@@ -270,7 +270,7 @@ func (t *Timer) Schedule(name string,interval int64,count int,task func(int64,in
 		delay = 0
 	}
 	if name=="" {
-		uuidv1,_ := uuid.NewV1()
+		uuidv1 := uuid.NewV1()
 		name = uuidv1.String()
 	}
 	t._taskIdGen++
