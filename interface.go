@@ -169,7 +169,7 @@ type IRuntime interface {
 	CreateEntity()IEntity
 	IsServer()bool
 	//private
-	markDirtyEntity(e IEntity)
+	MarkDirtyEntity(e IEntity)
 }
 
 //IModuleCtor module export interface

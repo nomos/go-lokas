@@ -89,7 +89,7 @@ func (this *Runtime) IsServer() bool {
 	return this.isServer
 }
 
-func (this *Runtime) markDirtyEntity(e lokas.IEntity){
+func (this *Runtime) MarkDirtyEntity(e lokas.IEntity){
 
 }
 

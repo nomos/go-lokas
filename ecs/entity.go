@@ -14,7 +14,7 @@ type Entity struct {
 	id            util.ID
 	dirty         bool
 	onDestroy     bool
-	runtime       Runtime
+	runtime       lokas.IRuntime
 	eventListener events.EventEmmiter
 	step          int64
 	removeMarks   []protocol.BINARY_TAG
@@ -117,7 +117,7 @@ func (this *Entity) MarkDirty(c lokas.IComponent) {
 	if this.dirty {
 		return
 	}
-	this.runtime.markDirtyEntity(this)
+	this.runtime.MarkDirtyEntity(this)
 	this.dirty = true
 	if this.runtime.IsServer() {
 		this.step = this.runtime.CurrentTick()
