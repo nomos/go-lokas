@@ -33,7 +33,7 @@ func NewActor() *Actor {
 }
 
 type Actor struct {
-	*ecs.Entity
+	lokas.IEntity
 	process     lokas.IProcess
 	msgChan     chan *protocol.RouteMessage
 	idGen       uint32
