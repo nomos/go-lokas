@@ -8,7 +8,7 @@ import (
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/client/v3"
 	"sync"
 	"time"
 )
@@ -24,7 +24,7 @@ const (
 
 func NewActor() *Actor {
 	ret := &Actor{
-		Entity:ecs.CreateEntity(),
+		IEntity:ecs.CreateEntity(),
 		reqContexts: make(map[uint32]lokas.IReqContext),
 		timer:time.NewTicker(UpdateTime),
 		timeout:     TimeOut,
