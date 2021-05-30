@@ -14,7 +14,7 @@ require (
 	github.com/nomos/go-log v0.0.1
 	github.com/nomos/jwt-go v3.2.0+incompatible
 	github.com/nomos/promise v0.0.1
-	github.com/nomos/qmgo v1.9.5
+	github.com/nomos/qmgo v1.9.6
 	github.com/pkg/sftp v1.13.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/shopspring/decimal v1.2.0
