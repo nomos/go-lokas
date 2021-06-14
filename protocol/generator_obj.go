@@ -32,6 +32,7 @@ const (
 	OBJ_MODEL_PACKAGE
 	OBJ_MODEL_IMPORTS
 	OBJ_MODEL_IDS
+	OBJ_MODEL_ERRORS
 	OBJ_MODEL_CLASS
 	OBJ_MODEL_ENUM
 
@@ -74,6 +75,7 @@ func init(){
 	obj_string_map[OBJ_MODEL_PACKAGE] = "OBJ_MODEL_PACKAGE"
 	obj_string_map[OBJ_MODEL_IMPORTS] = "OBJ_MODEL_IMPORTS"
 	obj_string_map[OBJ_MODEL_IDS] = "OBJ_MODEL_IDS"
+	obj_string_map[OBJ_MODEL_ERRORS] = "OBJ_MODEL_ERRORS"
 	obj_string_map[OBJ_MODEL_CLASS] = "OBJ_MODEL_CLASS"
 	obj_string_map[OBJ_MODEL_ENUM] = "OBJ_MODEL_ENUM"
 
@@ -222,14 +224,19 @@ func (this *DefaultGeneratorObj) InsertAfter(line *LineText, after *LineText)*Li
 
 
 func (this *DefaultGeneratorObj) TryAddLine(line *LineText, lineType LineType)bool {
-
 	removeComment := COMMENT_REGEXP.ReplaceAllString(line.Text, "$1")
+	comment := COMMENT_REGEXP.ReplaceAllString(line.Text,"$2")
+	if removeComment == comment {
+		comment = ""
+	}
 	if lineType.RegMatch(removeComment) {
+		line.Comment = comment
 		this.AddLine(line,lineType)
 		log.WithFields(log.Fields{
 			"lineType":    line.LineType.String(),
 			"lineNum": line.LineNum,
 			"text": line.Text,
+			"comment": line.Comment,
 		}).Info("find "+line.ObjName())
 		return true
 	}
@@ -356,6 +363,8 @@ func (this ObjectType) Create(file GeneratorFile)GeneratorObject  {
 		return NewModelPackageObject(file)
 	case OBJ_MODEL_IMPORTS:
 		return NewModelImportObject(file)
+	case OBJ_MODEL_ERRORS:
+		return NewModelErrorsObject(file)
 	case OBJ_MODEL_IDS:
 		return NewModelIdsObject(file)
 	case OBJ_MODEL_CLASS:

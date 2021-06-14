@@ -63,7 +63,7 @@ func NewAppConfig(name string, opts ...ConfigOption) *AppConfig {
 		ret = opt(ret)
 	}
 	if ret.fromFile && ret.folder == "" {
-		ret.folder, _ = os.Getwd()
+		ret.folder, _ = util.ExecPath()
 	}
 	ret.Viper = viper.New()
 	ret.Viper.AddConfigPath(".")

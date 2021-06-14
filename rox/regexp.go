@@ -1,7 +1,3 @@
-
-
-
-
 package rox
 
 import (
@@ -27,15 +23,6 @@ const (
 	regexpTypePrefix regexpType = 2
 	regexpTypeQuery  regexpType = 3
 )
-
-
-
-
-
-
-
-
-
 
 
 func newRouteRegexp(tpl string, typ regexpType, options routeRegexpOptions) (*routeRegexp, error) {

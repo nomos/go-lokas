@@ -45,6 +45,7 @@ type Generator struct {
 	ModelClassObjects []*ModelClassObject
 	ModelEnumObjects []*ModelEnumObject
 	ModelIdsObjects map[uint16]*ModelId
+	ModelErrorObjects map[int]*ModelError
 	ModelPackages map[string]*ModelPackageObject
 
 	TsModels       []*TsModelFile
@@ -83,6 +84,23 @@ func (this *Generator) SetProto2TsCmdLine(f func(pack, protoPath, TsPath string)
 	this.Proto2TsCmdLinExec = f
 }
 
+func (this *Generator) GetErrorName(id int)string{
+	e,ok:=this.ModelErrorObjects[id]
+	if ok {
+		return e.ErrorName
+	}
+	return ""
+}
+
+func (this *Generator) IsErrorName(s string)bool{
+	for _,v:=range this.ModelErrorObjects {
+		if v.ErrorName == s {
+			return true
+		}
+	}
+	return false
+}
+
 func (this *Generator) Clear() {
 	log.Warnf("Generator Clear")
 	this.Models = make(map[string]GeneratorFile)
@@ -98,6 +116,7 @@ func (this *Generator) Clear() {
 	this.ModelClassObjects = make([]*ModelClassObject, 0)
 	this.ModelEnumObjects = make([]*ModelEnumObject, 0)
 	this.ModelIdsObjects = make(map[uint16]*ModelId)
+	this.ModelErrorObjects = make(map[int]*ModelError)
 	this.ModelPackages = make(map[string]*ModelPackageObject)
 	this.InitDefaultSchemas()
 }
@@ -598,15 +617,15 @@ func (this *Generator) generateModel2GoClasses()error{
 func (this *Generator) generateModel2GoClass(m *ModelClassObject)error{
 	p:=path.Join(this.GoPath,"model_"+stringutil.SplitCamelCaseLowerSlash(m.ClassName))
 	p+=".go"
-	err:=ioutil.WriteFile(p, []byte(m.GoString()), 0644)
+	err:=ioutil.WriteFile(p, []byte(m.GoString(this)), 0644)
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
 	p=path.Join(this.GoPath,"model_"+stringutil.SplitCamelCaseLowerSlash(m.ClassName))
 	p+="_impl.go"
-	if !util.IsExist(p) {
-		err=ioutil.WriteFile(p, []byte(m.GoImplString()), 0644)
+	if !util.IsFileExist(p) {
+		err=ioutil.WriteFile(p, []byte(m.GoImplString(this)), 0644)
 		if err != nil {
 			log.Error(err.Error())
 			return err
@@ -630,7 +649,7 @@ func (this *Generator) generateModel2GoEnums()error{
 func (this *Generator) generateModel2GoEnum(m *ModelEnumObject)error{
 	p:=path.Join(this.GoPath,"enum_"+stringutil.SplitCamelCaseLowerSlash(m.EnumName))
 	p+=".go"
-	err:=ioutil.WriteFile(p, []byte(m.GoString()), 0644)
+	err:=ioutil.WriteFile(p, []byte(m.GoString(this)), 0644)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -653,12 +672,23 @@ func (this *Generator) generateModel2GoIds()error{
 	for _,m:=range this.Models {
 		f:=m.(*ModelFile)
 		ids:=f.ProcessIds()
+		errs:=f.ProcessErrors()
+		for _,e:=range errs {
+			this.ModelErrorObjects[e.ErrorId] = e
+		}
 		for _,v:=range ids {
 			pack :=this.ModelPackages[v.PackageName]
 			if pack==nil {
 				return errors.New("package not found:"+v.PackageName)
 			}
 			pack.Ids[BINARY_TAG(v.Id)] = v
+		}
+		for _,v:=range errs {
+			pack :=this.ModelPackages[v.PackageName]
+			if pack==nil {
+				return errors.New("package not found:"+v.PackageName)
+			}
+			pack.Errors[v.ErrorId] = v
 		}
 	}
 
@@ -675,7 +705,7 @@ func (this *Generator) generateModel2GoIds()error{
 func (this *Generator) generateModel2GoPackage(pack *ModelPackageObject)error{
 	p:=path.Join(this.GoPath,"ids")
 	p+=".go"
-	err:=ioutil.WriteFile(p, []byte(pack.GoString()), 0644)
+	err:=ioutil.WriteFile(p, []byte(pack.GoString(this)), 0644)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -722,7 +752,7 @@ func (this *Generator) generateModel2CsClasses()error{
 func (this *Generator) generateModel2CsClass(m *ModelClassObject)error{
 	p:=path.Join(this.CsPath,m.ClassName)
 	p+=".cs"
-	err:=ioutil.WriteFile(p, []byte(m.CsString()), 0644)
+	err:=ioutil.WriteFile(p, []byte(m.CsString(this)), 0644)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -745,7 +775,7 @@ func (this *Generator) generateModel2CsEnums()error{
 func (this *Generator) generateModel2CsEnum(m *ModelEnumObject)error{
 	p:=path.Join(this.CsPath,m.EnumName)
 	p+=".cs"
-	err:=ioutil.WriteFile(p, []byte(m.CsString()), 0644)
+	err:=ioutil.WriteFile(p, []byte(m.CsString(this)), 0644)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -765,15 +795,27 @@ func (this *Generator) generateModel2CsIds()error{
 		}
 		this.ModelPackages[pack.PackageName]= pack
 	}
+
 	for _,m:=range this.Models {
 		f:=m.(*ModelFile)
 		ids:=f.ProcessIds()
+		errs:=f.ProcessErrors()
+		for _,e:=range errs {
+			this.ModelErrorObjects[e.ErrorId] = e
+		}
 		for _,v:=range ids {
 			pack :=this.ModelPackages[v.PackageName]
 			if pack==nil {
 				return errors.New("package not found:"+v.PackageName)
 			}
 			pack.Ids[BINARY_TAG(v.Id)] = v
+		}
+		for _,v:=range errs {
+			pack :=this.ModelPackages[v.PackageName]
+			if pack==nil {
+				return errors.New("package not found:"+v.PackageName)
+			}
+			pack.Errors[v.ErrorId] = v
 		}
 	}
 
@@ -792,12 +834,21 @@ func (this *Generator) generateModel2CsPackage(pack *ModelPackageObject)error{
 	log.Warnf(className)
 	p:=path.Join(this.CsPath,className)
 	p+=".cs"
-	err:=ioutil.WriteFile(p, []byte(pack.CsString()), 0644)
+	err:=ioutil.WriteFile(p, []byte(pack.CsString(this)), 0644)
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
 	return nil
+}
+
+func (this *Generator) IsEnum(s string)bool{
+	for _,v:=range this.ModelEnumObjects {
+		if v.EnumName == s {
+			return true
+		}
+	}
+	return false
 }
 
 func (this *Generator) GenerateModel2Ts(){

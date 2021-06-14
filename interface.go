@@ -101,21 +101,10 @@ type IActorContainer interface {
 
 //IActor standard interface for actor
 type IActor interface {
-	IProxy
-	IModule
-	GetLeaseId() (clientv3.LeaseID,bool, error)
-	SetId(id util.ID)
-	GetId() util.ID
-	Update(dt time.Duration, now time.Time)
-}
-//IActor standard interface for actor
-type IEntityActor interface {
 	IEntity
 	IProxy
 	IModule
 	GetLeaseId() (clientv3.LeaseID,bool, error)
-	SetId(id util.ID)
-	GetId() util.ID
 	Update(dt time.Duration, now time.Time)
 }
 
@@ -123,6 +112,7 @@ type IEntity interface {
 	Dirty()bool
 	SetDirty(bool)
 	Get(t protocol.BINARY_TAG)IComponent
+	GetOrCreate(t protocol.BINARY_TAG)IComponent
 	Add(c IComponent)
 	Remove(t protocol.BINARY_TAG)IComponent
 	SetId(id util.ID)
@@ -140,6 +130,7 @@ type IComponentPool interface {
 
 type IComponent interface {
 	protocol.ISerializable
+	GetEntity()IEntity
 	SetDirty(d bool)
 	SetRuntime(engine IRuntime)
 	GetRuntime()IRuntime
@@ -262,7 +253,7 @@ type INetClient interface {
 	events.EventEmmiter
 	Connect(addr string) *promise.Promise
 	Disconnect(bool) *promise.Promise
-	Request(req interface{}, resp interface{}) *promise.Promise
+	Request(req interface{}) *promise.Promise
 	Connected() bool
 	OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise
 	OnRecv(conn IConn, data []byte)

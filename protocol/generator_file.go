@@ -3,11 +3,13 @@ package protocol
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"github.com/nomos/go-log/log"
 	"github.com/nomos/promise"
 	"io"
 	"os"
 	path2 "path"
+	"runtime"
 	"strings"
 )
 
@@ -397,6 +399,9 @@ func (this *DefaultGeneratorFile) parse(num int, objs ...ObjectType) (int, bool)
 		if r != nil {
 			if err, ok := r.(error); ok {
 				log.Error(err.Error())
+				buf := make([]byte, 1<<16)
+				runtime.Stack(buf, true)
+				fmt.Println(string(buf))
 			}
 		}
 	}()

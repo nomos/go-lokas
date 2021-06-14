@@ -2,7 +2,7 @@ package httpserver
 
 import (
 	"github.com/nomos/go-log/log"
-	"github.com/nomos/go-lokas/lox/rox"
+	"github.com/nomos/go-lokas/rox"
 	"net"
 	"net/http"
 	"sync"

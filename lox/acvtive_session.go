@@ -1,4 +1,4 @@
-package tcp
+package lox
 
 import (
 	"github.com/nomos/go-log/log"
@@ -10,36 +10,12 @@ import (
 	"time"
 )
 
-type SessionOption func(*ClientSession)
+type SessionOption func(*ActiveSession)
 
-func WithCloseFunc(closeFunc func(conn lokas.IConn)) SessionOption {
-	return func(session *ClientSession) {
-		session.OnCloseFunc = closeFunc
-	}
-}
+var _ lokas.ISession = &ActiveSession{}
 
-func WithOpenFunc(closeFunc func(conn lokas.IConn)) SessionOption {
-	return func(session *ClientSession) {
-		session.OnCloseFunc = closeFunc
-	}
-}
-
-func WithProtocol(protocol protocol.TYPE) SessionOption {
-	return func(session *ClientSession) {
-		session.Protocol = protocol
-	}
-}
-
-func WithMsgHandler(msgHandler func(msg *protocol.BinaryMessage)) SessionOption {
-	return func(session *ClientSession) {
-		session.MsgHandler = msgHandler
-	}
-}
-
-var _ lokas.ISession = &ClientSession{}
-
-func NewClientSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManager, opts ...SessionOption) *ClientSession {
-	s := &ClientSession{
+func NewActiveSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManager, opts ...SessionOption) *ActiveSession {
+	s := &ActiveSession{
 		ID:       id,
 		Messages: make(chan []byte, 100),
 		Conn:     conn,
@@ -54,7 +30,7 @@ func NewClientSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManage
 	return s
 }
 
-type ClientSession struct {
+type ActiveSession struct {
 	util.ID
 	process     lokas.IProcess
 	Messages    chan []byte
@@ -69,72 +45,72 @@ type ClientSession struct {
 	pingIndex   uint32
 }
 
-func (this *ClientSession) OnMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
+func (this *ActiveSession) OnMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
 	panic("implement me")
 }
 
-func (this *ClientSession) SendMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
+func (this *ActiveSession) SendMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
 	panic("implement me")
 }
 
-func (this *ClientSession) Call(actorId util.ID, transId uint32, req protocol.ISerializable, resp protocol.ISerializable) error {
+func (this *ActiveSession) Call(actorId util.ID, transId uint32, req protocol.ISerializable, resp protocol.ISerializable) error {
 	panic("implement me")
 }
 
-func (this *ClientSession) AsyncCall(actorId util.ID, transId uint32, req protocol.ISerializable, resp protocol.ISerializable) error {
+func (this *ActiveSession) AsyncCall(actorId util.ID, transId uint32, req protocol.ISerializable, resp protocol.ISerializable) error {
 	panic("implement me")
 }
 
-func (this *ClientSession) Type() string {
+func (this *ActiveSession) Type() string {
 	panic("implement me")
 }
 
-func (this *ClientSession) SetId(id util.ID) {
+func (this *ActiveSession) SetId(id util.ID) {
 	this.ID = id
 }
 
-func (this *ClientSession) CloneEntity() *ecs.Entity {
+func (this *ActiveSession) CloneEntity() *ecs.Entity {
 	panic("implement me")
 }
 
-func (this *ClientSession) Update(dt time.Duration, now time.Time) {
+func (this *ActiveSession) Update(dt time.Duration, now time.Time) {
 	panic("implement me")
 }
 
-func (this *ClientSession) GetProcess() lokas.IProcess {
+func (this *ActiveSession) GetProcess() lokas.IProcess {
 	panic("implement me")
 }
 
-func (this *ClientSession) SetProcess(process lokas.IProcess) {
+func (this *ActiveSession) SetProcess(process lokas.IProcess) {
 	panic("implement me")
 }
 
-func (this *ClientSession) OnCreate() error {
+func (this *ActiveSession) OnCreate() error {
 	panic("implement me")
 }
 
-func (this *ClientSession) Start() error {
+func (this *ActiveSession) Start() error {
 	this.start()
 	return nil
 }
 
-func (this *ClientSession) Stop() error {
+func (this *ActiveSession) Stop() error {
 	panic("implement me")
 }
 
-func (this *ClientSession) OnDestroy() error {
+func (this *ActiveSession) OnDestroy() error {
 	panic("implement me")
 }
 
-func (this *ClientSession) GetId() util.ID {
+func (this *ActiveSession) GetId() util.ID {
 	return this.ID
 }
 
-func (this *ClientSession) GetConn() lokas.IConn {
+func (this *ActiveSession) GetConn() lokas.IConn {
 	return this.Conn
 }
 
-func (this *ClientSession) OnOpen(conn lokas.IConn) {
+func (this *ActiveSession) OnOpen(conn lokas.IConn) {
 	this.start()
 	if this.OnOpenFunc != nil {
 		this.OnOpenFunc(conn)
@@ -145,7 +121,7 @@ func (this *ClientSession) OnOpen(conn lokas.IConn) {
 	}
 }
 
-func (this *ClientSession) OnClose(conn lokas.IConn) {
+func (this *ActiveSession) OnClose(conn lokas.IConn) {
 	if this.manager != nil {
 		this.manager.RemoveSession(this.ID)
 	}
@@ -156,35 +132,35 @@ func (this *ClientSession) OnClose(conn lokas.IConn) {
 	this.stop()
 }
 
-func (this *ClientSession) closeSession() {
+func (this *ActiveSession) closeSession() {
 	if this.manager != nil {
 		this.manager.RemoveSession(this.ID)
 	}
 }
 
-func (this *ClientSession) Write(data []byte) error {
+func (this *ActiveSession) Write(data []byte) error {
 	_, err := this.Conn.Write(data)
 	return err
 }
 
-func (this *ClientSession) OnRecv(conn lokas.IConn, data []byte) {
+func (this *ActiveSession) OnRecv(conn lokas.IConn, data []byte) {
 	// 注意: 此处data直接引用的网络缓冲区的slice，如果把data发送给其他goroutine处理，需要注意缓冲区覆盖问题
 	data1 := make([]byte, len(data), len(data))
 	copy(data1, data)
 	this.Messages <- data1
 }
 
-func (this *ClientSession) handleMsg(msg *protocol.BinaryMessage) {
+func (this *ActiveSession) handleMsg(msg *protocol.BinaryMessage) {
 	if this.MsgHandler != nil {
 		this.MsgHandler(msg)
 	}
 }
 
-func (this *ClientSession) PongHandler(pong *protocol.Pong) {
+func (this *ActiveSession) PongHandler(pong *protocol.Pong) {
 	this.Conn.SetReadDeadline(time.Now().Add(this.timeout))
 }
 
-func (this *ClientSession) start() {
+func (this *ActiveSession) start() {
 	go func() {
 		ticker := time.NewTicker(this.timeout / 5)
 		defer func() {
@@ -234,10 +210,10 @@ func (this *ClientSession) start() {
 	}()
 }
 
-func (this *ClientSession) stop() {
+func (this *ActiveSession) stop() {
 	this.done <- struct{}{}
 }
 
-func (this *ClientSession) HandleMessage(f func(msg *protocol.BinaryMessage)) {
+func (this *ActiveSession) HandleMessage(f func(msg *protocol.BinaryMessage)) {
 	this.MsgHandler = f
 }

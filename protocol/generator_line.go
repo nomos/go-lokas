@@ -85,6 +85,8 @@ const (
 	LINE_MODEL_CSPACKAGE
 	LINE_MODEL_TSPACKAGE
 	LINE_MODEL_IMPORTS
+	LINE_MODEL_ERRORS_HEADER
+	LINE_MODEL_ERROR
 	LINE_MODEL_IDS_HEADER
 	LINE_MODEL_ID
 	LINE_MODEL_CLASS_HEADER
@@ -201,6 +203,8 @@ func init() {
 	line_string[LINE_MODEL_GOPACKAGE] = "LINE_MODEL_GOPACKAGE"
 	line_string[LINE_MODEL_TSPACKAGE] = "LINE_MODEL_TSPACKAGE"
 	line_string[LINE_MODEL_IMPORTS] = "LINE_MODEL_IMPORTS"
+	line_string[LINE_MODEL_ERRORS_HEADER] = "LINE_MODEL_ERRORS_HEADER"
+	line_string[LINE_MODEL_ERROR] = "LINE_MODEL_ERROR"
 	line_string[LINE_MODEL_IDS_HEADER] = "LINE_MODEL_IDS_HEADER"
 	line_string[LINE_MODEL_ID] = "LINE_MODEL_ID"
 	line_string[LINE_MODEL_CLASS_HEADER] = "LINE_MODEL_CLASS_HEADER"
@@ -345,19 +349,24 @@ func init() {
 	line_regexp_replace_pkg[LINE_MODEL_TSPACKAGE] = "$1"
 	line_regexp_map[LINE_MODEL_IMPORTS] = regexp.MustCompile(`\s*import\s+(\w+)\s*`)
 	line_regexp_replace_pkg[LINE_MODEL_IMPORTS] = "$1"
+	line_regexp_map[LINE_MODEL_ERRORS_HEADER] = regexp.MustCompile(`\s*[\[]\s*((errors)|(errs))\s*[\]]\s*`)
+	line_regexp_map[LINE_MODEL_ERROR] = regexp.MustCompile(`\s*(\w+)\s+([0-9]+)\s*(.+)*\s*`)
+	line_regexp_replace_name[LINE_MODEL_ERROR] = "$1"
+	line_regexp_replace_value[LINE_MODEL_ERROR] = "$2"
+	line_regexp_replace_tag_name[LINE_MODEL_ERROR] = "$3"
 	line_regexp_map[LINE_MODEL_IDS_HEADER] = regexp.MustCompile(`\s*[\[]\s*(ids)\s*[\]]\s*`)
 	line_regexp_map[LINE_MODEL_ID] = regexp.MustCompile(`\s*(\w+)\s+([0-9]+)((\s*((REQ)|(NTF)|(EVT)))*)(\s*(\w+))*\s*`)
 	line_regexp_replace_name[LINE_MODEL_ID] = "$1"
 	line_regexp_replace_value[LINE_MODEL_ID] = "$2"
 	line_regexp_replace_type[LINE_MODEL_ID] = "$3"
-	line_regexp_replace_tag_name[LINE_MODEL_ID] = "$9"
+	line_regexp_replace_tag_name[LINE_MODEL_ID] = "$10"
 	line_regexp_map[LINE_MODEL_CLASS_HEADER] = regexp.MustCompile(`\s*[\[]\s*class\s+(\w+)\s*[\]]\s*`)
 	line_regexp_replace_struct_name[LINE_MODEL_CLASS_HEADER] = "$1"
 	line_regexp_map[LINE_MODEL_ENUM_HEADER] = regexp.MustCompile(`\s*[\[]\s*enum\s+(\w+)\s*[\]]\s*`)
 	line_regexp_replace_struct_name[LINE_MODEL_ENUM_HEADER] = "$1"
 	line_regexp_replace_name[LINE_MODEL_ENUM_HEADER] = "$1"
 	line_regexp_replace_name[LINE_MODEL_CLASS_HEADER] = "$1"
-	line_regexp_map[LINE_MODEL_CLASS_FIELD] = regexp.MustCompile(`\s*(\w+)\s+((\w|[{]|[]]|[}]|[[]|[:])+)\s*`)
+	line_regexp_map[LINE_MODEL_CLASS_FIELD] = regexp.MustCompile(`\s*(\w+)\s+((\w|[{]|[]]|[}]|[[]|[:]|[,])+)\s*`)
 	line_regexp_replace_name[LINE_MODEL_CLASS_FIELD] = "$1"
 	line_regexp_replace_type[LINE_MODEL_CLASS_FIELD] = "$2"
 	line_regexp_map[LINE_MODEL_ENUM_FIELD] = regexp.MustCompile(`\s*(\w+)\s+([0-9]+)\s*`)
@@ -390,6 +399,7 @@ type LineText struct {
 	TagName     string
 	Value       int
 	Type        string
+	Comment     string
 }
 
 type Fields map[string]string

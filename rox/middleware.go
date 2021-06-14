@@ -20,7 +20,7 @@ func CreateMiddleWare(f func (w ResponseWriter, r *http.Request, a lokas.IProces
 	return f
 }
 
-// MiddlewareFunc is a function which receives an http.Handler and returns another http.Handler.
+// MiddlewareFunc is a function which receives an http.Handler and returns another http.Handlethis.
 // Typically, the returned handler is a closure which does something with the http.ResponseWriter and http.Request passed
 // to it, and then calls the handler passed as parameter to the MiddlewareFunc.
 type MiddlewareFunc func(http.Handler) http.Handler
@@ -35,28 +35,28 @@ func (mw MiddlewareFunc) Middleware(handler http.Handler) http.Handler {
 	return mw(handler)
 }
 
-// Use appends a MiddlewareFunc to the chain. Middleware can be used to intercept or otherwise modify requests and/or responses, and are executed in the order that they are applied to the Router.
-func (r *Router) Use(mwf ...MiddlewareFunc) {
+// Use appends a MiddlewareFunc to the chain. Middleware can be used to intercept or otherwise modify requests and/or responses, and are executed in the order that they are applied to the Routethis.
+func (this *Router) Use(mwf ...MiddlewareFunc) {
 	for _, fn := range mwf {
-		r.middlewares = append(r.middlewares, middlewareWrapper{
+		this.middlewares = append(this.middlewares, middlewareWrapper{
 			matcher:    defaultMiddlewareMatcher,
 			middleware: fn,
 		})
 	}
 }
 
-func (r *Router) When(match MiddlewareMatcher,mwf ...MiddlewareFunc) {
+func (this *Router) When(match MiddlewareMatcher,mwf ...MiddlewareFunc) {
 	for _, fn := range mwf {
-		r.middlewares = append(r.middlewares, middlewareWrapper{
+		this.middlewares = append(this.middlewares, middlewareWrapper{
 			matcher:    match,
 			middleware: fn,
 		})
 	}
 }
 
-func (r *Router) PathIn(p []string,mwf ...MiddlewareFunc) {
+func (this *Router) PathIn(p []string,mwf ...MiddlewareFunc) {
 	for _, fn := range mwf {
-		r.middlewares = append(r.middlewares, middlewareWrapper{
+		this.middlewares = append(this.middlewares, middlewareWrapper{
 			matcher: func(req *http.Request) bool {
 				for _,v:=range p {
 					if v==req.URL.Path {
@@ -70,9 +70,9 @@ func (r *Router) PathIn(p []string,mwf ...MiddlewareFunc) {
 	}
 }
 
-func (r *Router) PathOnly(p string,mwf ...MiddlewareFunc) {
+func (this *Router) PathOnly(p string,mwf ...MiddlewareFunc) {
 	for _, fn := range mwf {
-		r.middlewares = append(r.middlewares, middlewareWrapper{
+		this.middlewares = append(this.middlewares, middlewareWrapper{
 			matcher: func(req *http.Request) bool {
 				return req.URL.Path == p
 			},
@@ -81,9 +81,9 @@ func (r *Router) PathOnly(p string,mwf ...MiddlewareFunc) {
 	}
 }
 
-func (r *Router) PathExcept(p string,mwf ...MiddlewareFunc) {
+func (this *Router) PathExcept(p string,mwf ...MiddlewareFunc) {
 	for _, fn := range mwf {
-		r.middlewares = append(r.middlewares, middlewareWrapper{
+		this.middlewares = append(this.middlewares, middlewareWrapper{
 			matcher: func(req *http.Request) bool {
 				return req.URL.Path != p
 			},
@@ -92,9 +92,9 @@ func (r *Router) PathExcept(p string,mwf ...MiddlewareFunc) {
 	}
 }
 
-func (r *Router) PathExcepts(p []string,mwf ...MiddlewareFunc) {
+func (this *Router) PathExcepts(p []string,mwf ...MiddlewareFunc) {
 	for _, fn := range mwf {
-		r.middlewares = append(r.middlewares, middlewareWrapper{
+		this.middlewares = append(this.middlewares, middlewareWrapper{
 			matcher: func(req *http.Request) bool {
 				for _,v:=range p {
 					if v==req.URL.Path {
@@ -111,9 +111,9 @@ func (r *Router) PathExcepts(p []string,mwf ...MiddlewareFunc) {
 
 
 
-// useInterface appends a middleware to the chain. Middleware can be used to intercept or otherwise modify requests and/or responses, and are executed in the order that they are applied to the Router.
-func (r *Router) useInterface(mw middleware) {
-	r.middlewares = append(r.middlewares, middlewareWrapper{
+// useInterface appends a middleware to the chain. Middleware can be used to intercept or otherwise modify requests and/or responses, and are executed in the order that they are applied to the Routethis.
+func (this *Router) useInterface(mw middleware) {
+	this.middlewares = append(this.middlewares, middlewareWrapper{
 		matcher:    defaultMiddlewareMatcher,
 		middleware: mw,
 	})
@@ -123,10 +123,10 @@ func (r *Router) useInterface(mw middleware) {
 // on requests for routes that have an OPTIONS method matcher to all the method matchers on
 // the route. Routes that do not explicitly handle OPTIONS requests will not be processed
 // by the middleware. See examples for usage.
-func CORSMethodMiddleware(r *Router) MiddlewareFunc {
+func CORSMethodMiddleware(this *Router) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			allMethods, err := getAllMethodsForRoute(r, req)
+			allMethods, err := getAllMethodsForRoute(this, req)
 			if err == nil {
 				for _, v := range allMethods {
 					if v == http.MethodOptions {
@@ -142,10 +142,10 @@ func CORSMethodMiddleware(r *Router) MiddlewareFunc {
 
 // getAllMethodsForRoute returns all the methods from method matchers matching a given
 // request.
-func getAllMethodsForRoute(r *Router, req *http.Request) ([]string, error) {
+func getAllMethodsForRoute(this *Router, req *http.Request) ([]string, error) {
 	var allMethods []string
 
-	for _, route := range r.routes {
+	for _, route := range this.routes {
 		var match RouteMatch
 		if route.Match(req, &match) || match.MatchErr == ErrMethodMismatch {
 			methods, err := route.GetMethods()

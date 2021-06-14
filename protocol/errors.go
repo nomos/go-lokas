@@ -8,26 +8,27 @@ type ErrCode int
 
 var (
 	//inner error
-	ErrTypeNotFound      = CreateError(-1, "type not found")
-	ErrRpcTimeOut        = CreateError(-2, "rpc timeout")
-	ErrPacketWrongFormat = CreateError(-3, "wrong packet format")
-	ErrInternalError     = CreateError(-4, "internal error")
-	ErrActorNotExist     = CreateError(-101, "actor not found")
+	ERR_TYPE_NOT_FOUND  = CreateError(-1, "type not found")
+	ERR_RPC_TIMEOUT     = CreateError(-2, "rpc timeout")
+	ERR_PACKAGE_FORMAT  = CreateError(-3, "wrong packet format")
+	ERR_INTERNAL_ERROR  = CreateError(-4, "internal error")
+	ERR_ACTOR_NOT_FOUND = CreateError(-101, "actor not found")
 
 	//cs error
-	ErrInternalServer       = CreateError(901, "服务器繁忙")
-	ErrTokenExpired        = CreateError(1001, "Token已过期")
-	ErrTokenValidate       = CreateError(1002, "Token无效")
-	ErrAccNotFind          = CreateError(1003, "找不到账户")
-	ErrGameAccNotFind      = CreateError(1004, "找不到游戏账户")
-	ErrGameAccAlreadyExist = CreateError(1011, "游戏账户已存在")
-	ErrGameAccCreateFailed = CreateError(1012, "创建游戏账户失败")
-	ErrParamNotExist       = CreateError(1101, "参数不存在")
-	ErrParamError          = CreateError(1102, "参数错误")
-	ErrPassAuthError       = CreateError(1103, "账户不存在或者密码错误")
-	ErrPasswordNeeded      = CreateError(1104, "需要输入密码")
-	ErrAuthFailed          = CreateError(1201, "验证失败")
-	ErrMsgFormat           = CreateError(1202, "数据格式错误")
+	ERR_INTERNAL_SERVER        = CreateError(901, "服务器繁忙")
+	ERR_TOKEN_EXPIRED          = CreateError(1001, "Token已过期")
+	ERR_TOKEN_VALIDATE         = CreateError(1002, "Token无效")
+	ERR_ACC_NOT_FIND           = CreateError(1003, "找不到账户")
+	ERR_GAME_ACC_NOT_FOUND     = CreateError(1004, "找不到游戏账户")
+	ERR_GAME_ACC_EXIST         = CreateError(1011, "游戏账户已存在")
+	ERR_GAME_ACC_CREATE_FAILED = CreateError(1012, "创建游戏账户失败")
+	ERR_PARAM_NOT_EXIST        = CreateError(1101, "参数不存在")
+	ERR_PARAM_TYPE             = CreateError(1102, "参数错误")
+	ERR_ACC_AUTH               = CreateError(1103, "账户不存在或者密码错误")
+	ERR_PASSWORD_EMPTY         = CreateError(1104, "需要输入密码")
+	ERR_AUTH_FAILED            = CreateError(1201, "验证失败")
+	ERR_MSG_FORMAT             = CreateError(1202, "数据格式错误")
+	ERR_PROTOCOL_NOT_FOUND     = CreateError(1203, "协议未找到")
 )
 
 func (this ErrCode) Error() string {
@@ -59,6 +60,7 @@ var predefined_errors = map[ErrCode]string{}
 type IError interface {
 	Error() string
 	ErrCode() int
+	Is(e error) bool
 }
 
 var _ ISerializable = &ErrMsg{}
@@ -70,6 +72,15 @@ type ErrMsg struct {
 
 func (this *ErrMsg) ErrCode() int {
 	return int(this.Code)
+}
+
+func (this *ErrMsg) Is(err error)bool {
+	if e, ok := err.(IError); ok {
+		if e.ErrCode() == this.ErrCode() {
+			return true
+		}
+	}
+	return false
 }
 
 func (this *ErrMsg) Unmarshal(from []byte) error {

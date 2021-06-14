@@ -218,7 +218,7 @@ func (this *TypeRegistry) GetTagByType(p reflect.Type) (BINARY_TAG,error){
 	if ret,ok:=this.typeMap[p];ok{
 		return ret,nil
 	} else {
-		return 0, ErrTypeNotFound
+		return 0, ERR_TYPE_NOT_FOUND
 	}
 }
 
@@ -226,7 +226,7 @@ func (this *TypeRegistry) GetTypeByTag(t BINARY_TAG) (reflect.Type,error){
 	if ret,ok:=this.tagMap[t];ok{
 		return ret,nil
 	} else {
-		return nil, ErrTypeNotFound
+		return nil, ERR_TYPE_NOT_FOUND
 	}
 }
 
@@ -234,6 +234,6 @@ func (this *TypeRegistry) GetInterfaceByTag(t BINARY_TAG) (ISerializable,error){
 	if ret,ok:=this.tagMap[t];ok{
 		return reflect.New(ret).Interface().(ISerializable),nil
 	} else {
-		return nil, ErrTypeNotFound
+		return nil, ERR_TYPE_NOT_FOUND
 	}
 }

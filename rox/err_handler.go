@@ -71,7 +71,7 @@ func NewRecovery() *Recovery {
 	}
 }
 
-func (rec *Recovery) ServeHTTP(writer ResponseWriter, request *http.Request, next http.Handler) {
+func (this *Recovery) ServeHTTP(writer ResponseWriter, request *http.Request, next http.Handler) {
 	defer func() {
 		if err := recover(); err != nil {
 			writer.WriteHeader(http.StatusInternalServerError)
@@ -79,11 +79,11 @@ func (rec *Recovery) ServeHTTP(writer ResponseWriter, request *http.Request, nex
 			infos := &PanicInformation{
 				RecoveredPanic: err,
 				Request:        request,
-				Stack:          make([]byte, rec.StackSize),
+				Stack:          make([]byte, this.StackSize),
 			}
-			infos.Stack = infos.Stack[:runtime.Stack(infos.Stack, rec.StackAll)]
-			if rec.PrintStack && rec.Formatter != nil {
-				rec.Formatter.FormatPanicError(writer, request, infos)
+			infos.Stack = infos.Stack[:runtime.Stack(infos.Stack, this.StackAll)]
+			if this.PrintStack && this.Formatter != nil {
+				this.Formatter.FormatPanicError(writer, request, infos)
 			} else {
 				if writer.Header().Get("Content-Type") == "" {
 					writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -91,10 +91,10 @@ func (rec *Recovery) ServeHTTP(writer ResponseWriter, request *http.Request, nex
 				InternalServerError(writer,NoPrintStackBodyString)
 			}
 
-			if rec.LogStack {
+			if this.LogStack {
 				log.Errorf(panicText, err, infos.Stack)
 			}
-			if rec.PanicHandlerFunc != nil {
+			if this.PanicHandlerFunc != nil {
 				func() {
 					defer func() {
 						if err := recover(); err != nil {
@@ -102,7 +102,7 @@ func (rec *Recovery) ServeHTTP(writer ResponseWriter, request *http.Request, nex
 							log.Errorf("%s\n", debug.Stack())
 						}
 					}()
-					rec.PanicHandlerFunc(infos)
+					this.PanicHandlerFunc(infos)
 				}()
 			}
 		}

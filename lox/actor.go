@@ -172,14 +172,14 @@ func (this *Actor) handleMsg(actorId util.ID, transId uint32, msg protocol.ISeri
 	if this.MsgHandler != nil {
 		resp, err := this.MsgHandler(actorId, transId, msg)
 		if err != nil {
-			if protocol.ErrActorNotExist.Is(err) {
-				log.Error("ErrActorNotExist")
-				return protocol.ErrActorNotExist
+			if protocol.ERR_ACTOR_NOT_FOUND.Is(err) {
+				log.Error("ERR_ACTOR_NOT_FOUND")
+				return protocol.ERR_ACTOR_NOT_FOUND
 			}
 			if uerr, ok := err.(protocol.IError); ok {
 				this.SendReply(actorId, transId, protocol.NewErrorMsg(int32(uerr.ErrCode()), uerr.Error()))
 			} else {
-				this.SendReply(actorId, transId, protocol.ErrInternalError.NewErrMsg())
+				this.SendReply(actorId, transId, protocol.ERR_INTERNAL_ERROR.NewErrMsg())
 			}
 			return err
 		}
@@ -231,7 +231,7 @@ func (this *Actor) Call(actorId util.ID, req protocol.ISerializable) (protocol.I
 		case context.DeadlineExceeded:
 			log.Warnf("DeadlineExceeded")
 			this.removeContext(transId)
-			return nil, protocol.ErrRpcTimeOut
+			return nil, protocol.ERR_RPC_TIMEOUT
 		default:
 			this.removeContext(transId)
 			if ctx.Err() != nil {

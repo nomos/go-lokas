@@ -1,12 +1,14 @@
 package lox
 
 import (
+	"github.com/nomos/go-log/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/network/tcp"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/promise"
+	"sync"
 	"time"
 )
 
@@ -20,9 +22,10 @@ func (this proxyCtor) Type() string {
 
 func (this proxyCtor) Create() lokas.IModule {
 	ret := &Proxy{
-		Actor:NewActor(),
+		Actor:            NewActor(),
 		dialerCloseChans: map[util.ProcessId]chan struct{}{},
-		ISessionManager: network.NewDefaultSessionManager(true),
+		ActiveSessions:   network.NewDefaultSessionManager(true),
+		PassiveSessions:   network.NewDefaultSessionManager(true),
 	}
 	return ret
 }
@@ -30,18 +33,25 @@ func (this proxyCtor) Create() lokas.IModule {
 var _ lokas.IModule = (*Proxy)(nil)
 var _ lokas.IProxy = (*Proxy)(nil)
 
-
 type Proxy struct {
 	*Actor
+	Host               string
+	Port               string
+	server             lokas.Server
+	startPending       *promise.Promise
+	started            bool
+	mu                 sync.Mutex
+
 	dialerCloseChans map[util.ProcessId]chan struct{}
-	lokas.ISessionManager
+	ActiveSessions   lokas.ISessionManager
+	PassiveSessions  lokas.ISessionManager
 }
 
-func (this *Proxy) OnStart() error{
+func (this *Proxy) OnStart() error {
 	panic("implement me")
 }
 
-func (this *Proxy) OnStop() error{
+func (this *Proxy) OnStop() error {
 	panic("implement me")
 }
 
@@ -57,7 +67,36 @@ func (this *Proxy) OnDestroy() error {
 	panic("implement me")
 }
 
+func passiveSessionCreator(p *Proxy) func(conn lokas.IConn) lokas.ISession {
+	return func(conn lokas.IConn) lokas.ISession {
+		sess := NewPassiveSession(conn, p.GetProcess().GenId(), p.PassiveSessions)
+		//sess.AuthFunc = this.AuthFunc
+		sess.Protocol = protocol.BINARY
+		p.PassiveSessions.AddSession(sess.GetId(), sess)
+		sess.Conn = conn
+		return sess
+	}
+}
+
 func (this *Proxy) Load(conf lokas.IConfig) error {
+	log.WithFields(log.Fields{
+		"host":     conf.Get("host"),
+		"port":     conf.Get("port"),
+		"protocol": conf.Get("protocol"),
+		"conn":     conf.Get("conn"),
+	}).Info("Gate:LoadConfig")
+	this.Host = conf.Get("host").(string)
+	this.Port = conf.Get("port").(string)
+	context := &lokas.Context{
+		SessionCreator:    passiveSessionCreator(this),
+		Splitter:          protocol.Split,
+		ReadBufferSize:    1024 * 1024,
+		ChanSize:          200,
+		LongPacketPicker:  protocol.PickLongPacket(protocol.BINARY),
+		LongPacketCreator: protocol.CreateLongPacket(protocol.BINARY),
+		MaxPacketWriteLen: protocol.DEFAULT_PACKET_LEN,
+	}
+	this.server = tcp.NewServer(context)
 	return nil
 }
 
@@ -65,11 +104,11 @@ func (this *Proxy) Unload() error {
 	return nil
 }
 
-func sessionCreator(id util.ProcessId, p *Proxy) func(conn lokas.IConn) lokas.ISession {
+func activeSessionCreator(id util.ProcessId, p *Proxy) func(conn lokas.IConn) lokas.ISession {
 	return func(conn lokas.IConn) lokas.ISession {
-		sess := p.GetSession(id.Snowflake()).(*network.DefaultSession)
+		sess := p.ActiveSessions.GetSession(id.Snowflake()).(*network.DefaultSession)
 		if sess == nil {
-			sess = network.NewDefaultSession(conn, id.Snowflake(), p)
+			sess = network.NewDefaultSession(conn, id.Snowflake(), p.ActiveSessions)
 		}
 		sess.Conn = conn
 		return sess
@@ -78,10 +117,10 @@ func sessionCreator(id util.ProcessId, p *Proxy) func(conn lokas.IConn) lokas.IS
 
 func (this *Proxy) Connect(id util.ProcessId, addr string) error {
 	context := &lokas.Context{
-		SessionCreator: sessionCreator(id, this),
-		Splitter:       protocol.Split,
-		ReadBufferSize: 1024 * 1024 * 4,
-		ChanSize:       10000,
+		SessionCreator:    activeSessionCreator(id, this),
+		Splitter:          protocol.Split,
+		ReadBufferSize:    1024 * 1024 * 4,
+		ChanSize:          10000,
 		LongPacketPicker:  protocol.PickLongPacket(protocol.BINARY),
 		LongPacketCreator: protocol.CreateLongPacket(protocol.BINARY),
 		MaxPacketWriteLen: protocol.DEFAULT_PACKET_LEN,
@@ -92,20 +131,39 @@ func (this *Proxy) Connect(id util.ProcessId, addr string) error {
 }
 
 func (this *Proxy) Start() *promise.Promise {
-	return promise.Resolve(nil)
+	log.Info(this.Type() + " Start")
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	if this.startPending == nil && !this.started {
+		this.startPending = promise.Async(func(resolve func(interface{}), reject func(interface{})) {
+			err := this.server.Start(this.Host + ":" + this.Port)
+			this.mu.Lock()
+			defer this.mu.Unlock()
+			if err != nil {
+				this.startPending = nil
+				reject(err)
+				return
+			}
+			this.started = true
+			this.startPending = nil
+			resolve(nil)
+		})
+	} else if this.started {
+		return promise.Resolve(nil)
+	}
+	return this.startPending
 }
 
 func (this *Proxy) Stop() *promise.Promise {
-	this.Range(func(id util.ID, session lokas.ISession) bool {
-		conn := session.GetConn()
-		if conn != nil {
-			conn.Close()
-			conn.Wait()
-		}
-		return false
-	})
-	for _,v:=range this.dialerCloseChans {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	log.Warnf("Proxy:Stop")
+	this.ActiveSessions.Clear()
+	for _, v := range this.dialerCloseChans {
 		close(v)
 	}
+	this.PassiveSessions.Clear()
+	this.started = false
+	this.server.Stop()
 	return promise.Resolve(nil)
 }

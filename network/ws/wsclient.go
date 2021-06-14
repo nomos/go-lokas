@@ -235,7 +235,7 @@ func (this *WsClient) getContext(transId uint32) lokas.IReqContext {
 	return this.reqContexts[transId]
 }
 
-func (this *WsClient) Request(req interface{}, resp interface{}) *promise.Promise {
+func (this *WsClient) Request(req interface{}) *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		if this.Opening {
 			_, err := this.Open().Await()
@@ -249,7 +249,7 @@ func (this *WsClient) Request(req interface{}, resp interface{}) *promise.Promis
 			return
 		}
 		id := this.genId()
-		_,err := this.Call(id, req)
+		resp,err := this.Call(id, req)
 		if err != nil {
 			log.Error("Call Error:%s", zap.String("err", err.Error()))
 			reject(err)
@@ -297,7 +297,7 @@ func (this *WsClient) doCall(ctx lokas.IReqContext, req interface{}, isSync bool
 					this.Open().Await()
 				}()
 			}
-			return nil,protocol.ErrRpcTimeOut
+			return nil,protocol.ERR_RPC_TIMEOUT
 		default:
 			resp:=ctx.GetResp()
 			if err,ok:=resp.(*protocol.ErrMsg);ok {

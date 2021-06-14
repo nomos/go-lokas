@@ -45,7 +45,7 @@ func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 		if err != nil {
 			origin:=this.GetProcess().GetActor(msg.FromActor)
 			if !msg.Req {
-				origin.ReceiveMessage(protocol.NewRouteMessage(msg.ToActor,msg.FromActor,msg.TransId,protocol.ErrActorNotExist.NewErrMsg(),true))
+				origin.ReceiveMessage(protocol.NewRouteMessage(msg.ToActor,msg.FromActor,msg.TransId,protocol.ERR_ACTOR_NOT_FOUND.NewErrMsg(),true))
 			}
 			return
 		}

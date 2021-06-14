@@ -296,7 +296,7 @@ func (this *Registry) GetActorIdsByTypeAndServerId(serverId int32,typ string)[]u
 func (this *Registry) GetProcessIdByActor(actorId util.ID)(util.ProcessId,error){
 	regi:=this.GlobalRegistry.GetActorRegistry(actorId)
 	if regi==nil {
-		return 0,protocol.ErrActorNotExist
+		return 0,protocol.ERR_ACTOR_NOT_FOUND
 	}
 	return regi.ProcessId,nil
 }

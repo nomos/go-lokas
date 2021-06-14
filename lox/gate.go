@@ -129,10 +129,9 @@ func (this *Gate) Load(conf lokas.IConfig) error {
 }
 
 func (this *Gate) SessionCreator(conn lokas.IConn) lokas.ISession {
-	sess := NewClientSession(conn, this.GetProcess().GenId(), this,
-		WithAuthFunc(this.AuthFunc),
-		WithProtocol(this.Protocol),
-	)
+	sess := NewPassiveSession(conn, this.GetProcess().GenId(), this)
+	sess.AuthFunc = this.AuthFunc
+	sess.Protocol = this.Protocol
 	this.ISessionManager.AddSession(sess.GetId(), sess)
 	this.GetProcess().AddActor(sess)
 	return sess

@@ -28,7 +28,7 @@ func CreateFile(filePath string,perms... int)  error  {
 		perm = perms[0]
 	}
 	dirPath := path.Dir(filePath)
-	if !IsExist(dirPath) {
+	if !IsFileExist(dirPath) {
 		err := os.MkdirAll(dirPath, os.ModePerm)
 		if err!= nil {
 			return err
@@ -39,7 +39,7 @@ func CreateFile(filePath string,perms... int)  error  {
 	return nil
 }
 
-func IsExist(path string) bool {
+func IsFileExist(path string) bool {
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsExist(err) {

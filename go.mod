@@ -11,7 +11,7 @@ require (
 	github.com/iancoleman/orderedmap v0.2.0
 	github.com/noaway/dateparse v0.0.0-20171117034806-ad2b19d7b298
 	github.com/nomos/go-events v0.0.3
-	github.com/nomos/go-log v0.0.1
+	github.com/nomos/go-log v0.0.2
 	github.com/nomos/jwt-go v3.2.0+incompatible
 	github.com/nomos/promise v0.0.1
 	github.com/nomos/qmgo v1.9.6

@@ -23,25 +23,25 @@ func NewStatic(directory http.FileSystem) *Static {
 	}
 }
 
-func (s *Static) MiddleWare(rw ResponseWriter, r *http.Request, a lokas.IProcess, next http.Handler) {
+func (this *Static) MiddleWare(rw ResponseWriter, r *http.Request, a lokas.IProcess, next http.Handler) {
 	if r.Method != "GET" && r.Method != "HEAD" {
 		next.ServeHTTP(rw, r)
 		return
 	}
 	file := r.URL.Path
 
-	if s.Prefix != "" {
-		if !strings.HasPrefix(file, s.Prefix) {
+	if this.Prefix != "" {
+		if !strings.HasPrefix(file, this.Prefix) {
 			next.ServeHTTP(rw, r)
 			return
 		}
-		file = file[len(s.Prefix):]
+		file = file[len(this.Prefix):]
 		if file != "" && file[0] != '/' {
 			next.ServeHTTP(rw, r)
 			return
 		}
 	}
-	f, err := s.Dir.Open(file)
+	f, err := this.Dir.Open(file)
 	if err != nil {
 
 		next.ServeHTTP(rw, r)
@@ -62,8 +62,8 @@ func (s *Static) MiddleWare(rw ResponseWriter, r *http.Request, a lokas.IProcess
 			return
 		}
 
-		file = path.Join(file, s.IndexFile)
-		f, err = s.Dir.Open(file)
+		file = path.Join(file, this.IndexFile)
+		f, err = this.Dir.Open(file)
 		if err != nil {
 			next.ServeHTTP(rw, r)
 			return

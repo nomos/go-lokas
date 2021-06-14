@@ -55,11 +55,18 @@ func CreateEntity() lokas.IEntity {
 }
 
 func (this *Entity) Add(c lokas.IComponent) {
+	if c == nil {
+		return
+	}
 	id,err:=c.GetId()
 	if err != nil {
 		log.Panic(err.Error())
 	}
+	if this.components[id]!=nil {
+		return
+	}
 	this.components[id] = c
+	c.OnAdd(this,this.runtime)
 }
 
 func (this *Entity) AddByTag(t protocol.BINARY_TAG)lokas.IComponent {
@@ -68,12 +75,27 @@ func (this *Entity) AddByTag(t protocol.BINARY_TAG)lokas.IComponent {
 
 func (this *Entity) Remove(t protocol.BINARY_TAG)lokas.IComponent {
 	comp:=this.components[t]
+	if comp!=nil {
+		comp.OnRemove(this,this.runtime)
+	}
 	delete(this.components,t)
 	return comp
 }
 
 func (this *Entity) Get(t protocol.BINARY_TAG)lokas.IComponent {
 	return this.components[t]
+}
+
+func (this *Entity) GetOrCreate(t protocol.BINARY_TAG)lokas.IComponent {
+	c,ok:=this.components[t]
+	if ok {
+		return c
+	}
+	a,_ := protocol.GetTypeRegistry().GetInterfaceByTag(t)
+	c=a.(lokas.IComponent)
+	c.OnCreate(this.runtime)
+	this.Add(c)
+	return c
 }
 
 func (this *Entity) cleanup() {

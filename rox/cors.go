@@ -125,29 +125,29 @@ func CorsAllowAll() *Cors {
 	})
 }
 
-func (c *Cors) MiddleWare(w ResponseWriter, r *http.Request, a lokas.IProcess, next http.Handler) {
+func (this *Cors) MiddleWare(w ResponseWriter, r *http.Request, a lokas.IProcess, next http.Handler) {
 	//log.Warnf("Cors MiddleWare")
 	if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
-		c.logf("Handler: Preflight request")
-		c.handlePreflight(w, r)
-		if c.optionPassthrough {
+		this.logf("Handler: Preflight request")
+		this.handlePreflight(w, r)
+		if this.optionPassthrough {
 			next.ServeHTTP(w, r)
 		} else {
 			w.WriteHeader(http.StatusOK)
 		}
 	} else {
-		c.logf("Handler: Actual request")
-		c.handleActualRequest(w, r)
+		this.logf("Handler: Actual request")
+		this.handleActualRequest(w, r)
 		next.ServeHTTP(w, r)
 	}
 }
 
-func (c *Cors) handlePreflight(w http.ResponseWriter, r *http.Request) {
+func (this *Cors) handlePreflight(w http.ResponseWriter, r *http.Request) {
 	headers := w.Header()
 	origin := r.Header.Get("Origin")
 
 	if r.Method != http.MethodOptions {
-		c.logf("Preflight aborted: %s!=OPTIONS", r.Method)
+		this.logf("Preflight aborted: %s!=OPTIONS", r.Method)
 		return
 	}
 	headers.Add("Vary", "Origin")
@@ -155,25 +155,25 @@ func (c *Cors) handlePreflight(w http.ResponseWriter, r *http.Request) {
 	headers.Add("Vary", "Access-Control-Request-Headers")
 
 	if origin == "" {
-		c.logf("Preflight aborted: empty origin")
+		this.logf("Preflight aborted: empty origin")
 		return
 	}
-	if !c.isOriginAllowed(r, origin) {
-		c.logf("Preflight aborted: origin '%s' not allowed", origin)
+	if !this.isOriginAllowed(r, origin) {
+		this.logf("Preflight aborted: origin '%s' not allowed", origin)
 		return
 	}
 
 	reqMethod := r.Header.Get("Access-Control-Request-Method")
-	if !c.isMethodAllowed(reqMethod) {
-		c.logf("Preflight aborted: method '%s' not allowed", reqMethod)
+	if !this.isMethodAllowed(reqMethod) {
+		this.logf("Preflight aborted: method '%s' not allowed", reqMethod)
 		return
 	}
 	reqHeaders := parseHeaderList(r.Header.Get("Access-Control-Request-Headers"))
-	if !c.areHeadersAllowed(reqHeaders) {
-		c.logf("Preflight aborted: headers '%v' not allowed", reqHeaders)
+	if !this.areHeadersAllowed(reqHeaders) {
+		this.logf("Preflight aborted: headers '%v' not allowed", reqHeaders)
 		return
 	}
-	if c.allowedOriginsAll {
+	if this.allowedOriginsAll {
 		headers.Set("Access-Control-Allow-Origin", "*")
 	} else {
 		headers.Set("Access-Control-Allow-Origin", origin)
@@ -184,68 +184,68 @@ func (c *Cors) handlePreflight(w http.ResponseWriter, r *http.Request) {
 
 		headers.Set("Access-Control-Allow-Headers", strings.Join(reqHeaders, ", "))
 	}
-	if c.allowCredentials {
+	if this.allowCredentials {
 		headers.Set("Access-Control-Allow-Credentials", "true")
 	}
-	if c.maxAge > 0 {
-		headers.Set("Access-Control-Max-Age", strconv.Itoa(c.maxAge))
+	if this.maxAge > 0 {
+		headers.Set("Access-Control-Max-Age", strconv.Itoa(this.maxAge))
 	}
-	c.logf("Preflight response headers: %v", headers)
+	this.logf("Preflight response headers: %v", headers)
 }
 
-func (c *Cors) handleActualRequest(w http.ResponseWriter, r *http.Request) {
+func (this *Cors) handleActualRequest(w http.ResponseWriter, r *http.Request) {
 	headers := w.Header()
 	origin := r.Header.Get("Origin")
 
 	headers.Add("Vary", "Origin")
 	if origin == "" {
-		c.logf("Actual request no headers added: missing origin")
+		this.logf("Actual request no headers added: missing origin")
 		return
 	}
-	if !c.isOriginAllowed(r, origin) {
-		c.logf("Actual request no headers added: origin '%s' not allowed", origin)
+	if !this.isOriginAllowed(r, origin) {
+		this.logf("Actual request no headers added: origin '%s' not allowed", origin)
 		return
 	}
 
-	if !c.isMethodAllowed(r.Method) {
-		c.logf("Actual request no headers added: method '%s' not allowed", r.Method)
+	if !this.isMethodAllowed(r.Method) {
+		this.logf("Actual request no headers added: method '%s' not allowed", r.Method)
 
 		return
 	}
-	if c.allowedOriginsAll {
+	if this.allowedOriginsAll {
 		headers.Set("Access-Control-Allow-Origin", "*")
 	} else {
 		headers.Set("Access-Control-Allow-Origin", origin)
 	}
-	if len(c.exposedHeaders) > 0 {
-		headers.Set("Access-Control-Expose-Headers", strings.Join(c.exposedHeaders, ", "))
+	if len(this.exposedHeaders) > 0 {
+		headers.Set("Access-Control-Expose-Headers", strings.Join(this.exposedHeaders, ", "))
 	}
-	if c.allowCredentials {
+	if this.allowCredentials {
 		headers.Set("Access-Control-Allow-Credentials", "true")
 	}
-	c.logf("Actual response added headers: %v", headers)
+	this.logf("Actual response added headers: %v", headers)
 }
 
-func (c *Cors) logf(format string, a ...interface{}) {
-	if c.debug {
+func (this *Cors) logf(format string, a ...interface{}) {
+	if this.debug {
 		log.Warnf(concatInterface(format, a...))
 	}
 }
 
-func (c *Cors) isOriginAllowed(r *http.Request, origin string) bool {
-	if c.allowOriginFunc != nil {
-		return c.allowOriginFunc(r, origin)
+func (this *Cors) isOriginAllowed(r *http.Request, origin string) bool {
+	if this.allowOriginFunc != nil {
+		return this.allowOriginFunc(r, origin)
 	}
-	if c.allowedOriginsAll {
+	if this.allowedOriginsAll {
 		return true
 	}
 	origin = strings.ToLower(origin)
-	for _, o := range c.allowedOrigins {
+	for _, o := range this.allowedOrigins {
 		if o == origin {
 			return true
 		}
 	}
-	for _, w := range c.allowedWOrigins {
+	for _, w := range this.allowedWOrigins {
 		if w.match(origin) {
 			return true
 		}
@@ -253,8 +253,8 @@ func (c *Cors) isOriginAllowed(r *http.Request, origin string) bool {
 	return false
 }
 
-func (c *Cors) isMethodAllowed(method string) bool {
-	if len(c.allowedMethods) == 0 {
+func (this *Cors) isMethodAllowed(method string) bool {
+	if len(this.allowedMethods) == 0 {
 		// If no method allowed, always return false, even for preflight request
 		return false
 	}
@@ -263,7 +263,7 @@ func (c *Cors) isMethodAllowed(method string) bool {
 		// Always allow preflight requests
 		return true
 	}
-	for _, m := range c.allowedMethods {
+	for _, m := range this.allowedMethods {
 		if m == method {
 			return true
 		}
@@ -271,14 +271,14 @@ func (c *Cors) isMethodAllowed(method string) bool {
 	return false
 }
 
-func (c *Cors) areHeadersAllowed(requestedHeaders []string) bool {
-	if c.allowedHeadersAll || len(requestedHeaders) == 0 {
+func (this *Cors) areHeadersAllowed(requestedHeaders []string) bool {
+	if this.allowedHeadersAll || len(requestedHeaders) == 0 {
 		return true
 	}
 	for _, header := range requestedHeaders {
 		header = http.CanonicalHeaderKey(header)
 		found := false
-		for _, h := range c.allowedHeaders {
+		for _, h := range this.allowedHeaders {
 			if h == header {
 				found = true
 				break

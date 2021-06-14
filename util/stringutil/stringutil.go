@@ -1,11 +1,13 @@
 package stringutil
 
 import (
+	"errors"
 	"github.com/nomos/go-log/log"
 	"math/rand"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -14,6 +16,71 @@ import (
 func StartWithCapital(str string)bool {
 	c1:=str[0]
 	return c1>64&&c1<91
+}
+
+func SplitInt32Array(s string,split string)([]int32,error){
+	arr:=strings.Split(s,split)
+	ret:=make([]int32,0)
+	for _,v:=range arr {
+		elem,err:=strconv.Atoi(v)
+		if err != nil {
+			log.Error(err.Error())
+			return nil,err
+		}
+		ret = append(ret, int32(elem))
+	}
+	return ret,nil
+}
+
+func SplitInt32Map(s string,split string,mapSep string)(map[int32]int32,error){
+	arr:=strings.Split(s,split)
+	ret:=make(map[int32]int32)
+	for _,v:=range arr {
+		elems:=strings.Split(v,mapSep)
+		if len(elems)!=2{
+			return nil,errors.New("SplitInt32Map:wrong format")
+		}
+		k,err:=strconv.Atoi(elems[0])
+		if err != nil {
+			log.Error(err.Error())
+			return nil,err
+		}
+		v,err:=strconv.Atoi(elems[1])
+		if err != nil {
+			log.Error(err.Error())
+			return nil,err
+		}
+		ret[int32(k)] =int32(v)
+	}
+	return ret,nil
+}
+
+func SplitInt64Array(s string,split string)([]int64,error){
+	arr:=strings.Split(s,split)
+	ret:=make([]int64,0)
+	for _,v:=range arr {
+		elem,err:=strconv.Atoi(v)
+		if err != nil {
+			log.Error(err.Error())
+			return nil,err
+		}
+		ret = append(ret, int64(elem))
+	}
+	return ret,nil
+}
+
+func SplitIntArray(s string,split string)([]int,error){
+	arr:=strings.Split(s,split)
+	ret:=make([]int,0)
+	for _,v:=range arr {
+		elem,err:=strconv.Atoi(v)
+		if err != nil {
+			log.Error(err.Error())
+			return nil,err
+		}
+		ret = append(ret, elem)
+	}
+	return ret,nil
 }
 
 

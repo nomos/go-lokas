@@ -341,7 +341,7 @@ func Split(data []byte, atEOF bool) (advance int, token []byte, err error) {
 	}
 	n := int(binary.LittleEndian.Uint16(data[0:2]))
 	if n == 0 || n > MAX_PACKET_SIZE {
-		return 0, nil, ErrPacketWrongFormat
+		return 0, nil, ERR_PACKAGE_FORMAT
 	}
 	if dataLen < n {
 		return 0, nil, nil

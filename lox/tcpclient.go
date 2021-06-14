@@ -1,4 +1,4 @@
-package tcp
+package lox
 
 import (
 	"context"
@@ -8,16 +8,13 @@ import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/network/conn"
+	"github.com/nomos/go-lokas/network/tcp"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/promise"
 	"go.uber.org/zap"
 	"strconv"
 	"sync"
 	"time"
-)
-
-const (
-	TimeOut = time.Second * 15
 )
 
 const (
@@ -31,7 +28,7 @@ var _ lokas.ISession = (*TcpClient)(nil)
 
 type TcpClient struct {
 	events.EventEmmiter
-	*ClientSession
+	*ActiveSession
 	conn        *conn.Conn
 	timeout     time.Duration
 	addr        string
@@ -51,18 +48,18 @@ type TcpClient struct {
 func tcpSessionCreator(client *TcpClient) func(conn lokas.IConn) lokas.ISession {
 	return func(connect lokas.IConn) lokas.ISession {
 		client.conn = connect.(*conn.Conn)
-		client.ClientSession.Conn = connect
+		client.ActiveSession.Conn = connect
 		return client
 	}
 }
 
-func NewTcpClient(opts ...SessionOption) *TcpClient {
+func NewTcpClient() *TcpClient {
 	ret := &TcpClient{
-		EventEmmiter: events.New(),
-		ClientSession:NewClientSession(nil,0,nil,opts...),
-		context:      nil,
-		reqContexts:  make(map[uint32]lokas.IReqContext),
-		timeout:      TimeOut,
+		EventEmmiter:  events.New(),
+		ActiveSession: NewActiveSession(nil,0,nil),
+		context:       nil,
+		reqContexts:   make(map[uint32]lokas.IReqContext),
+		timeout:       TimeOut,
 	}
 	return ret
 }
@@ -82,7 +79,7 @@ func (this *TcpClient) connect()error {
 		LongPacketCreator: protocol.CreateLongPacket(this.Protocol),
 		MaxPacketWriteLen: protocol.DEFAULT_PACKET_LEN,
 	}
-	connect,err:=Dial(this.addr,context)
+	connect,err:=tcp.Dial(this.addr,context)
 	if err!=nil {
 		return err
 	}
@@ -164,7 +161,7 @@ func (this *TcpClient) OnClose(conn lokas.IConn) {
 	log.Warnf("TcpClient OnClose")
 	this.openPending = nil
 	this.Opening = false
-	this.ClientSession.stop()
+	this.ActiveSession.stop()
 	this.ClearContext(errors.New("disconnect"))
 	if this.isOpen {
 		this.isOpen = false
@@ -178,7 +175,7 @@ func (this *TcpClient) OnClose(conn lokas.IConn) {
 	this.Emit("close")
 }
 
-func (this *TcpClient) Request(req interface{}, resp interface{}) *promise.Promise {
+func (this *TcpClient) Request(req interface{}) *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		if this.Opening {
 			_, err := this.Connect(this.addr).Await()
@@ -193,7 +190,7 @@ func (this *TcpClient) Request(req interface{}, resp interface{}) *promise.Promi
 		}
 		id := this.genId()
 		var err error
-		resp,err = this.Call(id, req)
+		resp,err := this.Call(id, req)
 		if err != nil {
 			log.Error("Call Error:%s", zap.String("err", err.Error()))
 			reject(err)
@@ -319,7 +316,7 @@ func (this *TcpClient) doCall(ctx lokas.IReqContext, req interface{}) (interface
 					this.Connect(this.addr).Await()
 				}()
 			}
-			return nil,protocol.ErrRpcTimeOut
+			return nil,protocol.ERR_RPC_TIMEOUT
 		default:
 			this.removeContext(transId)
 			if ctx.Err()!=nil {

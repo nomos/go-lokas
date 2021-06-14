@@ -3,7 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-log/log"
 	"github.com/nomos/go-lokas"
-	"github.com/nomos/go-lokas/lox/rox"
+	"github.com/nomos/go-lokas/rox"
 	"github.com/nomos/go-lokas/network/httpserver"
 	"github.com/nomos/promise"
 	"net/http"

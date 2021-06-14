@@ -60,7 +60,7 @@ func init(){
 	tag_model_regexp_map[TAG_FloatArray] = regexp.MustCompile(`(\[\]float32|\[\]float)`)
 	tag_model_regexp_map[TAG_DoubleArray] = regexp.MustCompile(`(\[\]float64|\[\]double)`)
 	tag_model_regexp_map[TAG_List] = regexp.MustCompile(`\[\s*(\w+)\s*\]`)
-	tag_model_regexp_map[TAG_Map] = regexp.MustCompile(`\{\s*(string|int64|int32|uint32|int|uint|long)\s*[:]\s*(\w+)\s*\}`)
+	tag_model_regexp_map[TAG_Map] = regexp.MustCompile(`\{\s*(\w+)\s*[\:|\,]\s*(\w+)\s*\}`)
 	tag_model_regexp_map[TAG_Buffer] = regexp.MustCompile(`(bytes)`)
 	tag_model_regexp_map[TAG_Time] = regexp.MustCompile(`time`)
 	tag_model_regexp_map[TAG_Decimal] = regexp.MustCompile(`decimal`)

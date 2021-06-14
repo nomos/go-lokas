@@ -3,7 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-log/log"
 	"github.com/nomos/go-lokas"
-	"github.com/nomos/go-lokas/lox/rox"
+	"github.com/nomos/go-lokas/rox"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/jwt-go"
 	"net/http"
@@ -39,7 +39,7 @@ type JwtClaimCreator func(user interface{},expire time.Duration)JwtClaimWithUser
 func (this* JwtClaim) Valid() error {
 	expires:= this.Create.Add(time.Duration(this.Expire)).Before(time.Now())
 	if expires {
-		return protocol.ErrTokenExpired
+		return protocol.ERR_TOKEN_EXPIRED
 	}
 	return nil
 }
@@ -63,32 +63,32 @@ func JwtAuth(rsa bool,creator JwtClaimCreator,userCreator UserCreator)func(w rox
 		log.Warnf("token",t)
 		if t == "" {
 			log.Error("令牌不能为空")
-			w.Failed(protocol.ErrTokenValidate)
+			w.Failed(protocol.ERR_TOKEN_VALIDATE)
 			return
 		}
 		userToken := "Bearer "+t
 		split := strings.Split(userToken, " ")
 		if len(split) != 2 || split[0] != "Bearer"{
 			log.Error("令牌格式不正确")
-			w.Failed(protocol.ErrTokenValidate)
+			w.Failed(protocol.ERR_TOKEN_VALIDATE)
 			return
 		}
-		var key interface{}
+		var key string
 		if rsa {
-			key=a.Config().Get("SigningKeyPublic")
+			key=a.Config().GetString("SigningKeyPublic")
 		} else {
-			key = a.Config().Get("SigningKey")
+			key = a.Config().GetString("SigningKey")
 		}
-		token, err := jwt.ParseWithClaims(split[1], creator(userCreator(),time.Hour*24), func(token *jwt.Token) (interface{}, error) { return key, nil })
+		token, err := jwt.ParseWithClaims(split[1], creator(userCreator(),time.Hour*24), func(token *jwt.Token) (interface{}, error) { return []byte(key), nil })
 		if err != nil || token.Valid != true {
 			// 过期或者非正确处理
 			log.Errorf(token)
 			log.Error("令牌错误:"+err.Error())
 
-			if protocol.ErrTokenExpired.Is(err.(*jwt.ValidationError).Inner) {
-				w.Failed(protocol.ErrTokenExpired)
+			if protocol.ERR_TOKEN_EXPIRED.Is(err.(*jwt.ValidationError).Inner) {
+				w.Failed(protocol.ERR_TOKEN_EXPIRED)
 			} else {
-				w.Failed(protocol.ErrTokenValidate)
+				w.Failed(protocol.ERR_TOKEN_VALIDATE)
 			}
 			return
 		}
@@ -102,16 +102,16 @@ func JwtAuth(rsa bool,creator JwtClaimCreator,userCreator UserCreator)func(w rox
 
 func SignToken(creator JwtClaimCreator,user interface{},a lokas.IProcess,expire time.Duration,rsa bool)(string,error){
 	var claim *jwt.Token
-	var key interface{}
+	var key string
 	if rsa {
-		key=a.Config().Get("SigningKeyPrivate")
+		key=a.Config().GetString("SigningKeyPrivate")
 		claim=jwt.NewWithClaims(jwt.SigningMethodRS256,creator(user,expire))
 	} else {
-		key=a.Config().Get("SigningKey")
+		key=a.Config().GetString("SigningKey")
 		claim=jwt.NewWithClaims(jwt.SigningMethodHS256,creator(user,expire))
 	}
 
-	token,err:=claim.SignedString(key)
+	token,err:=claim.SignedString([]byte(key))
 	if err != nil {
 		log.Error("生成令牌出错:"+err.Error())
 		return "",err
@@ -125,7 +125,7 @@ func JwtSign(rsa bool,creator JwtClaimCreator) func(w rox.ResponseWriter, r *htt
 		user := w.GetContext("user")
 		if user == nil {
 			log.Error("用户不存在,令牌无效")
-			w.Failed(protocol.ErrTokenValidate)
+			w.Failed(protocol.ERR_TOKEN_VALIDATE)
 			return
 		}
 		token, err := SignToken(creator,user, a,TOKEN_EXPIRE_TIME,rsa)
@@ -137,7 +137,7 @@ func JwtSign(rsa bool,creator JwtClaimCreator) func(w rox.ResponseWriter, r *htt
 		refresh_token, err := SignToken(creator,user, a,REFRESH_TOKEN_EXPIRE_TIME,rsa)
 		if err != nil {
 			log.Error("生成令牌出错")
-			w.Failed(protocol.ErrTokenValidate)
+			w.Failed(protocol.ERR_TOKEN_VALIDATE)
 			return
 		}
 		w.AddContent("token", token)

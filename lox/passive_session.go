@@ -10,11 +10,11 @@ import (
 	"time"
 )
 
-var _ lokas.ISession = &ClientSession{}
-var _ lokas.IActor = &ClientSession{}
+var _ lokas.ISession = &PassiveSession{}
+var _ lokas.IActor = &PassiveSession{}
 
-func NewClientSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManager, opts ...SessionOption) *ClientSession {
-	s := &ClientSession{
+func NewPassiveSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManager) *PassiveSession {
+	s := &PassiveSession{
 		Actor:NewActor(),
 		Messages: make(chan []byte, 100),
 		Conn:     conn,
@@ -23,13 +23,10 @@ func NewClientSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManage
 		ticker: time.NewTicker(UpdateTime),
 	}
 	s.SetId(id)
-	for _, o := range opts {
-		o(s)
-	}
 	return s
 }
 
-type ClientSession struct {
+type PassiveSession struct {
 	*Actor
 	Verified    bool
 	Messages    chan []byte
@@ -45,83 +42,62 @@ type ClientSession struct {
 	ticker *time.Ticker
 }
 
-func (this *ClientSession) Load(conf lokas.IConfig) error {
+func (this *PassiveSession) Load(conf lokas.IConfig) error {
 	panic("implement me")
 }
 
-func (this *ClientSession) Unload() error {
+func (this *PassiveSession) Unload() error {
 	panic("implement me")
 }
 
-func (this *ClientSession) OnStart() error {
+func (this *PassiveSession) OnStart() error {
 	panic("implement me")
 }
 
-func (this *ClientSession) OnStop() error {
+func (this *PassiveSession) OnStop() error {
 	panic("implement me")
 }
 
-type SessionOption func(*ClientSession)
-
-func WithCloseFunc(closeFunc func(conn lokas.IConn)) SessionOption {
-	return func(session *ClientSession) {
-		session.OnCloseFunc = closeFunc
-	}
+func (this *PassiveSession) Type() string {
+	return "PassiveSession"
 }
 
-func WithTimeout(timeout time.Duration) SessionOption {
-	return func(session *ClientSession) {
-		session.timeout = timeout
-	}
-}
-
-func WithOpenFunc(openFunc func(conn lokas.IConn)) SessionOption {
-	return func(session *ClientSession) {
-		session.OnCloseFunc = openFunc
-	}
-}
-
-func WithAuthFunc(authFunc func(data []byte) error) SessionOption {
-	return func(session *ClientSession) {
-		session.AuthFunc = authFunc
-	}
-}
-
-func WithProtocol(protocol protocol.TYPE) SessionOption {
-	return func(session *ClientSession) {
-		session.Protocol = protocol
-	}
-}
-
-func (this *ClientSession) Type() string {
-	return "ClientSession"
-}
-
-func (this *ClientSession) OnCreate() error {
+func (this *PassiveSession) OnCreate() error {
 	return nil
 }
 
-func (this *ClientSession) Start() *promise.Promise {
+func (this *PassiveSession) Start() *promise.Promise {
 	return promise.Resolve(nil)
 }
 
-func (this *ClientSession) Stop() *promise.Promise {
+func (this *PassiveSession) Stop() *promise.Promise {
 	return promise.Resolve(nil)
 }
 
-func (this *ClientSession) OnDestroy() error {
+func (this *PassiveSession) OnDestroy() error {
 	return nil
 }
 
-func (this *ClientSession) GetConn() lokas.IConn {
+func (this *PassiveSession) GetConn() lokas.IConn {
 	return this.Conn
 }
 
-func (this *ClientSession) StartMessagePump() {
-	log.Infof("StartMessagePump message pump",this.genId())
+func (this *PassiveSession) StartMessagePump() {
+	log.Infof("StartMessagePump message pump",this.GetId())
+
 	this.msgChan = make(chan *protocol.RouteMessage,100)
 	this.done = make(chan struct{})
 	go func() {
+		defer func() {
+			r:=recover()
+			if r!=nil {
+				if e,ok:=r.(error);ok {
+					log.Errorf(e.Error())
+					log.Error("客户端协议出错")
+					this.Conn.Close()
+				}
+			}
+		}()
 		for {
 			select {
 			case <-this.ticker.C:
@@ -132,7 +108,7 @@ func (this *ClientSession) StartMessagePump() {
 				cmdId := protocol.GetCmdId16(data)
 				if !this.Verified && cmdId != protocol.TAG_HandShake {
 					var msg []byte
-					msg,err:=protocol.MarshalMessage(0,protocol.NewError(protocol.ErrAuthFailed),this.Protocol)
+					msg,err:=protocol.MarshalMessage(0,protocol.NewError(protocol.ERR_AUTH_FAILED),this.Protocol)
 					if err != nil {
 						log.Error(err.Error())
 						this.Conn.Wait()
@@ -150,7 +126,7 @@ func (this *ClientSession) StartMessagePump() {
 					log.Error("unmarshal client message error",
 						zap.Any("cmdId", cmdId),
 					)
-					msg, _ := protocol.NewError(protocol.ErrMsgFormat).Marshal()
+					msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
 					_,err:=this.Conn.Write(msg)
 					if err != nil {
 						log.Error(err.Error())
@@ -165,7 +141,7 @@ func (this *ClientSession) StartMessagePump() {
 					}
 					if err != nil {
 						log.Error(err.Error())
-						msg,err:=protocol.MarshalMessage(msg.TransId,protocol.NewError(protocol.ErrAuthFailed),this.Protocol)
+						msg,err:=protocol.MarshalMessage(msg.TransId,protocol.NewError(protocol.ERR_AUTH_FAILED),this.Protocol)
 						if err != nil {
 							log.Error(err.Error())
 							this.Conn.Wait()
@@ -218,6 +194,16 @@ func (this *ClientSession) StartMessagePump() {
 		}
 	}()
 	go func() {
+		defer func() {
+			r:=recover()
+			if r!=nil {
+				if e,ok:=r.(error);ok {
+					log.Errorf(e.Error())
+					log.Error("内部错误")
+					this.Conn.Close()
+				}
+			}
+		}()
 		for {
 			select {
 			case rMsg := <-this.msgChan:
@@ -229,32 +215,32 @@ func (this *ClientSession) StartMessagePump() {
 	}()
 }
 
-func (this *ClientSession) closeSession() {
+func (this *PassiveSession) closeSession() {
 	if this.manager != nil {
 		this.manager.RemoveSession(this.GetId())
 	}
 }
 
-func (this *ClientSession) stop() {
+func (this *PassiveSession) stop() {
 	close(this.done)
 }
 
-func (this *ClientSession) OnOpen(conn lokas.IConn) {
+func (this *PassiveSession) OnOpen(conn lokas.IConn) {
 	this.StartMessagePump()
 	if this.OnOpenFunc != nil {
 		this.OnOpenFunc(conn)
 	}
-	log.Infof("ClientSession:OnOpen")
+	log.Infof("PassiveSession:OnOpen")
 	if this.manager != nil {
 		this.manager.AddSession(this.GetId(), this)
 	}
 }
 
-func (this *ClientSession) OnClose(conn lokas.IConn) {
+func (this *PassiveSession) OnClose(conn lokas.IConn) {
 	if this.manager != nil {
 		this.manager.RemoveSession(this.GetId())
 	}
-	log.Infof("ClientSession:OnClose")
+	log.Infof("PassiveSession:OnClose")
 	if this.OnCloseFunc != nil {
 		this.OnCloseFunc(conn)
 	}
@@ -262,7 +248,7 @@ func (this *ClientSession) OnClose(conn lokas.IConn) {
 	this.stop()
 }
 
-func (this *ClientSession) OnRecv(conn lokas.IConn, data []byte) {
+func (this *PassiveSession) OnRecv(conn lokas.IConn, data []byte) {
 	d := make([]byte, len(data), len(data))
 	copy(d, data)
 	this.Messages <- d
