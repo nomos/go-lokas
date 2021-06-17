@@ -1048,7 +1048,7 @@ import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/ecs"
 	"github.com/nomos/go-lokas/protocol"
-	"reflect"
+	"reflect"{OtherImport}
 )
 
 var _ lokas.IComponent = (*{EnumName})(nil)
@@ -1066,6 +1066,11 @@ func (this *{EnumName}) Serializable()protocol.ISerializable {
 	return this
 }
 `
+	if this.hasTime() {
+		ret = strings.Replace(ret,`{OtherImport}`,"\n\t"+`"time"`,-1)
+	} else {
+		ret = strings.Replace(ret,`{OtherImport}`,"",-1)
+	}
 	if this.Comment!="" {
 		comment:="\n"+this.Comment
 		ret = strings.Replace(ret,`{Comment}`,comment,-1)
@@ -1076,6 +1081,15 @@ func (this *{EnumName}) Serializable()protocol.ISerializable {
 	ret = strings.Replace(ret,`{EnumName}`,this.ClassName,-1)
 	ret = strings.Replace(ret,`{ClassBody}`,this.goFields(g),-1)
 	return ret
+}
+
+func (this *ModelClassObject) hasTime()bool {
+	for _,f:=range this.Fields {
+		if f.Type=="time" {
+			return true
+		}
+	}
+	return false
 }
 
 func (this *ModelClassObject) goFields(g *Generator)string{

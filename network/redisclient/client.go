@@ -3,7 +3,6 @@ package redisclient
 import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/nomos/go-log/log"
-	"reflect"
 	"time"
 )
 
@@ -38,7 +37,7 @@ func (this *Client) Execute(cmd string, args ...interface{}) *RedisReply {
 	conn := this.Pool.Get()
 	defer conn.Close()
 	res, err := conn.Do(cmd, args...)
-	log.Infof(cmd, args, res, reflect.TypeOf(res))
+	//log.Infof(cmd, args, res, reflect.TypeOf(res))
 	if err != nil {
 		log.Error(err.Error())
 	}

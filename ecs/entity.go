@@ -65,8 +65,11 @@ func (this *Entity) Add(c lokas.IComponent) {
 	if this.components[id]!=nil {
 		return
 	}
+	c.SetEntity(this)
+	c.SetRuntime(this.runtime)
 	this.components[id] = c
 	c.OnAdd(this,this.runtime)
+	this.SetDirty(true)
 }
 
 func (this *Entity) AddByTag(t protocol.BINARY_TAG)lokas.IComponent {
@@ -111,6 +114,11 @@ func (this *Entity) Dirty()bool {
 
 func (this *Entity) SetDirty(d bool) {
 	this.dirty = d
+	if d==false {
+		for _,c:=range this.components {
+			c.SetDirty(false)
+		}
+	}
 }
 
 func (this *Entity) hasTypeInComponents(t reflect.Type)bool {

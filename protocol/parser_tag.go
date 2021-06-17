@@ -104,7 +104,7 @@ func MatchGoSystemTag(s string)(BINARY_TAG,string,string) {
 }
 
 func MatchModelProtoTag(s string)BINARY_TAG {
-	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String}
+	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time}
 	for _,tag:=range protoTagArr {
 		if tag_model_regexp_map[tag].FindString(s) == s {
 			return tag
@@ -114,7 +114,7 @@ func MatchModelProtoTag(s string)BINARY_TAG {
 }
 
 func GetModelProtoTag(s string)BINARY_TAG {
-	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String}
+	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time}
 	for _,tag:=range protoTagArr {
 		if tag_model_regexp_map[tag].FindString(s) == s {
 			return tag
