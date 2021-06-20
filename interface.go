@@ -115,6 +115,7 @@ type IEntity interface {
 	GetOrCreate(t protocol.BINARY_TAG)IComponent
 	Add(c IComponent)
 	Remove(t protocol.BINARY_TAG)IComponent
+	RemoveAll()
 	SetId(id util.ID)
 	GetId()util.ID
 	Components()map[protocol.BINARY_TAG]IComponent
@@ -257,6 +258,11 @@ type INetClient interface {
 	Connected() bool
 	OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise
 	OnRecv(conn IConn, data []byte)
+}
+
+type IEntityNetClient interface {
+	IEntity
+	INetClient
 }
 
 type AsyncCallBack func(context IReqContext)

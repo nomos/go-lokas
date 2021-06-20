@@ -9,7 +9,6 @@ import (
 	"reflect"
 )
 
-
 type Entity struct {
 	id            util.ID
 	dirty         bool
@@ -83,6 +82,15 @@ func (this *Entity) Remove(t protocol.BINARY_TAG)lokas.IComponent {
 	}
 	delete(this.components,t)
 	return comp
+}
+
+func (this *Entity) RemoveAll(){
+	for _,v:=range this.components {
+		if v!=nil {
+			v.OnRemove(this,this.runtime)
+		}
+	}
+	this.components = map[protocol.BINARY_TAG]lokas.IComponent{}
 }
 
 func (this *Entity) Get(t protocol.BINARY_TAG)lokas.IComponent {

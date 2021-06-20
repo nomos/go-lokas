@@ -216,7 +216,7 @@ func (this *TcpClient) OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) 
 
 func (this *TcpClient) MessageHandler(msg *protocol.BinaryMessage){
 	if msg.TransId!=0 {
-		ctx:=this.getContext(msg.TransId)
+		ctx:=this.GetContext(msg.TransId)
 		ctx.SetResp(msg.Body)
 		ctx.Finish()
 	}
@@ -274,7 +274,7 @@ func (this *TcpClient) removeContext(transId uint32) {
 	delete(this.reqContexts, transId)
 }
 
-func (this *TcpClient) getContext(transId uint32) lokas.IReqContext {
+func (this *TcpClient) GetContext(transId uint32) lokas.IReqContext {
 	this.ctxMutex.Lock()
 	defer this.ctxMutex.Unlock()
 	return this.reqContexts[transId]

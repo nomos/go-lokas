@@ -493,7 +493,24 @@ func Register{ClassB}(f OnNotify{ClassB}Func,r func(protocol.BINARY_TAG,func(dat
 		ret = strings.ReplaceAll(ret,"{ClassB}",this.Name)
 		return ret
 	case "EVT":
-		return ""
+		ret+="//"
+		if this.Comment!= "" {
+			ret+="-----"
+			ret+=strings.ReplaceAll(this.Comment,"//","")
+			ret+="(客户端)"
+			ret+="-----"
+		}
+		ret+="\n"
+		ret+=`type OnEvent{ClassB} func(c lokas.IEntityNetClient,event *{ClassB})error
+
+func RegisterOnEvent{ClassB}(f func(c lokas.IEntityNetClient,event *{ClassB})error,r  func(protocol.BINARY_TAG,func(lokas.IEntityNetClient,protocol.ISerializable))){
+	r({TAG}, func(client lokas.IEntityNetClient, serializable protocol.ISerializable) {
+		f(client,serializable.(*{ClassB}))
+	})
+}`
+		ret = strings.ReplaceAll(ret,"{TAG}","TAG_"+stringutil.SplitCamelCaseUpperSlash(this.Name))
+		ret = strings.ReplaceAll(ret,"{ClassB}",this.Name)
+		return ret
 	default:
 		return ""
 	}
