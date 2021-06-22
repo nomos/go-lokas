@@ -44,15 +44,12 @@ var GateCtor = gateCtor{}
 
 type gateCtor struct{}
 
-func (this gateCtor) Type() string {
-	return "Gate"
-}
-
 func (this gateCtor) Create() lokas.IModule {
 	ret := &Gate{
 		Actor:NewActor(),
 		ISessionManager: network.NewDefaultSessionManager(true),
 	}
+	ret.SetType("Gate")
 	return ret
 }
 
@@ -79,10 +76,6 @@ func (this *Gate) OnStart() error{
 
 func (this *Gate) OnStop() error{
 	return nil
-}
-
-func (this *Gate) Type() string {
-	return GateCtor.Type()
 }
 
 func (this *Gate) Load(conf lokas.IConfig) error {

@@ -29,11 +29,13 @@ func NewActor() *Actor {
 		timer:time.NewTicker(UpdateTime),
 		timeout:     TimeOut,
 	}
+	ret.SetType("Actor")
 	return ret
 }
 
 type Actor struct {
 	lokas.IEntity
+	typeString string
 	process     lokas.IProcess
 	msgChan     chan *protocol.RouteMessage
 	idGen       uint32
@@ -45,6 +47,14 @@ type Actor struct {
 	leaseId     clientv3.LeaseID
 	OnUpdateFunc func()
 	MsgHandler  func(actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error)
+}
+
+func (this *Actor) Type()string{
+	return this.typeString
+}
+
+func (this *Actor) SetType(s string){
+	this.typeString = s
 }
 
 //return leaseId,(bool)is registered,error
@@ -168,7 +178,12 @@ func (this *Actor) hookReceive(msg *protocol.RouteMessage) *protocol.RouteMessag
 }
 
 func (this *Actor) handleMsg(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
-	log.Warnf("handleMsg",actorId,this.GetId())
+	id,err:=msg.GetId()
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	log.Infof("handleMsg",this.Type(),this.GetId(),"-",actorId,id.String())
 	if this.MsgHandler != nil {
 		resp, err := this.MsgHandler(actorId, transId, msg)
 		if err != nil {
@@ -177,17 +192,23 @@ func (this *Actor) handleMsg(actorId util.ID, transId uint32, msg protocol.ISeri
 				return protocol.ERR_ACTOR_NOT_FOUND
 			}
 			if uerr, ok := err.(protocol.IError); ok {
-				this.SendReply(actorId, transId, protocol.NewErrorMsg(int32(uerr.ErrCode()), uerr.Error()))
+				if transId!=0 {
+					this.SendReply(actorId, transId, protocol.NewErrorMsg(int32(uerr.ErrCode()), uerr.Error()))
+				}
 			} else {
-				this.SendReply(actorId, transId, protocol.ERR_INTERNAL_ERROR.NewErrMsg())
+				if transId!=0 {
+					this.SendReply(actorId, transId, protocol.ERR_INTERNAL_ERROR.NewErrMsg())
+				}
 			}
 			return err
 		}
 		if resp != nil {
-			err:=this.SendReply(actorId, transId, resp)
-			if err != nil {
-				log.Error(err.Error())
-				return err
+			if transId!=0 {
+				err:=this.SendReply(actorId, transId, resp)
+				if err != nil {
+					log.Error(err.Error())
+					return err
+				}
 			}
 		}
 	}
@@ -199,18 +220,30 @@ func (this *Actor) OnMessage(msg *protocol.RouteMessage) {
 	if msg != nil {
 		err:=this.handleMsg(msg.FromActor, msg.TransId, msg.Body)
 		if err != nil {
-			log.Errorf(this.GetId(),err.Error())
+			log.Errorf(this.Type(),this.GetId(),err.Error())
 		}
 	}
 }
 
 func (this *Actor) SendReply(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
+	id,err:=msg.GetId()
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	log.Infof("SendReply",this.Type(),this.GetId(),"-",actorId.String(),id.String())
 	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, false)
 	this.process.RouteMsg(routeMsg)
 	return nil
 }
 
 func (this *Actor) SendMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
+	id,err:=msg.GetId()
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	log.Infof("SendMessage",this.Type(),this.GetId(),"-",actorId.String(),transId,id.String())
 	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, true)
 	this.process.RouteMsg(routeMsg)
 	return nil

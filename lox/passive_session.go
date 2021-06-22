@@ -22,6 +22,7 @@ func NewPassiveSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManag
 		timeout: TimeOut,
 		ticker: time.NewTicker(UpdateTime),
 	}
+	s.SetType("PassiveSession")
 	s.SetId(id)
 	return s
 }
@@ -56,10 +57,6 @@ func (this *PassiveSession) OnStart() error {
 
 func (this *PassiveSession) OnStop() error {
 	panic("implement me")
-}
-
-func (this *PassiveSession) Type() string {
-	return "PassiveSession"
 }
 
 func (this *PassiveSession) OnCreate() error {

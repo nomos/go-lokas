@@ -188,7 +188,14 @@ namespace {CsPackageName}
 
 func (this *ModelPackageObject) GetCsFuncString(g *Generator)string {
 	ret := ""
+	ids:=make([]*ModelId,0)
 	for _,id:=range this.Ids {
+		ids= append(ids, id)
+	}
+	sort.Slice(ids, func(i, j int) bool {
+		return ids[i].Id<ids[j].Id
+	})
+	for _,id:=range ids {
 		if id.Type!="" {
 			s:=id.GetCsProtocolFuncString(g)
 			s+="\n"
@@ -201,7 +208,14 @@ func (this *ModelPackageObject) GetCsFuncString(g *Generator)string {
 
 func (this *ModelPackageObject) GetCsMessageRegString(g *Generator)string {
 	ret := ""
+	ids:=make([]*ModelId,0)
 	for _,id:=range this.Ids {
+		ids= append(ids, id)
+	}
+	sort.Slice(ids, func(i, j int) bool {
+		return ids[i].Id<ids[j].Id
+	})
+	for _,id:=range ids {
 		if id.Type!="" {
 			s:=id.GetCsMessageRegisterString(g)
 			if s!="" {

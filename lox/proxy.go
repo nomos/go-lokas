@@ -115,7 +115,39 @@ func activeSessionCreator(id util.ProcessId, p *Proxy) func(conn lokas.IConn) lo
 	}
 }
 
+func getIdMutexKey(a,b util.ProcessId)string{
+	ret:= "proxy/"
+	if a>b {
+		ret+=a.String()
+		ret+="_"
+		ret+=b.String()
+	} else {
+		ret+=b.String()
+		ret+="_"
+		ret+=a.String()
+	}
+	return ret
+}
+
+func (this *Proxy) checkIsConnected(id util.ProcessId)bool{
+	return this.PassiveSessions.GetSession(id.Snowflake())!=nil||this.ActiveSessions.GetSession(id.Snowflake())!=nil
+}
+
 func (this *Proxy) Connect(id util.ProcessId, addr string) error {
+	selfId:=this.GetProcess().Id()
+	mu,err:=this.GetProcess().GlobalMutex(getIdMutexKey(selfId,id),15)
+	if this.checkIsConnected(id) {
+		log.Warnf("服务器已经连接",selfId.String(),id.String())
+		return nil
+	}
+	//如果连上
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	mu.Lock()
+	defer mu.Unlock()
+
 	context := &lokas.Context{
 		SessionCreator:    activeSessionCreator(id, this),
 		Splitter:          protocol.Split,

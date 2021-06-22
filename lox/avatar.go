@@ -12,6 +12,7 @@ func NewAvatar(id util.ID)*Avatar{
 	ret:=&Avatar{
 		Actor:NewActor(),
 	}
+	ret.SetType("Avatar")
 	ret.SetId(id)
 	return ret
 }
@@ -20,8 +21,6 @@ var _ lokas.IActor = (*Avatar)(nil)
 
 type Avatar struct {
 	*Actor
-	GameId string
-	ServerId int32
 }
 
 func (this *Avatar) Deserialize(a lokas.IProcess) error {
@@ -30,10 +29,6 @@ func (this *Avatar) Deserialize(a lokas.IProcess) error {
 
 func (this *Avatar) Serialize(a lokas.IProcess) error {
 	return nil
-}
-
-func (this *Avatar) Type() string {
-	return "Avatar"
 }
 
 func (this *Avatar) Load(conf lokas.IConfig) error {

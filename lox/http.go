@@ -24,6 +24,7 @@ func (this httpCtor) Create() lokas.IModule {
 		Actor:NewActor(),
 		subRouters: map[string]*rox.Router{},
 	}
+	ret.SetType(this.Type())
 	return ret
 }
 
@@ -104,10 +105,6 @@ func (this *Http) Stop()*promise.Promise {
 	this.started = false
 	this.httpServer.Stop()
 	return promise.Resolve(nil)
-}
-
-func (this *Http) Type()string {
-	return "Http"
 }
 
 func (this *Http) CreateHandlerFunc(f rox.Handler)func(http.ResponseWriter, *http.Request){

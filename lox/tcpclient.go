@@ -215,6 +215,8 @@ func (this *TcpClient) OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) 
 }
 
 func (this *TcpClient) MessageHandler(msg *protocol.BinaryMessage){
+	id,_:=msg.GetId()
+	log.Warnf("MessageHandler",msg.TransId,id)
 	if msg.TransId!=0 {
 		ctx:=this.GetContext(msg.TransId)
 		ctx.SetResp(msg.Body)

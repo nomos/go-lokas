@@ -16,9 +16,11 @@ func (this centerCtor) Type()string{
 }
 
 func (this centerCtor) Create()lokas.IModule {
-	return &Center{
+	ret:= &Center{
 		Actor:NewActor(),
 	}
+	ret.SetType(this.Type())
+	return ret
 }
 
 var _ lokas.IActor = &Center{}
@@ -38,10 +40,6 @@ func (this *Center) OnStart() error{
 
 func (this *Center) OnStop() error{
 	panic("implement me")
-}
-
-func (this *Center) Type()string {
-	return CenterCtor.Type()
 }
 
 func (this *Center) OnCreate() error {

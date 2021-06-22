@@ -35,7 +35,7 @@ func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 		log.Warnf("isProcessId")
 	} else if msg.ToActor!=0 {
 		a:=this.process.GetActor(msg.ToActor)
-		log.Warnf("RouteMsg",msg.ToActor,a!=nil)
+		log.Infof("RouteMsg",msg.FromActor,"-",msg.ToActor,a!=nil)
 		if a!=nil {
 			a.ReceiveMessage(msg)
 			return

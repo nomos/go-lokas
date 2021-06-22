@@ -1,10 +1,10 @@
 package lox
 
 import (
-	"github.com/nomos/promise"
 	"github.com/nomos/go-log/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/util"
+	"github.com/nomos/promise"
 	"sync"
 )
 
@@ -22,6 +22,7 @@ func (this avatarManagerCtor) Create()lokas.IModule {
 		Avatars: map[util.ID]*Avatar{},
 	}
 	ret.OnUpdateFunc = ret.OnUpdate
+	ret.SetType(this.Type())
 	return ret
 }
 
@@ -31,10 +32,6 @@ type AvatarManager struct {
 	*Actor
 	Avatars map[util.ID]*Avatar
 	mu sync.Mutex
-}
-
-func (this *AvatarManager) Type() string {
-	return AvatarManagerCtor.Type()
 }
 
 func (this *AvatarManager) GetAvatar(id util.ID)*Avatar{

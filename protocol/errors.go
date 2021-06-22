@@ -92,7 +92,7 @@ func (this *ErrMsg) Marshal() ([]byte, error) {
 }
 
 func (this *ErrMsg) GetId() (BINARY_TAG, error) {
-	return GetCmdIdFromType(this)
+	return TAG_Error,nil
 }
 
 func (this *ErrMsg) Serializable() ISerializable {

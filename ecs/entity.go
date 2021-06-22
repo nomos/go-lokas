@@ -54,7 +54,7 @@ func CreateEntity() lokas.IEntity {
 }
 
 func (this *Entity) Add(c lokas.IComponent) {
-	if c == nil {
+	if util.IsNil(c) {
 		return
 	}
 	id,err:=c.GetId()
