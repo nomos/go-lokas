@@ -136,6 +136,11 @@ func (this *Proxy) checkIsConnected(id util.ProcessId)bool{
 func (this *Proxy) Connect(id util.ProcessId, addr string) error {
 	selfId:=this.GetProcess().Id()
 	mu,err:=this.GetProcess().GlobalMutex(getIdMutexKey(selfId,id),15)
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	defer mu.Unlock()
 	if this.checkIsConnected(id) {
 		log.Warnf("服务器已经连接",selfId.String(),id.String())
 		return nil
@@ -146,7 +151,6 @@ func (this *Proxy) Connect(id util.ProcessId, addr string) error {
 		return err
 	}
 	mu.Lock()
-	defer mu.Unlock()
 
 	context := &lokas.Context{
 		SessionCreator:    activeSessionCreator(id, this),

@@ -46,6 +46,7 @@ func CreateMutex(key string, ttl int, machines []string) (*Mutex, error) {
 
 	hostname, err := os.Hostname()
 	if err != nil {
+		c.Close()
 		return nil, err
 	}
 
@@ -139,6 +140,7 @@ func (this *Mutex) lock() (err error) {
 }
 
 func (this *Mutex) Unlock() (err error) {
+	defer this.client.Close()
 	defer this.mutex.Unlock()
 	for i := 1; i <= defaultTry; i++ {
 		var resp *clientv3.DeleteResponse

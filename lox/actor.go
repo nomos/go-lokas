@@ -184,6 +184,9 @@ func (this *Actor) handleMsg(actorId util.ID, transId uint32, msg protocol.ISeri
 		return err
 	}
 	log.Infof("handleMsg",this.Type(),this.GetId(),"-",actorId,id.String())
+	if id == protocol.TAG_Error {
+		log.Warnf("errmsg",msg.(*protocol.ErrMsg).Message)
+	}
 	if this.MsgHandler != nil {
 		resp, err := this.MsgHandler(actorId, transId, msg)
 		if err != nil {

@@ -55,8 +55,7 @@ func init() {
 	ret:=`//this is a generated file,do not modify it!!!
 package {PackageName}
 
-import (
-	"git.ting-zhou.com/tz/funnel/server/gamedata"
+import ({GameDataFolder}
 	"github.com/nomos/go-log/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/protocol"
@@ -78,6 +77,11 @@ func init() {
 	if funcStr == "" {
 		ret = ret0
 	}
+	gamedatafolder:=""
+	if g.GameDataFolder!="" {
+		gamedatafolder = "\n\t"+`"`+g.GameDataFolder+`"`
+	}
+	ret = strings.Replace(ret,`{GameDataFolder}`,gamedatafolder,-1)
 	ret = strings.Replace(ret,`{Errors}`,this.GoErrorString(g),-1)
 	ret = strings.Replace(ret,`{PackageName}`,this.GoPackageName,-1)
 	ret = strings.Replace(ret,`{Ids}`,this.GetGoIdAssignString(g),-1)

@@ -32,6 +32,7 @@ type GeneratorOption struct {
 }
 
 type Generator struct {
+	GameDataFolder string
 	GenType           GenType
 	Models            map[string]GeneratorFile
 	GoModels          map[string]GeneratorFile
@@ -599,6 +600,7 @@ func (this *Generator) GenerateModel2Go()error{
 		log.Error(err.Error())
 		return err
 	}
+	log.Warnf("Finish")
 	return nil
 }
 
@@ -658,6 +660,7 @@ func (this *Generator) generateModel2GoEnum(m *ModelEnumObject)error{
 }
 
 func (this *Generator) generateModel2GoIds()error{
+	log.Warnf("generateModel2GoIds")
 	for _,m:=range this.Models {
 		f:=m.(*ModelFile)
 		pack:=f.ProcessPackages()
@@ -694,6 +697,7 @@ func (this *Generator) generateModel2GoIds()error{
 
 	for _,p:=range this.ModelPackages {
 		err:=this.generateModel2GoPackage(p)
+
 		if err != nil {
 			log.Error(err.Error())
 			return err
@@ -705,6 +709,7 @@ func (this *Generator) generateModel2GoIds()error{
 func (this *Generator) generateModel2GoPackage(pack *ModelPackageObject)error{
 	p:=path.Join(this.GoPath,"ids")
 	p+=".go"
+	log.Warnf("generateModel2GoPackage",p)
 	err:=ioutil.WriteFile(p, []byte(pack.GoString(this)), 0644)
 	if err != nil {
 		log.Error(err.Error())
