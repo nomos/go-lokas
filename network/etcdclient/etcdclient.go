@@ -39,7 +39,7 @@ func WithTimeout(timeout time.Duration)func(client *Client){
 }
 
 func (this *Client)NewMutex(key string, ttl int)(*Mutex, error){
-	return CreateMutex(key,ttl,this.config.Endpoints)
+	return CreateMutex(this.Client,key,ttl)
 }
 
 type Client struct {

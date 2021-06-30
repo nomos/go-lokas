@@ -85,10 +85,6 @@ type IProcess interface {
 
 //IProxy universal module interface for connection
 type IProxy interface {
-	ReceiveMessage(msg *protocol.RouteMessage)
-	OnMessage(msg *protocol.RouteMessage)
-	SendMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error
-	Call(actorId util.ID, req protocol.ISerializable) (protocol.ISerializable, error)
 }
 
 type IActorContainer interface {
@@ -104,6 +100,10 @@ type IActor interface {
 	IEntity
 	IProxy
 	IModule
+	ReceiveMessage(msg *protocol.RouteMessage)
+	OnMessage(msg *protocol.RouteMessage)
+	SendMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error
+	Call(actorId util.ID, req protocol.ISerializable) (protocol.ISerializable, error)
 	GetLeaseId() (clientv3.LeaseID,bool, error)
 	Update(dt time.Duration, now time.Time)
 }

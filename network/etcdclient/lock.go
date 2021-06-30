@@ -33,25 +33,15 @@ type Mutex struct {
 	leaseId clientv3.LeaseID
 }
 
-func CreateMutex(key string, ttl int, machines []string) (*Mutex, error) {
-	cfg := clientv3.Config{
-		Endpoints:               machines,
-		DialKeepAliveTimeout: time.Second,
-	}
-
-	c, err := clientv3.New(cfg)
-	if err != nil {
-		return nil, err
-	}
+func CreateMutex(c *clientv3.Client,key string, ttl int) (*Mutex, error) {
 
 	hostname, err := os.Hostname()
 	if err != nil {
-		c.Close()
 		return nil, err
 	}
 
-	if len(key) == 0 || len(machines) == 0 {
-		return nil, errors.New("wrong lock key or empty machines")
+	if len(key) == 0 {
+		return nil, errors.New("wrong lock key")
 	}
 
 	if key[0] != '/' {
@@ -66,16 +56,17 @@ func CreateMutex(key string, ttl int, machines []string) (*Mutex, error) {
 		key:    key,
 		id:     fmt.Sprintf("%v-%v-%v", hostname, os.Getpid(), time.Now().Format("20060102-15:04:05.999999999")),
 		client: c,
+		mutex:  new(sync.Mutex),
 		kapi:   clientv3.NewKV(c),
 		ctx:    context.TODO(),
 		ttl:    int64(ttl),
-		mutex:  new(sync.Mutex),
-		lease:clientv3.NewLease(c),
-		watcher: clientv3.NewWatcher(c),
+
 	}, nil
 }
 
 func (this *Mutex) Lock() (err error) {
+	this.lease = clientv3.NewLease(this.client)
+	this.watcher = clientv3.NewWatcher(this.client)
 	this.mutex.Lock()
 	for try := 1; try <= defaultTry; try++ {
 		err = this.lock()
@@ -140,7 +131,8 @@ func (this *Mutex) lock() (err error) {
 }
 
 func (this *Mutex) Unlock() (err error) {
-	defer this.client.Close()
+	defer this.watcher.Close()
+	defer this.lease.Close()
 	defer this.mutex.Unlock()
 	for i := 1; i <= defaultTry; i++ {
 		var resp *clientv3.DeleteResponse
