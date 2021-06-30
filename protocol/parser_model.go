@@ -87,6 +87,7 @@ func init() {
 	ret = strings.Replace(ret,`{Ids}`,this.GetGoIdAssignString(g),-1)
 	ret = strings.Replace(ret,`{IdRegister}`,this.GetGoIdRegString(g),-1)
 	ret = strings.Replace(ret,`{Protocols}`,this.GetGoFuncString(g),-1)
+	ret = strings.ReplaceAll(ret,"\r","")
 	return ret
 }
 
