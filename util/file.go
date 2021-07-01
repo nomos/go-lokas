@@ -3,7 +3,7 @@ package util
 import (
 	"encoding/json"
 	"errors"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"io/ioutil"
 	"os"
 	"path"

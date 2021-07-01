@@ -2,7 +2,7 @@ package rox
 
 import (
 	"fmt"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"net/http"
 	"runtime"

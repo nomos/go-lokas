@@ -2,7 +2,7 @@ package util
 
 import (
 	"bytes"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"os"
 	"os/signal"
 	"path/filepath"

@@ -2,7 +2,7 @@ package lox
 
 import (
 	"errors"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"plugin"
 )

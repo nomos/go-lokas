@@ -1,7 +1,7 @@
 package lox
 
 import (
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/promise"

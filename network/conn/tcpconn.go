@@ -7,7 +7,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network/internal/common"
 	"github.com/nomos/go-lokas/network/internal/hub"
 )

@@ -2,7 +2,7 @@ package protocol
 
 import (
 	"fmt"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/stringutil"
 	"github.com/nomos/promise"
 	"regexp"
@@ -56,7 +56,7 @@ func init() {
 package {PackageName}
 
 import ({GameDataFolder}
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"

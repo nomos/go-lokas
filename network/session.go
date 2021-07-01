@@ -1,7 +1,7 @@
 package network
 
 import (
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/ecs"
 	"github.com/nomos/go-lokas/protocol"

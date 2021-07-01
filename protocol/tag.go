@@ -2,7 +2,7 @@ package protocol
 
 import (
 	"fmt"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 )
 
 const (

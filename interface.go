@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nomos/go-events"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/network/redisclient"
 	"github.com/nomos/go-lokas/protocol"

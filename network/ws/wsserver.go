@@ -2,7 +2,7 @@ package ws
 
 import (
 	"github.com/gorilla/websocket"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/network/conn"
 	"github.com/nomos/go-lokas/network/httpserver"

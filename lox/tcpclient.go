@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/nomos/go-events"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/network/conn"

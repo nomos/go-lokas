@@ -2,7 +2,7 @@ package redisclient
 
 import (
 	"github.com/gomodule/redigo/redis"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"time"
 )
 

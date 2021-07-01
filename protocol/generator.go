@@ -3,7 +3,7 @@ package protocol
 import (
 	"errors"
 	"github.com/iancoleman/orderedmap"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/stringutil"
 	"github.com/nomos/promise"

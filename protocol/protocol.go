@@ -3,7 +3,7 @@ package protocol
 import (
 	"encoding/binary"
 	"encoding/json"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util"
 	"reflect"
 	"time"

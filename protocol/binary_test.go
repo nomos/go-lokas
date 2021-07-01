@@ -2,7 +2,7 @@ package protocol
 
 import (
 	"bytes"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/xmath"
 	"go.uber.org/zap"
 	"reflect"

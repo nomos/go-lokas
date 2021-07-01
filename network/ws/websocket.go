@@ -1,7 +1,7 @@
 package ws
 
 import (
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/promise"
 	"go.uber.org/zap"

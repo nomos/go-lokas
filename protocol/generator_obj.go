@@ -1,6 +1,6 @@
 package protocol
 
-import "github.com/nomos/go-log/log"
+import "github.com/nomos/go-lokas/log"
 
 type ObjectType int
 

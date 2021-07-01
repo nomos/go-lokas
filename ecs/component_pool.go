@@ -1,7 +1,7 @@
 package ecs
 
 import (
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"reflect"
 )

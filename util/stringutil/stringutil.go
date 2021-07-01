@@ -2,7 +2,7 @@ package stringutil
 
 import (
 	"errors"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"math/rand"
 	"os"
 	"path/filepath"

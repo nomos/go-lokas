@@ -2,7 +2,7 @@ package util
 
 import (
 	"fmt"
-	"github.com/nomos/go-log/log"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/slice"
 	"sync"
 )
