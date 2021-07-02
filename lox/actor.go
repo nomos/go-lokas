@@ -2,9 +2,10 @@ package lox
 
 import (
 	"context"
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/ecs"
+	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
@@ -156,6 +157,13 @@ func (this *Actor) removeContext(transId uint32) {
 	delete(this.reqContexts, transId)
 }
 
+func (this *Actor) PId()util.ProcessId{
+	if this.process==nil {
+		return 0
+	}
+	return this.process.PId()
+}
+
 func (this *Actor) getContext(transId uint32) lokas.IReqContext {
 	this.ctxMutex.Lock()
 	defer this.ctxMutex.Unlock()
@@ -183,9 +191,16 @@ func (this *Actor) handleMsg(actorId util.ID, transId uint32, msg protocol.ISeri
 		log.Error(err.Error())
 		return err
 	}
-	log.Infof("handleMsg",this.Type(),this.GetId(),"-",actorId,id.String())
 	if id == protocol.TAG_Error {
-		log.Warnf("errmsg",msg.(*protocol.ErrMsg).Message)
+		log.Warn("Actor:handleMsg:errmsg",
+			logfield.ActorInfo(this).
+			Concat(logfield.ErrorInfo(msg.(*protocol.ErrMsg))).
+			Concat(logfield.MsgInfo(msg)).
+			Append(logfield.FromActorId(actorId)).
+			Append(logfield.TransId(transId))...
+		)
+	} else {
+		log.Info("Actor:handleMsg",logfield.ActorReceiveMsgInfo(this,msg,transId,actorId)...)
 	}
 	if this.MsgHandler != nil {
 		resp, err := this.MsgHandler(actorId, transId, msg)
@@ -223,30 +238,33 @@ func (this *Actor) OnMessage(msg *protocol.RouteMessage) {
 	if msg != nil {
 		err:=this.handleMsg(msg.FromActor, msg.TransId, msg.Body)
 		if err != nil {
-			log.Errorf(this.Type(),this.GetId(),err.Error())
+			log.Error("Actor:OnMessage:Error",
+				logfield.ActorReceiveMsgInfo(this,msg.Body,msg.TransId,msg.FromActor).
+				Append(logfield.Error(err))...
+			)
 		}
 	}
 }
 
 func (this *Actor) SendReply(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
-	id,err:=msg.GetId()
+	_,err:=msg.GetId()
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	log.Infof("SendReply",this.Type(),this.GetId(),"-",actorId.String(),id.String())
+	log.Info("Actor:SendReply",logfield.ActorSendMsgInfo(this,msg,transId,actorId)...)
 	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, false)
 	this.process.RouteMsg(routeMsg)
 	return nil
 }
 
 func (this *Actor) SendMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
-	id,err:=msg.GetId()
+	_,err:=msg.GetId()
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	log.Infof("SendMessage",this.Type(),this.GetId(),"-",actorId.String(),transId,id.String())
+	log.Info("Actor:SendMessage",logfield.ActorSendMsgInfo(this,msg,transId,actorId)...)
 	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, true)
 	this.process.RouteMsg(routeMsg)
 	return nil
@@ -265,7 +283,7 @@ func (this *Actor) Call(actorId util.ID, req protocol.ISerializable) (protocol.I
 	case <-ctx.Done():
 		switch ctx.Err() {
 		case context.DeadlineExceeded:
-			log.Warnf("DeadlineExceeded")
+			log.Warn("DeadlineExceeded",logfield.ActorSendMsgInfo(this,req,transId,actorId)...)
 			this.removeContext(transId)
 			return nil, protocol.ERR_RPC_TIMEOUT
 		default:

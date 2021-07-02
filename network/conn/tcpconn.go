@@ -67,7 +67,6 @@ func (this *TcpPumper) readPump(conn *Conn) {
 	for {
 		if ok := scanner.Scan(); ok {
 			data := scanner.Bytes()
-			//log.Infof("recv data",len(data))
 
 			if this.longPacketPicker != nil {
 				data = this.readLongPacket(conn, data)

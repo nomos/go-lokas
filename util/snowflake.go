@@ -101,6 +101,14 @@ func (this ProcessId) Snowflake()ID {
 	return ID(this)
 }
 
+func (this ProcessId) Int32()int32 {
+	return int32(this)
+}
+
+func (this ProcessId) Int64()int64 {
+	return this.Snowflake().Int64()
+}
+
 func (this ProcessId) String()string {
 	return strconv.Itoa(int(this))
 }

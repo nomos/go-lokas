@@ -3,6 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/network/tcp"
 	"github.com/nomos/go-lokas/protocol"
@@ -134,7 +135,7 @@ func (this *Proxy) checkIsConnected(id util.ProcessId)bool{
 }
 
 func (this *Proxy) Connect(id util.ProcessId, addr string) error {
-	selfId:=this.GetProcess().Id()
+	selfId:=this.GetProcess().PId()
 	mu,err:=this.GetProcess().GlobalMutex(getIdMutexKey(selfId,id),15)
 	if err != nil {
 		log.Error(err.Error())
@@ -167,7 +168,7 @@ func (this *Proxy) Connect(id util.ProcessId, addr string) error {
 }
 
 func (this *Proxy) Start() *promise.Promise {
-	log.Info(this.Type() + " Start")
+	log.Info("start",logfield.FuncInfo(this,"Start")...)
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	if this.startPending == nil && !this.started {
@@ -193,7 +194,7 @@ func (this *Proxy) Start() *promise.Promise {
 func (this *Proxy) Stop() *promise.Promise {
 	this.mu.Lock()
 	defer this.mu.Unlock()
-	log.Warnf("Proxy:Stop")
+	log.Warn("stop",logfield.FuncInfo(this,"Stop")...)
 	this.ActiveSessions.Clear()
 	for _, v := range this.dialerCloseChans {
 		close(v)

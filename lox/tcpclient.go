@@ -6,6 +6,7 @@ import (
 	"github.com/nomos/go-events"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/network/conn"
 	"github.com/nomos/go-lokas/network/tcp"
@@ -149,16 +150,15 @@ func (this *TcpClient) Connected() bool {
 }
 
 func (this *TcpClient) OnOpen(conn lokas.IConn) {
-	log.Warnf("TcpClient OnOpen")
+	log.Warn("connected",logfield.FuncInfo(this,"OnOpen").Append(logfield.Address(this.addr))...)
 	this.MsgHandler = this.MessageHandler
 	this.Opening = false
-	log.Warnf(this.addr + " connected")
 	this.isOpen = true
 	this.Emit("open")
 }
 
 func (this *TcpClient) OnClose(conn lokas.IConn) {
-	log.Warnf("TcpClient OnClose")
+	log.Warn("disconnecting",logfield.FuncInfo(this,"OnClose").Append(logfield.Address(this.addr))...)
 	this.openPending = nil
 	this.Opening = false
 	this.ActiveSession.stop()
@@ -171,7 +171,7 @@ func (this *TcpClient) OnClose(conn lokas.IConn) {
 	this.conn.Close()
 	this.conn = nil
 	this.Closing = false
-	log.Warnf(this.addr + " disconnected")
+	log.Warn("disconnected",logfield.FuncInfo(this,"OnClose").Append(logfield.Address(this.addr))...)
 	this.Emit("close")
 }
 
@@ -310,7 +310,8 @@ func (this *TcpClient) doCall(ctx lokas.IReqContext, req interface{}) (interface
 	case <-ctx.Done():
 		switch ctx.Err() {
 		case context.DeadlineExceeded:
-			log.Warnf("DeadlineExceeded")
+			log.Warn("DeadlineExceeded",logfield.FuncInfo(this,"doCall").
+				Append(logfield.TransId(transId))...)
 			this.removeContext(transId)
 			if this.isOpen {
 				this.Disconnect(false).Await()

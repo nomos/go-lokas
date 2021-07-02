@@ -60,26 +60,28 @@ type IProcess interface {
 	IRegistry
 	IActorContainer
 	IRouter
-	Add(modules IModule) IModule                                //add a module
-	RegisterModule(ctor IModuleCtor)                            //register a module ctor
-	LoadAllModule(IProcessConfig) error                         //load all module from config
-	LoadMod(name string, conf IConfig) error                    //load a module with config
-	UnloadMod(name string) error                                //unload a module
-	Get(name string) IModule                                    //get a module
-	Load(IProcessConfig) error                                  //load config
-	Start() error                                               //start process
-	Stop() error                                                //stop process
-	Id() util.ProcessId                                         //ProcessId
+	Add(modules IModule) IModule             //add a module
+	RegisterModule(ctor IModuleCtor)         //register a module ctor
+	LoadAllModule(IProcessConfig) error      //load all module from config
+	LoadMod(name string, conf IConfig) error //load a module with config
+	UnloadMod(name string) error             //unload a module
+	Get(name string) IModule                 //get a module
+	Load(IProcessConfig) error               //load config
+	Start() error                            //start process
+	Stop() error                             //stop process
+	PId() util.ProcessId                     //PId
+	GetId() util.ID                          //PId to snowflake
+	Type()string
 	GenId() util.ID                                             //gen snowflake Id,goroutine safe
 	GetLogger() *log.ComposeLogger                              //get process logger
-	GetMongo() *qmgo.Database                                    //get mongo client
+	GetMongo() *qmgo.Database                                   //get mongo client
 	GetRedis() *redisclient.Client                              //get redis client
 	GetEtcd() *etcdclient.Client                                //get etcd client
 	GlobalMutex(key string, ttl int) (*etcdclient.Mutex, error) //create a distributed global mutex based on etcd
 	Config() IConfig                                            //get config
 	GameId() string                                             //get game id
-	ServerId() int32                                           //get server id
-	GameServerId()string										//get game and server id
+	ServerId() int32                                            //get server id
+	GameServerId()string                                        //get game and server id
 	Version() string                                            //get version
 }
 
@@ -95,11 +97,18 @@ type IActorContainer interface {
 	GetActor(id util.ID) IActor
 }
 
+type IActorInfo interface {
+	GetId()util.ID
+	PId()util.ProcessId
+	Type() string
+}
+
 //IActor standard interface for actor
 type IActor interface {
 	IEntity
 	IProxy
 	IModule
+	PId()util.ProcessId
 	ReceiveMessage(msg *protocol.RouteMessage)
 	OnMessage(msg *protocol.RouteMessage)
 	SendMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error

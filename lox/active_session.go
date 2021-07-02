@@ -4,6 +4,7 @@ import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/ecs"
+	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"go.uber.org/zap"
@@ -115,7 +116,7 @@ func (this *ActiveSession) OnOpen(conn lokas.IConn) {
 	if this.OnOpenFunc != nil {
 		this.OnOpenFunc(conn)
 	}
-	log.Warnf("OnOpen")
+	log.Warn("OnOpen")
 	if this.manager != nil {
 		this.manager.AddSession(this.ID, this)
 	}
@@ -125,7 +126,7 @@ func (this *ActiveSession) OnClose(conn lokas.IConn) {
 	if this.manager != nil {
 		this.manager.RemoveSession(this.ID)
 	}
-	log.Warnf("OnClose")
+	log.Warn("OnClose",logfield.FuncInfo(this,"OnClose")...)
 	if this.OnOpenFunc != nil {
 		this.OnCloseFunc(conn)
 	}
@@ -185,7 +186,7 @@ func (this *ActiveSession) start() {
 				msg, err := protocol.UnmarshalMessage(data,this.Protocol)
 				if err != nil {
 					log.Error("unmarshal client message error",
-						zap.Any("cmdId", cmdId),
+						logfield.FuncInfo(this,"start").Append(zap.Any("cmdId", cmdId))...
 					)
 					return
 				}
@@ -202,7 +203,7 @@ func (this *ActiveSession) start() {
 				//}
 				this.handleMsg(msg)
 			case <-this.done:
-				log.Warnf("closing")
+				log.Warn("closing",logfield.FuncInfo(this,"start")...)
 				this.closeSession()
 				break Loop
 			}

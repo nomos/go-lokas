@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/network/redisclient"
 	"github.com/nomos/go-lokas/util"
@@ -56,32 +57,40 @@ func (this *Process) ServerId() int32 {
 	return this.serverId
 }
 
-func (this *Process) GameServerId()string{
-	return this.gameId+"_"+strconv.Itoa(int(this.serverId))
+func (this *Process) GameServerId() string {
+	return this.gameId + "_" + strconv.Itoa(int(this.serverId))
 }
 
 func (this *Process) Version() string {
 	return this.version
 }
 
-func (this *Process) Id() util.ProcessId {
+func (this *Process) PId() util.ProcessId {
 	return this.id
 }
 
-func (this *Process) LoadModuleRegistry()error{
-	res,err:=this.etcd.Get(context.TODO(),"/process/"+this.Id().String()+"/modules")
+func (this *Process) GetId() util.ID {
+	return this.id.Snowflake()
+}
+
+func (this *Process) Type() string {
+	return "Process"
+}
+
+func (this *Process) LoadModuleRegistry() error {
+	res, err := this.etcd.Get(context.TODO(), "/process/"+this.PId().String()+"/modules")
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	if len(res.Kvs)==0 {
+	if len(res.Kvs) == 0 {
 		return nil
 	}
-	if len(res.Kvs)!=1 {
+	if len(res.Kvs) != 1 {
 		log.Error("incorrect etcd result")
 		return errors.New("incorrect etcd result")
 	}
-	err=json.Unmarshal(res.Kvs[0].Value,&this.modulesMap)
+	err = json.Unmarshal(res.Kvs[0].Value, &this.modulesMap)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -89,9 +98,9 @@ func (this *Process) LoadModuleRegistry()error{
 	return nil
 }
 
-func (this *Process) SaveModuleRegistry()error{
-	s,_:=json.Marshal(this.modulesMap)
-	_,err:=this.etcd.Put(context.TODO(),"/process/"+this.Id().String()+"/modules",string(s))
+func (this *Process) SaveModuleRegistry() error {
+	s, _ := json.Marshal(this.modulesMap)
+	_, err := this.etcd.Put(context.TODO(), "/process/"+this.PId().String()+"/modules", string(s))
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -103,7 +112,7 @@ func (this *Process) RegisterModule(creator lokas.IModuleCtor) {
 	this.modulesCreator[creator.Type()] = creator
 }
 
-func (this *Process) Add(mod lokas.IModule)lokas.IModule {
+func (this *Process) Add(mod lokas.IModule) lokas.IModule {
 	this.modules[mod.Type()] = mod
 	mod.SetProcess(this)
 	return mod
@@ -160,12 +169,11 @@ func (this *Process) createMod(name string) lokas.IModule {
 		log.Panic("module create failed", zap.String("mod name", name))
 	}
 
-
 	if _, ok := ret.(lokas.IActor); ok {
-		if id,ok:=this.modulesMap[name];ok {
+		if id, ok := this.modulesMap[name]; ok {
 			ret.(lokas.IActor).SetId(id)
 		} else {
-			id :=this.GenId()
+			id := this.GenId()
 			ret.(lokas.IActor).SetId(id)
 			this.modulesMap[name] = id
 		}
@@ -192,12 +200,12 @@ func (this *Process) LoadAllModule(conf lokas.IProcessConfig) error {
 func (this *Process) StartAllModule() error {
 	for _, mod := range this.modules {
 		if _, ok := mod.(lokas.IActor); ok {
-			log.Info("starting", zap.String("module", mod.Type()))
+			log.Info("starting",logfield.FuncInfo(this,"StartAllModule").Append(logfield.Module(mod))...)
 			_, err := mod.(lokas.IActor).Start().Await()
 			if err != nil {
 				return err
 			}
-			log.Info("StartMessagePump success", zap.String("module", mod.Type()))
+			log.Info("success",logfield.FuncInfo(this,"StartAllModule").Append(logfield.Module(mod))...)
 		}
 	}
 	return nil
@@ -207,12 +215,15 @@ func (this *Process) StopAllModule() error {
 	log.Warnf("StopAllModule", this.modules)
 	for _, mod := range this.modules {
 		if _, ok := mod.(lokas.IActor); ok {
-			log.Info("stop", zap.String("module", mod.Type()))
+			log.Info("stop", logfield.FuncInfo(this,"StopAllModule").Append(logfield.Module(mod))...)
 			_, err := mod.(lokas.IActor).Stop().Await()
 			if err != nil {
 				return err
 			}
-			log.Info("stop success", zap.String("module", mod.Type()))
+			log.Info("success",
+				logfield.FuncInfo(this, "StopAllModule").
+					Append(logfield.Module(mod))...
+			)
 		}
 	}
 	return nil
@@ -232,11 +243,17 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 	this.gameId = config.GetGameId()
 	this.version = config.GetVersion()
 	this.id = config.GetProcessId()
-	if this.id==0 {
-		log.Error("pid is not set")
+	if this.id == 0 {
+		log.Error("pid is not set",logfield.FuncInfo(this,"Load")...)
 		return errors.New("pid is not set")
 	}
-	log.Info("process config", zap.Uint16("id", uint16(this.Id())), zap.String("game", this.GameId()), zap.String("version", this.Version()), zap.Int32("server", this.ServerId()))
+	log.Info("process config",
+		logfield.FuncInfo(this, "Load").
+			Append(zap.Uint16("id", uint16(this.PId()))).
+			Append(zap.String("game", this.GameId())).
+			Append(zap.String("version", this.Version())).
+			Append(zap.Int32("server", this.ServerId()))...
+	)
 	err := this.loadMongo(config.GetDb("mongo").(MongoConfig))
 	if err != nil {
 		log.Error(err.Error())
@@ -253,13 +270,13 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 		return err
 	}
 	this.idNode, _ = util.NewSnowflake(int64(config.GetProcessId()))
-	err=this.LoadModuleRegistry()
+	err = this.LoadModuleRegistry()
 
 	err = this.LoadAllModule(config)
 	if err != nil {
 		return err
 	}
-	err= this.SaveModuleRegistry()
+	err = this.SaveModuleRegistry()
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -268,16 +285,25 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 }
 
 func (this *Process) loadMongo(config MongoConfig) error {
-	client, err := qmgo.NewClient(context.TODO(),&qmgo.Config{
-		Uri:      "mongodb://" + config.User + ":" + config.Password + "@" + config.Host + ":" + config.Port,
+	url := "mongodb://" + config.User + ":" + config.Password + "@" + config.Host + ":" + config.Port
+	client, err := qmgo.NewClient(context.TODO(), &qmgo.Config{
+		Uri:      url,
 		Database: config.Database,
 	})
 	if err != nil {
-		log.Error("load mongoFailed:" + err.Error())
+		log.Error("Process:loadMongo:Error",
+			logfield.Error(err),
+		)
+
 		return err
 	}
 	this.mongo = client.Database(config.Database)
-	log.Infof("mongo db:", this.mongo.GetDatabaseName())
+	log.Info("success",
+		logfield.FuncInfo(this, "loadMongo").
+			Concat(logfield.ActorInfo(this)).
+			Append(logfield.DataBase(config.Database)).
+			Append(logfield.Address(url))...
+	)
 	return nil
 }
 
@@ -311,7 +337,10 @@ func (this *Process) Stop() error {
 		log.Error(err.Error())
 		return err
 	}
-	log.Warn("server shutdown success")
+	log.Warn("success",
+		logfield.FuncInfo(this, "Stop").
+			Concat(logfield.ActorInfo(this))...
+	)
 	return nil
 }
 

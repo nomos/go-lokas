@@ -3,6 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/promise"
@@ -80,7 +81,7 @@ func (this *PassiveSession) GetConn() lokas.IConn {
 }
 
 func (this *PassiveSession) StartMessagePump() {
-	log.Infof("StartMessagePump message pump",this.GetId())
+	log.Info("PassiveSession:StartMessagePump",logfield.ActorInfo(this)...)
 
 	this.msgChan = make(chan *protocol.RouteMessage,100)
 	this.done = make(chan struct{})
@@ -227,7 +228,7 @@ func (this *PassiveSession) OnOpen(conn lokas.IConn) {
 	if this.OnOpenFunc != nil {
 		this.OnOpenFunc(conn)
 	}
-	log.Infof("PassiveSession:OnOpen")
+	log.Info("PassiveSession:OnOpen",logfield.ActorInfo(this)...)
 	if this.manager != nil {
 		this.manager.AddSession(this.GetId(), this)
 	}
@@ -237,7 +238,7 @@ func (this *PassiveSession) OnClose(conn lokas.IConn) {
 	if this.manager != nil {
 		this.manager.RemoveSession(this.GetId())
 	}
-	log.Infof("PassiveSession:OnClose")
+	log.Info("PassiveSession:OnClose",logfield.ActorInfo(this)...)
 	if this.OnCloseFunc != nil {
 		this.OnCloseFunc(conn)
 	}

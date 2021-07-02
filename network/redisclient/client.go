@@ -37,7 +37,6 @@ func (this *Client) Execute(cmd string, args ...interface{}) *RedisReply {
 	conn := this.Pool.Get()
 	defer conn.Close()
 	res, err := conn.Do(cmd, args...)
-	//log.Infof(cmd, args, res, reflect.TypeOf(res))
 	if err != nil {
 		log.Error(err.Error())
 	}

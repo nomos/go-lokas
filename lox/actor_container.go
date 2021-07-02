@@ -3,6 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/promise"
 	"go.uber.org/zap"
@@ -69,12 +70,12 @@ func (this *ActorContainer) GetActor(id util.ID)lokas.IActor{
 func (this *ActorContainer) StartActor(actor lokas.IActor){
 	log.Info("starting",zap.String("module",actor.Type()))
 	go actor.Start().Then(func(data interface{}) interface{} {
-		log.Infof("StartActor success",actor.Type(),actor.GetId())
+		log.Info("ActorContainer:StartActor:success",logfield.ActorInfo(actor)...)
 		actor.OnStart()
 		return nil
 	}).Catch(func(err error) interface{} {
 		if err != nil {
-			log.Error("Actor StartActor error type:"+actor.Type()+" Id:"+actor.GetId().String()+" err:"+err.Error())
+			log.Error("ActorContainer:StartActor:error",logfield.ActorInfo(actor).Append(logfield.Error(err))...)
 			this.RemoveActor(actor)
 			return err
 		}

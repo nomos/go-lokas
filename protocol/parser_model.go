@@ -481,7 +481,7 @@ func (this *ModelId) GetGoProtocolFuncString(g *Generator)string{
 	return resp.(*{ClassA}),nil
 }
 
-type OnRequest{ClassB}Func func(data *gamedata.DataMap,avatar lokas.IActor, actorId util.ID, transId uint32,req *{ClassB}) (*{ClassA},error)
+type OnRequest{ClassB}Func func(data *gamedata.DataMap,avatar funnel.IAvatar, actorId util.ID, transId uint32,req *{ClassB}) (*{ClassA},error)
 
 func Register{ClassB}(f OnRequest{ClassB}Func,r func(protocol.BINARY_TAG,func(data *gamedata.DataMap,avatar lokas.IActor,actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error))){
 	r({TAG}, func(data *gamedata.DataMap, avatar lokas.IActor, actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error) {
