@@ -505,7 +505,7 @@ func (this *Registry) RegisterActors() error {
 		log.Error(err.Error())
 		return err
 	}
-	log.Info("res", logfield.FuncInfo(this,"RegisterActors").Append(logfield.Result(res))...)
+	log.Info("res", logfield.FuncInfo(this,"RegisterActors").Append(logfield.Result(res.Header.String()))...)
 	return nil
 }
 
@@ -532,7 +532,7 @@ func (this *Registry) RegisterActorRemote(actor lokas.IActor) error {
 			log.Error(err.Error())
 			return err
 		}
-		log.Warn("res", logfield.FuncInfo(this,"RegisterActorRemote").Append(logfield.Result(res))...)
+		log.Warn("res", logfield.FuncInfo(this,"RegisterActorRemote").Append(logfield.Result(res.Header.String()))...)
 	}
 	return nil
 }
