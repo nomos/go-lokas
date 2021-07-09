@@ -14,6 +14,7 @@ import (
 var __hooks []Hook = make([]Hook,0)
 var once sync.Once
 var _logger *ComposeLogger
+var _console bool
 
 
 type titleEncoder struct {
@@ -139,10 +140,16 @@ func InitDefault(dev bool,console bool,title string, hooks ...Hook){
 		hooks = append(hooks, h)
 	}
 	if console {
+		_console = true
 		_logger = NewComposeLogger(dev, ConsoleConfig(title), 2, hooks...)
 	} else {
+		_console = false
 		_logger = NewComposeLogger(dev, DefaultConfig(title), 2, hooks...)
 	}
+}
+
+func IsConsole()bool {
+	return _console
 }
 
 func Init(dev bool, conf *LogConfig, hooks ...Hook) {

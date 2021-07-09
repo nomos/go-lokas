@@ -97,7 +97,7 @@ type SshClient struct {
 	stringWriter StringWriter
 }
 
-func NewSshClient(user, password, addr string) *SshClient {
+func NewSshClient(user, password, addr string,console bool) *SshClient {
 	ret := &SshClient{
 		EventEmmiter: events.New(),
 		addr:         addr,
@@ -108,7 +108,11 @@ func NewSshClient(user, password, addr string) *SshClient {
 		sessions: make([]*ssh.Session,0),
 	}
 	ret.defaultShellSession = ret.NewShellSession()
-	ret.ComposeLogger = log.NewComposeLogger(true,log.DefaultConfig(""),1)
+	if console {
+		ret.ComposeLogger = log.NewComposeLogger(true,log.ConsoleConfig(""),1)
+	} else {
+		ret.ComposeLogger = log.NewComposeLogger(true,log.DefaultConfig(""),1)
+	}
 	return ret
 }
 
