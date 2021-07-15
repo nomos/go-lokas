@@ -51,6 +51,15 @@ func HasInt(arr []int,item int)bool{
 	return false
 }
 
+func HasString(arr []string,item string)bool{
+	for _,v:=range arr {
+		if v == item {
+			return true
+		}
+	}
+	return false
+}
+
 func HasFloat64(arr []float64,item float64)bool{
 	for _,v:=range arr {
 		if v == item {
