@@ -139,8 +139,9 @@ func (this *TcpClient) Disconnect(b bool) *promise.Promise {
 		return this.closePending
 	}
 	this.closePending = promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-		this.conn.Close()
+		this.ActiveSession.stop()
 		resolve(nil)
+		this.closePending = nil
 	})
 	return this.closePending
 }
@@ -165,7 +166,7 @@ func (this *TcpClient) OnClose(conn lokas.IConn) {
 	this.ClearContext(errors.New("disconnect"))
 	if this.isOpen {
 		this.isOpen = false
-		this.Disconnect(true)
+		this.Disconnect(true).Await()
 		this.closePending = nil
 	}
 	this.conn.Close()

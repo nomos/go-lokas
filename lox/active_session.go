@@ -21,7 +21,6 @@ func NewActiveSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManage
 		Messages: make(chan []byte, 100),
 		Conn:     conn,
 		manager:  manager,
-		done:     make(chan struct{}),
 		timeout:  time.Second * 15,
 		Protocol: protocol.BINARY,
 	}
@@ -96,7 +95,8 @@ func (this *ActiveSession) Start() error {
 }
 
 func (this *ActiveSession) Stop() error {
-	panic("implement me")
+	this.stop()
+	return nil
 }
 
 func (this *ActiveSession) OnDestroy() error {
@@ -162,6 +162,7 @@ func (this *ActiveSession) PongHandler(pong *protocol.Pong) {
 }
 
 func (this *ActiveSession) start() {
+	this.done = make(chan struct{})
 	go func() {
 		ticker := time.NewTicker(this.timeout / 5)
 		defer func() {
@@ -212,7 +213,10 @@ func (this *ActiveSession) start() {
 }
 
 func (this *ActiveSession) stop() {
-	this.done <- struct{}{}
+	if this.done!=nil {
+		this.done <- struct{}{}
+		this.done = nil
+	}
 }
 
 func (this *ActiveSession) HandleMessage(f func(msg *protocol.BinaryMessage)) {
