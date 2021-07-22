@@ -750,13 +750,33 @@ func (this *ModelEnumObject) GoString(g *Generator)string{
 	ret:=`//this is a generate file,do not modify it!
 package {PackageName}
 
-import "github.com/nomos/go-lokas/protocol"
+import (
+	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/protocol"
+)
 
 type {EnumName} protocol.Enum {Comment}
 
 const (
 {ClassBody}
 )
+
+func TO_{EnumName}(s string){EnumName}{
+	switch s {
+{StringToEnum}
+	}
+	log.Panic("not a valid type")
+	return -1
+}
+
+
+func (this {EnumName}) String()string{
+	switch this {
+{EnumToString}
+	}
+	log.Panic("not a valid type")
+	return ""
+}
 `
 	if this.Comment!="" {
 		comment:=" "+this.Comment
@@ -764,11 +784,66 @@ const (
 	} else {
 		ret = strings.Replace(ret,`{Comment}`,"",-1)
 	}
-	ret = strings.Replace(ret,`{PackageName}`,this.GoPackage,1)
-	ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSlash(this.EnumName),1)
-	ret = strings.Replace(ret,`{ClassBody}`,this.goFields(g),1)
+	ret = strings.Replace(ret,`{PackageName}`,this.GoPackage,-1)
+	ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSlash(this.EnumName),-1)
+	ret = strings.Replace(ret,`{ClassBody}`,this.goFields(g),-1)
+	ret = strings.Replace(ret,`{StringToEnum}`,this.gsString2EnumFields(g),-1)
+	ret = strings.Replace(ret,`{EnumToString}`,this.gsEnum2StringFields(g),-1)
 	return ret
 }
+
+func (this *ModelEnumObject) gsString2EnumFields(g *Generator)string{
+	ret:=""
+	for _,l:=range this.lines {
+		if l.LineType ==LINE_MODEL_ENUM_FIELD {
+			comment:=strings.TrimSpace(l.Comment)
+			if comment=="" {
+				break
+			}
+			comment=strings.ReplaceAll(l.Comment,"//","")
+			comment = strings.TrimSpace(comment)
+			comment = `"`+comment+`"`
+			ret+="\tcase "
+			ret+=comment
+			ret+=":\n"
+			ret+="\t\t"
+			ret+= "return "
+			ret+=stringutil.SplitCamelCaseUpperSlash(this.EnumName)
+			ret+="_"
+			ret+=stringutil.SplitCamelCaseUpperSlash(l.Name)
+			ret+="\n"
+		}
+	}
+	ret = strings.TrimRight(ret,"\n")
+	return ret
+}
+
+func (this *ModelEnumObject) gsEnum2StringFields(g *Generator)string{
+	ret:=""
+	for _,l:=range this.lines {
+		if l.LineType ==LINE_MODEL_ENUM_FIELD {
+			comment:=strings.TrimSpace(l.Comment)
+			if comment=="" {
+				break
+			}
+			ret+="\tcase "
+			ret+=stringutil.SplitCamelCaseUpperSlash(this.EnumName)
+			ret+="_"
+			ret+=stringutil.SplitCamelCaseUpperSlash(l.Name)
+			ret+=":\n"
+			ret+="\t\t"
+			ret+= "return "
+			comment=strings.ReplaceAll(l.Comment,"//","")
+			comment = strings.TrimSpace(comment)
+			comment = `"`+comment+`"`
+			ret+=comment
+			ret+="\n"
+		}
+	}
+	ret = strings.TrimRight(ret,"\n")
+	return ret
+}
+
 
 func (this *ModelEnumObject) goFields(g *Generator)string{
 	ret:=""
