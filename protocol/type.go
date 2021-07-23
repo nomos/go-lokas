@@ -125,6 +125,15 @@ func init(){
 
 type Enum int32
 
+func (this Enum) Enum() Enum {
+	return this
+}
+
+type IEnum interface {
+	ToString()string
+	Enum() Enum
+}
+
 var once sync.Once
 var singleton *TypeRegistry
 

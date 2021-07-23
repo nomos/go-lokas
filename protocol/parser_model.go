@@ -751,7 +751,6 @@ func (this *ModelEnumObject) GoString(g *Generator)string{
 package {PackageName}
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/protocol"
 )
 
@@ -761,11 +760,17 @@ const (
 {ClassBody}
 )
 
+var ALL_{EnumName} = []protocol.IEnum{{EnumList}}
+
 func TO_{EnumName}(s string){EnumName}{
 	switch s {
 {StringToEnum}
 	}
 	return -1
+}
+
+func (this {EnumName}) Enum()protocol.Enum{
+	return protocol.Enum(this)
 }
 
 
@@ -787,6 +792,22 @@ func (this {EnumName}) ToString()string{
 	ret = strings.Replace(ret,`{ClassBody}`,this.goFields(g),-1)
 	ret = strings.Replace(ret,`{StringToEnum}`,this.gsString2EnumFields(g),-1)
 	ret = strings.Replace(ret,`{EnumToString}`,this.gsEnum2StringFields(g),-1)
+	ret = strings.Replace(ret,`{EnumList}`,this.gsEnumListFields(g),-1)
+	return ret
+}
+
+
+func (this *ModelEnumObject) gsEnumListFields(g *Generator)string{
+	ret:=""
+	for _,l:=range this.lines {
+		if l.LineType ==LINE_MODEL_ENUM_FIELD {
+			ret+=stringutil.SplitCamelCaseUpperSlash(this.EnumName)
+			ret+="_"
+			ret+=stringutil.SplitCamelCaseUpperSlash(l.Name)
+			ret+=","
+		}
+	}
+	ret = strings.TrimRight(ret,",")
 	return ret
 }
 
