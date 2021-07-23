@@ -765,16 +765,14 @@ func TO_{EnumName}(s string){EnumName}{
 	switch s {
 {StringToEnum}
 	}
-	log.Panic("not a valid type")
 	return -1
 }
 
 
-func (this {EnumName}) String()string{
+func (this {EnumName}) ToString()string{
 	switch this {
 {EnumToString}
 	}
-	log.Panic("not a valid type")
 	return ""
 }
 `
