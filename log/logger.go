@@ -282,7 +282,7 @@ var _ StdLogger = (*TestLogger)(nil)
 
 func NewAstilecTronLogger() *TestLogger {
 	ret := &TestLogger{}
-	ret._logger, _ = newLogConfig().Build(zap.AddCallerSkip(2))
+	ret._logger, _ = newLogConfig().Build(zap.AddCallerSkip(3))
 	return ret
 }
 
@@ -297,12 +297,10 @@ func (this *TestLogger) Fatalf(msg string, fields ...interface{}) {
 }
 
 func (this *TestLogger) Print(fields ...interface{}) {
-	return
 	this._logger.Info(fields[0].(string))
 }
 
 func (this *TestLogger) Printf(msg string, fields ...interface{}) {
-	return
 	this._logger.Info(fmt.Sprintf(msg, fields))
 
 }
@@ -391,6 +389,7 @@ func Fatal(msg string, fields ...zap.Field) {
 	}
 	_logger.Fatal(msg, fields...)
 }
+
 
 func Sync()error{
 	if _logger == nil {
