@@ -103,6 +103,8 @@ func (this *TcpClient) Connect(addr string) *promise.Promise {
 				err:=this.connect()
 				if err != nil {
 					log.Error(err.Error())
+					this.context = nil
+					this.openPending = nil
 					reject(err)
 					return
 				}
@@ -160,6 +162,7 @@ func (this *TcpClient) OnOpen(conn lokas.IConn) {
 
 func (this *TcpClient) OnClose(conn lokas.IConn) {
 	log.Warn("disconnecting",logfield.FuncInfo(this,"OnClose").Append(logfield.Address(this.addr))...)
+	this.context = nil
 	this.openPending = nil
 	this.Opening = false
 	this.ActiveSession.stop()

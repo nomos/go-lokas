@@ -21,6 +21,9 @@ func StartWithCapital(str string)bool {
 func SplitInt32Array(s string,split string)([]int32,error){
 	arr:=strings.Split(s,split)
 	ret:=make([]int32,0)
+	if s=="" {
+		return ret,nil
+	}
 	for _,v:=range arr {
 		elem,err:=strconv.Atoi(v)
 		if err != nil {
@@ -35,6 +38,9 @@ func SplitInt32Array(s string,split string)([]int32,error){
 func SplitInt32Map(s string,split string,mapSep string)(map[int32]int32,error){
 	arr:=strings.Split(s,split)
 	ret:=make(map[int32]int32)
+	if s=="" {
+		return ret,nil
+	}
 	for _,v:=range arr {
 		elems:=strings.Split(v,mapSep)
 		if len(elems)!=2{
@@ -58,6 +64,9 @@ func SplitInt32Map(s string,split string,mapSep string)(map[int32]int32,error){
 func SplitInt64Array(s string,split string)([]int64,error){
 	arr:=strings.Split(s,split)
 	ret:=make([]int64,0)
+	if s=="" {
+		return ret,nil
+	}
 	for _,v:=range arr {
 		elem,err:=strconv.Atoi(v)
 		if err != nil {
@@ -72,6 +81,9 @@ func SplitInt64Array(s string,split string)([]int64,error){
 func SplitIntArray(s string,split string)([]int,error){
 	arr:=strings.Split(s,split)
 	ret:=make([]int,0)
+	if s=="" {
+		return ret,nil
+	}
 	for _,v:=range arr {
 		elem,err:=strconv.Atoi(v)
 		if err != nil {
