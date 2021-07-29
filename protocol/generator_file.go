@@ -3,13 +3,12 @@ package protocol
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/promise"
 	"io"
 	"os"
 	path2 "path"
-	"runtime"
 	"strings"
 )
 
@@ -397,12 +396,7 @@ func (this *DefaultGeneratorFile) parse(num int, objs ...ObjectType) (int, bool)
 	defer func() {
 		var r = recover()
 		if r != nil {
-			if err, ok := r.(error); ok {
-				log.Error(err.Error())
-				buf := make([]byte, 1<<16)
-				runtime.Stack(buf, true)
-				fmt.Println(string(buf))
-			}
+			util.Recover(r,true)
 		}
 	}()
 
