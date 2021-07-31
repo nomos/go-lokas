@@ -32,6 +32,9 @@ type ComposeLogger struct {
 	zapCompose 	*ZapCompose
 }
 
+func (this *ComposeLogger) Clear() {
+}
+
 func (this *ComposeLogger) recycle() {
 	if this.parent != nil {
 		this.parent.recycleFieldLogger(this)

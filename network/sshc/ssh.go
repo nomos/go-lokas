@@ -126,6 +126,10 @@ func (this *SshClient) NewShellSession()*ShellSession{
 	return ret
 }
 
+func (this *SshClient) Clear() {
+
+}
+
 func (this *SshClient) Write(p []byte)(int,error) {
 	this.Info(string(p))
 	this.stringWriter.WriteString(string(p))

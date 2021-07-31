@@ -255,6 +255,7 @@ type TestLogger struct {
 }
 
 type ILogger interface {
+	Clear()
 	Infof(args ...interface{})
 	Debugf(args ...interface{})
 	Warnf(args ...interface{})
