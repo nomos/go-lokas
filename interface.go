@@ -225,6 +225,7 @@ type IContext interface {
 type IConfig interface {
 	Save() error
 	Load() error
+	GetFolder() string
 	LoadFromRemote() error
 	SetRemoteConfig(p string, etcd string)
 	Set(key string, value interface{})
