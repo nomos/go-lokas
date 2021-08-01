@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 )
 
 func PathExists(path string) (bool, error) {
@@ -19,6 +21,29 @@ func PathExists(path string) (bool, error) {
 	}
 	return false, err
 }
+
+func substr(s string, pos, length int) string {
+	runes := []rune(s)
+	l := pos + length
+	if l > len(runes) {
+		l = len(runes)
+	}
+	return string(runes[pos:l])
+}
+
+func GetParentDirectory(dir string) string {
+	dir = strings.ReplaceAll(dir,`\`,"/")
+	return substr(dir, 0, strings.LastIndex(dir, "/"))
+}
+
+func GetCurrentDirectory() string {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Error(err.Error())
+	}
+	return strings.Replace(dir, "\\", "/", -1)
+}
+
 
 type WalkDirFunc func(filePath string, file os.FileInfo) bool
 
