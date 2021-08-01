@@ -134,6 +134,26 @@ type IEnum interface {
 	Enum() Enum
 }
 
+type IEnumCollection []IEnum
+
+func (this IEnumCollection) GetEnumByString(s string)IEnum{
+	for _,v:=range this {
+		if v.ToString()==s {
+			return v
+		}
+	}
+	return nil
+}
+
+func (this IEnumCollection) GetEnumByValue(s Enum)IEnum{
+	for _,v:=range this {
+		if v.Enum()==s {
+			return v
+		}
+	}
+	return nil
+}
+
 var once sync.Once
 var singleton *TypeRegistry
 

@@ -50,6 +50,10 @@ func IsFileExist(path string) bool {
 	return true
 }
 
+func IsFileWithExt(p string,ext string) bool {
+	return ext==path.Ext(p)
+}
+
 func FilterFileWithExt(files []string,ext... string)[]string {
 	ret:=make([]string,0)
 	for _,file:=range files {
