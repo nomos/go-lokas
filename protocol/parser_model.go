@@ -55,7 +55,7 @@ func init() {
 	ret:=`//this is a generated file,do not modify it!!!
 package {PackageName}
 
-import ({GameDataFolder}
+import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/protocol"
@@ -77,11 +77,6 @@ func init() {
 	if funcStr == "" {
 		ret = ret0
 	}
-	gamedatafolder:=""
-	if g.GameDataFolder!="" {
-		gamedatafolder = "\n\t"+`"`+g.GameDataFolder+`"`
-	}
-	ret = strings.Replace(ret,`{GameDataFolder}`,gamedatafolder,-1)
 	ret = strings.Replace(ret,`{Errors}`,this.GoErrorString(g),-1)
 	ret = strings.Replace(ret,`{PackageName}`,this.GoPackageName,-1)
 	ret = strings.Replace(ret,`{Ids}`,this.GetGoIdAssignString(g),-1)
@@ -481,10 +476,10 @@ func (this *ModelId) GetGoProtocolFuncString(g *Generator)string{
 	return resp.(*{ClassA}),nil
 }
 
-type OnRequest{ClassB}Func func(data *gamedata.DataMap,avatar lokas.IActor, actorId util.ID, transId uint32,req *{ClassB}) (*{ClassA},error)
+type OnRequest{ClassB}Func func(data *DataMap,avatar lokas.IActor, actorId util.ID, transId uint32,req *{ClassB}) (*{ClassA},error)
 
-func Register{ClassB}(f OnRequest{ClassB}Func,r func(protocol.BINARY_TAG,func(data *gamedata.DataMap,avatar lokas.IActor,actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error))){
-	r({TAG}, func(data *gamedata.DataMap, avatar lokas.IActor, actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error) {
+func Register{ClassB}(f OnRequest{ClassB}Func,r func(protocol.BINARY_TAG,func(data *DataMap,avatar lokas.IActor,actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error))){
+	r({TAG}, func(data *DataMap, avatar lokas.IActor, actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error) {
 		return f(data,avatar,actorId,transId,msg.(*{ClassB}))
 	})
 }`
@@ -501,10 +496,10 @@ func Register{ClassB}(f OnRequest{ClassB}Func,r func(protocol.BINARY_TAG,func(da
 		}
 		ret+="//     [{ClassB}]----->"
 		ret+="\n"
-		ret+=`type OnNotify{ClassB}Func func(data *gamedata.DataMap,avatar lokas.IActor, actorId util.ID,notify *{ClassB})
+		ret+=`type OnNotify{ClassB}Func func(data *DataMap,avatar lokas.IActor, actorId util.ID,notify *{ClassB})
 
-func Register{ClassB}(f OnNotify{ClassB}Func,r func(protocol.BINARY_TAG,func(data *gamedata.DataMap,avatar lokas.IActor,actorId util.ID, msg protocol.ISerializable))){
-	r({TAG}, func(data *gamedata.DataMap, avatar lokas.IActor, actorId util.ID, msg protocol.ISerializable) {
+func Register{ClassB}(f OnNotify{ClassB}Func,r func(protocol.BINARY_TAG,func(data *DataMap,avatar lokas.IActor,actorId util.ID, msg protocol.ISerializable))){
+	r({TAG}, func(data *DataMap, avatar lokas.IActor, actorId util.ID, msg protocol.ISerializable) {
 		f(data,avatar,actorId,msg.(*{ClassB}))
 	})
 }`

@@ -32,7 +32,6 @@ type GeneratorOption struct {
 }
 
 type Generator struct {
-	GameDataFolder string
 	GenType           GenType
 	Models            map[string]GeneratorFile
 	GoModels          map[string]GeneratorFile
