@@ -2,7 +2,7 @@ package lox
 
 import (
 	"github.com/nomos/go-lokas"
-	"github.com/nomos/promise"
+	"github.com/nomos/go-lokas/promise"
 )
 
 var _ lokas.IModuleCtor = (*centerCtor)(nil)

@@ -8,7 +8,7 @@ import (
 	"github.com/nomos/go-lokas/network/tcp"
 	"github.com/nomos/go-lokas/network/ws"
 	"github.com/nomos/go-lokas/protocol"
-	"github.com/nomos/promise"
+	"github.com/nomos/go-lokas/promise"
 	"sync"
 )
 

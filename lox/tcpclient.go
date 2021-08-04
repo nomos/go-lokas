@@ -3,7 +3,7 @@ package lox
 import (
 	"context"
 	"errors"
-	"github.com/nomos/go-events"
+	"github.com/nomos/go-lokas/events"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log/logfield"
@@ -11,7 +11,7 @@ import (
 	"github.com/nomos/go-lokas/network/conn"
 	"github.com/nomos/go-lokas/network/tcp"
 	"github.com/nomos/go-lokas/protocol"
-	"github.com/nomos/promise"
+	"github.com/nomos/go-lokas/promise"
 	"go.uber.org/zap"
 	"strconv"
 	"sync"

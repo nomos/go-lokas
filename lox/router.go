@@ -5,7 +5,7 @@ import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/protocol"
-	"github.com/nomos/promise"
+	"github.com/nomos/go-lokas/promise"
 )
 
 var _ lokas.IModule = (*Router)(nil)

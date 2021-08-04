@@ -5,7 +5,7 @@ import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/rox"
 	"github.com/nomos/go-lokas/network/httpserver"
-	"github.com/nomos/promise"
+	"github.com/nomos/go-lokas/promise"
 	"net/http"
 	"regexp"
 	"sync"

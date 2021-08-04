@@ -9,7 +9,7 @@ import (
 	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	"github.com/nomos/promise"
+	"github.com/nomos/go-lokas/promise"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	"go.etcd.io/etcd/client/v3"
 	"regexp"

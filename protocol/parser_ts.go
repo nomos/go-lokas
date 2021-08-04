@@ -2,7 +2,7 @@ package protocol
 
 import (
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/promise"
+	"github.com/nomos/go-lokas/promise"
 )
 
 const (

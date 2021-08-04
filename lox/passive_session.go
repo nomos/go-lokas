@@ -6,7 +6,7 @@ import (
 	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	"github.com/nomos/promise"
+	"github.com/nomos/go-lokas/promise"
 	"go.uber.org/zap"
 	"time"
 )

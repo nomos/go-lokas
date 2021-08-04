@@ -4,7 +4,7 @@ import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/util"
-	"github.com/nomos/promise"
+	"github.com/nomos/go-lokas/promise"
 	"sync"
 )
 
