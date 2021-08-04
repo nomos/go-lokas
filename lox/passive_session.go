@@ -1,12 +1,11 @@
 package lox
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	"github.com/nomos/go-lokas/promise"
 	"go.uber.org/zap"
 	"time"
 )
@@ -64,12 +63,12 @@ func (this *PassiveSession) OnCreate() error {
 	return nil
 }
 
-func (this *PassiveSession) Start() *promise.Promise {
-	return promise.Resolve(nil)
+func (this *PassiveSession) Start() error {
+	return nil
 }
 
-func (this *PassiveSession) Stop() *promise.Promise {
-	return promise.Resolve(nil)
+func (this *PassiveSession) Stop() error {
+	return nil
 }
 
 func (this *PassiveSession) OnDestroy() error {

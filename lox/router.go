@@ -1,11 +1,10 @@
 package lox
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/protocol"
-	"github.com/nomos/go-lokas/promise"
 )
 
 var _ lokas.IModule = (*Router)(nil)
@@ -69,12 +68,12 @@ func (this *Router) Unload() error {
 	return nil
 }
 
-func (this *Router) Start() *promise.Promise {
-	return promise.Resolve(nil)
+func (this *Router) Start() error {
+	return nil
 }
 
-func (this *Router) Stop() *promise.Promise {
-	return promise.Resolve(nil)
+func (this *Router) Stop() error {
+	return nil
 }
 
 func (this *Router) OnStart() error {

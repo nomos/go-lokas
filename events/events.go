@@ -313,7 +313,7 @@ func SetMaxListeners(n int) {
 func (e *BaseEmitter) SetMaxListeners(n int) {
 	if n < 0 {
 		if EnableWarning {
-			log.Printf("(events) warning: MaxListeners must be positive number, tried to set: %d", n)
+			log.Errorf("(events) warning: MaxListeners must be positive number, tried to set: %d", n)
 			return
 		}
 	}

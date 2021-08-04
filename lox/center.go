@@ -2,7 +2,6 @@ package lox
 
 import (
 	"github.com/nomos/go-lokas"
-	"github.com/nomos/go-lokas/promise"
 )
 
 var _ lokas.IModuleCtor = (*centerCtor)(nil)
@@ -59,10 +58,10 @@ func (this *Center) Unload()error {
 	return nil
 }
 
-func (this *Center) Start()*promise.Promise {
+func (this *Center) Start() error {
 	return nil
 }
 
-func (this *Center) Stop()*promise.Promise {
+func (this *Center) Stop() error {
 	return nil
 }

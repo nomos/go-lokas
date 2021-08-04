@@ -137,6 +137,10 @@ func (this ProcessId) IsValid()bool{
 	return this>=0&&this<2<<NodeBits
 }
 
+func (this ID) ProcessId() ProcessId {
+	return ProcessId(int64(this) & nodeMask >> nodeShift)
+}
+
 // NewNode returns a new snowflake node that can be used to generate snowflake
 // IDs
 func NewSnowflake(node int64) (*Snowflake, error) {

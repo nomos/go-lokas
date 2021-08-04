@@ -4,12 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	"github.com/nomos/go-lokas/promise"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	"go.etcd.io/etcd/client/v3"
 	"regexp"
@@ -310,12 +309,12 @@ func (this *Registry) OnDestroy() error {
 	panic("implement me")
 }
 
-func (this *Registry) Start() *promise.Promise {
-	return promise.Resolve(nil)
+func (this *Registry) Start() error {
+	return nil
 }
 
-func (this *Registry) Stop() *promise.Promise {
-	return promise.Resolve(nil)
+func (this *Registry) Stop() error {
+	return nil
 }
 
 func (this *Registry) OnStart() error {

@@ -1,10 +1,9 @@
 package lox
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util"
-	"github.com/nomos/go-lokas/promise"
 	"sync"
 )
 
@@ -73,13 +72,13 @@ func (this *AvatarManager) Unload() error {
 	return nil
 }
 
-func (this *AvatarManager) Start() *promise.Promise {
+func (this *AvatarManager) Start() error {
 	this.StartMessagePump()
-	return promise.Resolve(nil)
+	return nil
 }
 
-func (this *AvatarManager) Stop() *promise.Promise {
-	return promise.Resolve(nil)
+func (this *AvatarManager) Stop() error {
+	return nil
 }
 
 func (this *AvatarManager) OnUpdate(){

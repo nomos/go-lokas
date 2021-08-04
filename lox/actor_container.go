@@ -1,11 +1,10 @@
 package lox
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/util"
-	"github.com/nomos/go-lokas/promise"
 	"go.uber.org/zap"
 	"sync"
 )
@@ -39,12 +38,12 @@ func (this *ActorContainer) SetProcess(process lokas.IProcess) {
 	this.process = process
 }
 
-func (this *ActorContainer) Start() *promise.Promise {
-	return promise.Resolve(nil)
+func (this *ActorContainer) Start() error {
+	return nil
 }
 
-func (this *ActorContainer) Stop() *promise.Promise {
-	return promise.Resolve(nil)
+func (this *ActorContainer) Stop() error {
+	return nil
 }
 
 func (this *ActorContainer) OnStart() error {
@@ -69,30 +68,29 @@ func (this *ActorContainer) GetActor(id util.ID)lokas.IActor{
 
 func (this *ActorContainer) StartActor(actor lokas.IActor){
 	log.Info("starting",zap.String("module",actor.Type()))
-	go actor.Start().Then(func(data interface{}) interface{} {
-		log.Info("ActorContainer:StartActor:success",logfield.ActorInfo(actor)...)
-		actor.OnStart()
-		return nil
-	}).Catch(func(err error) interface{} {
+	go func() {
+		err:=actor.Start()
 		if err != nil {
 			log.Error("ActorContainer:StartActor:error",logfield.ActorInfo(actor).Append(logfield.Error(err))...)
 			this.RemoveActor(actor)
-			return err
+		} else {
+			log.Info("ActorContainer:StartActor:success",logfield.ActorInfo(actor)...)
+			actor.OnStart()
 		}
-		return nil
-	}).Await()
+	}()
 }
 
 func (this *ActorContainer) StopActor(actor lokas.IActor){
 	log.Info("stoping",zap.String("module",actor.Type()))
-	go actor.Stop().Then(func(data interface{}) interface{} {
-		actor.OnStop()
-		log.Info("stop success",zap.String("module",actor.Type()))
-		return nil
-	}).Catch(func(err error) interface{} {
-		log.Error("Actor stop error type:"+actor.Type()+" Id:"+actor.GetId().String()+" err:"+err.Error())
-		return nil
-	}).Await()
+	go func() {
+		err:=actor.Stop()
+		if err != nil {
+			log.Error("Actor stop error type:"+actor.Type()+" Id:"+actor.GetId().String()+" err:"+err.Error())
+		} else {
+			log.Info("stop success",zap.String("module",actor.Type()))
+			actor.OnStop()
+		}
+	}()
 }
 
 func (this *ActorContainer) AddActor(actor lokas.IActor){

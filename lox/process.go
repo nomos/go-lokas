@@ -201,7 +201,7 @@ func (this *Process) StartAllModule() error {
 	for _, mod := range this.modules {
 		if _, ok := mod.(lokas.IActor); ok {
 			log.Info("starting",logfield.FuncInfo(this,"StartAllModule").Append(logfield.Module(mod))...)
-			_, err := mod.(lokas.IActor).Start().Await()
+			err := mod.(lokas.IActor).Start()
 			if err != nil {
 				return err
 			}
@@ -216,7 +216,7 @@ func (this *Process) StopAllModule() error {
 	for _, mod := range this.modules {
 		if _, ok := mod.(lokas.IActor); ok {
 			log.Info("stop", logfield.FuncInfo(this,"StopAllModule").Append(logfield.Module(mod))...)
-			_, err := mod.(lokas.IActor).Stop().Await()
+			err := mod.(lokas.IActor).Stop()
 			if err != nil {
 				return err
 			}

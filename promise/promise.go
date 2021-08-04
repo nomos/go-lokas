@@ -110,13 +110,13 @@ func Await(p *Promise) (interface{}, error) {
 
 }
 
-func (promise *Promise) CalTime() *Promise {
-	promise.calTime = true
-	return promise
+func (this *Promise) CalTime() *Promise {
+	this.calTime = true
+	return this
 }
 
-func (promise *Promise) Elapse() time.Duration {
-	return promise.elapseTime
+func (this *Promise) Elapse() time.Duration {
+	return this.elapseTime
 }
 
 func Async(executor func(resolve func(interface{}), reject func(interface{}))) *Promise {
@@ -139,11 +139,11 @@ func Async(executor func(resolve func(interface{}), reject func(interface{}))) *
 	return promise
 }
 
-func (promise *Promise) Resolve(resolution interface{}) {
-	promise.mutex.Lock()
+func (this *Promise) Resolve(resolution interface{}) {
+	this.mutex.Lock()
 
-	if !promise.pending {
-		promise.mutex.Unlock()
+	if !this.pending {
+		this.mutex.Unlock()
 		return
 	}
 
@@ -151,51 +151,51 @@ func (promise *Promise) Resolve(resolution interface{}) {
 	case *Promise:
 		flattenedResult, err := result.Await()
 		if err != nil {
-			promise.mutex.Unlock()
-			promise.Reject(err)
+			this.mutex.Unlock()
+			this.Reject(err)
 			return
 		}
-		promise.result = flattenedResult
+		this.result = flattenedResult
 	default:
-		promise.result = result
+		this.result = result
 	}
-	promise.pending = false
+	this.pending = false
 
-	promise.wg.Done()
-	promise.mutex.Unlock()
+	this.wg.Done()
+	this.mutex.Unlock()
 }
 
-func (promise *Promise) Reject(err interface{}) {
-	promise.mutex.Lock()
-	defer promise.mutex.Unlock()
+func (this *Promise) Reject(err interface{}) {
+	this.mutex.Lock()
+	defer this.mutex.Unlock()
 
-	if !promise.pending {
+	if !this.pending {
 		return
 	}
 	if err1, ok := err.(error); ok {
-		promise.err = err1
+		this.err = err1
 	} else {
-		promise.err = errors.New(err.(string))
+		this.err = errors.New(err.(string))
 	}
-	promise.pending = false
+	this.pending = false
 
-	promise.wg.Done()
+	this.wg.Done()
 }
 
-func (promise *Promise) handlePanic() {
+func (this *Promise) handlePanic() {
 	var r = recover()
 	if r != nil {
 		if err, ok := r.(error); ok {
-			promise.Reject(errors.New(err.Error()))
+			this.Reject(errors.New(err.Error()))
 		} else {
-			promise.Reject(errors.New(r.(string)))
+			this.Reject(errors.New(r.(string)))
 		}
 	}
 }
 
-func (promise *Promise) Then(fulfillment func(data interface{}) interface{}) *Promise {
+func (this *Promise) Then(fulfillment func(data interface{}) interface{}) *Promise {
 	return Async(func(resolve func(interface{}), reject func(interface{})) {
-		result, err := promise.Await()
+		result, err := this.Await()
 		if err != nil {
 			reject(err)
 			return
@@ -204,9 +204,9 @@ func (promise *Promise) Then(fulfillment func(data interface{}) interface{}) *Pr
 	})
 }
 
-func (promise *Promise) Catch(rejection func(err error) interface{}) *Promise {
+func (this *Promise) Catch(rejection func(err error) interface{}) *Promise {
 	return Async(func(resolve func(interface{}), reject func(interface{})) {
-		result, err := promise.Await()
+		result, err := this.Await()
 		if err != nil {
 			reject(rejection(err))
 			return
@@ -215,21 +215,21 @@ func (promise *Promise) Catch(rejection func(err error) interface{}) *Promise {
 	})
 }
 
-func (promise *Promise) Await() (interface{}, error) {
-	if promise.calTime {
+func (this *Promise) Await() (interface{}, error) {
+	if this.calTime {
 		start := time.Now()
-		promise.wg.Wait()
-		promise.elapseTime = time.Now().Sub(start)
-		return promise.result, promise.err
+		this.wg.Wait()
+		this.elapseTime = time.Now().Sub(start)
+		return this.result, this.err
 	}
-	promise.wg.Wait()
-	return promise.result, promise.err
+	this.wg.Wait()
+	return this.result, this.err
 }
 
-func (promise *Promise) AsCallback(f func(interface{}, error)) {
+func (this *Promise) AsCallback(f func(interface{}, error)) {
 	go func() {
-		promise.wg.Wait()
-		f(promise.result, promise.err)
+		this.wg.Wait()
+		f(this.result, this.err)
 	}()
 }
 

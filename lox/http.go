@@ -1,11 +1,10 @@
 package lox
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
-	"github.com/nomos/go-lokas/rox"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network/httpserver"
-	"github.com/nomos/go-lokas/promise"
+	"github.com/nomos/go-lokas/rox"
 	"net/http"
 	"regexp"
 	"sync"
@@ -36,7 +35,6 @@ type Http struct {
 	Port string
 	subRouters map[string]*rox.Router
 	httpServer *httpserver.HttpServer
-	startPending *promise.Promise
 	started bool
 	mu sync.Mutex
 }
@@ -74,37 +72,29 @@ func (this *Http) Unload()error {
 	return nil
 }
 
-func (this *Http) Start()*promise.Promise {
+func (this *Http) Start() error {
 	log.Info(this.Type()+" Start")
 	this.mu.Lock()
 	defer this.mu.Unlock()
-	if this.startPending==nil&&!this.started {
-		this.startPending =  promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-			err:=this.httpServer.Start(this.Host+":"+this.Port)
-			this.mu.Lock()
-			defer this.mu.Unlock()
-			if err != nil {
-				this.startPending = nil
-				reject(err)
-				return
-			}
-			this.started = true
-			this.startPending = nil
-			resolve(nil)
-		})
-	} else if this.started {
-		return promise.Resolve(nil)
+	if this.started {
+		return nil
 	}
-	return this.startPending
+	err:=this.httpServer.Start(this.Host+":"+this.Port)
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	this.started = true
+	return nil
 }
 
-func (this *Http) Stop()*promise.Promise {
+func (this *Http) Stop() error {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	log.Info(this.Type()+" Stop")
 	this.started = false
 	this.httpServer.Stop()
-	return promise.Resolve(nil)
+	return nil
 }
 
 func (this *Http) CreateHandlerFunc(f rox.Handler)func(http.ResponseWriter, *http.Request){

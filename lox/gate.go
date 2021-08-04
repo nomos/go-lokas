@@ -1,14 +1,13 @@
 package lox
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/network/tcp"
 	"github.com/nomos/go-lokas/network/ws"
 	"github.com/nomos/go-lokas/protocol"
-	"github.com/nomos/go-lokas/promise"
 	"sync"
 )
 
@@ -66,7 +65,6 @@ type Gate struct {
 	Protocol           protocol.TYPE
 	connType           ConnType
 	server             lokas.Server
-	startPending       *promise.Promise
 	started            bool
 	mu                 sync.Mutex
 }
@@ -145,35 +143,27 @@ func (this *Gate) OnDestroy() error {
 	return nil
 }
 
-func (this *Gate) Start() *promise.Promise {
+func (this *Gate) Start() error {
 	log.Info(this.Type() + " Start")
 	this.mu.Lock()
 	defer this.mu.Unlock()
-	if this.startPending == nil && !this.started {
-		this.startPending = promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-			err := this.server.Start(this.Host + ":" + this.Port)
-			this.mu.Lock()
-			defer this.mu.Unlock()
-			if err != nil {
-				this.startPending = nil
-				reject(err)
-				return
-			}
-			this.started = true
-			this.startPending = nil
-			resolve(nil)
-		})
-	} else if this.started {
-		return promise.Resolve(nil)
+	if this.started {
+		return nil
 	}
-	return this.startPending
+	err := this.server.Start(this.Host + ":" + this.Port)
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	this.started = true
+	return nil
 }
-func (this *Gate) Stop() *promise.Promise {
+func (this *Gate) Stop() error {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	this.ISessionManager.Clear()
 	log.Warn("stop",logfield.FuncInfo(this,"Stop")...)
 	this.started = false
 	this.server.Stop()
-	return promise.Resolve(nil)
+	return nil
 }

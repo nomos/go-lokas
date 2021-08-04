@@ -130,7 +130,6 @@ type IEntity interface {
 	Components()map[protocol.BINARY_TAG]IComponent
 }
 
-
 type IComponentPool interface {
 	Recycle(comp IComponent)
 	Get() IComponent
@@ -186,8 +185,8 @@ type IModule interface {
 	Unload() error
 	GetProcess() IProcess
 	SetProcess(IProcess)
-	Start() *promise.Promise
-	Stop() *promise.Promise
+	Start() error
+	Stop() error
 	OnStart() error
 	OnStop() error
 }

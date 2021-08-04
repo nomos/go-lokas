@@ -1,4 +1,4 @@
-package ws
+package wsclient
 
 import (
 	"github.com/nomos/go-lokas/log"
