@@ -66,18 +66,22 @@ func (this *ActorContainer) GetActor(id util.ID)lokas.IActor{
 	return this.Actors[id]
 }
 
-func (this *ActorContainer) StartActor(actor lokas.IActor){
+func (this *ActorContainer) StartActor(actor lokas.IActor) error{
 	log.Info("starting",zap.String("module",actor.Type()))
-	go func() {
-		err:=actor.Start()
+	err:=actor.Start()
+	if err != nil {
+		log.Error("ActorContainer:StartActor:error",logfield.ActorInfo(actor).Append(logfield.Error(err))...)
+		this.RemoveActor(actor)
+		return err
+	} else {
+		log.Info("ActorContainer:StartActor:success",logfield.ActorInfo(actor)...)
+		err=actor.OnStart()
 		if err != nil {
-			log.Error("ActorContainer:StartActor:error",logfield.ActorInfo(actor).Append(logfield.Error(err))...)
-			this.RemoveActor(actor)
-		} else {
-			log.Info("ActorContainer:StartActor:success",logfield.ActorInfo(actor)...)
-			actor.OnStart()
+			log.Error(err.Error())
+			return err
 		}
-	}()
+	}
+	return nil
 }
 
 func (this *ActorContainer) StopActor(actor lokas.IActor){
@@ -98,7 +102,6 @@ func (this *ActorContainer) AddActor(actor lokas.IActor){
 	defer this.mu.Unlock()
 	actor.SetProcess(this.process)
 	this.Actors[actor.GetId()] = actor
-	this.StartActor(actor)
 	this.process.RegisterActors()
 }
 

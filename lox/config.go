@@ -151,13 +151,13 @@ func (this *AppConfig) Load() error {
 	defer this.mu.Unlock()
 	file, err := os.OpenFile(path.Join(this.folder, this.name+".toml"), os.O_RDWR, 0666)
 	if err != nil {
-		log.Error(err.Error())
+		log.Warn(err.Error())
 		return err
 	}
 	if file != nil {
 		return this.Viper.ReadConfig(file)
 	} else {
-		log.Errorf("no file")
+		log.Warn("no file")
 	}
 	return nil
 }

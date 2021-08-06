@@ -136,6 +136,7 @@ func (this *Process) LoadMod(name string, conf lokas.IConfig) error {
 	}
 	if _, ok := mod.(lokas.IActor); ok {
 		this.AddActor(mod.(lokas.IActor))
+		this.StartActor(mod.(lokas.IActor))
 	}
 	log.Info("load success", zap.String("module", name))
 	return nil

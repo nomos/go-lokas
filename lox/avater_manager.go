@@ -48,6 +48,7 @@ func (this *AvatarManager) CreateAvatar(id util.ID)(*Avatar,error){
 	}
 	avatar=NewAvatar(id)
 	this.GetProcess().AddActor(avatar)
+	this.GetProcess().StartActor(avatar)
 	this.Avatars[id] = avatar
 	err:=avatar.Deserialize(this.GetProcess())
 	if err != nil {

@@ -126,6 +126,7 @@ func (this *Gate) SessionCreator(conn lokas.IConn) lokas.ISession {
 	sess.Protocol = this.Protocol
 	this.ISessionManager.AddSession(sess.GetId(), sess)
 	this.GetProcess().AddActor(sess)
+	this.GetProcess().StartActor(sess)
 	return sess
 }
 

@@ -95,6 +95,7 @@ type IActorContainer interface {
 	RemoveActorById(id util.ID) IActor
 	GetActorIds() []util.ID
 	GetActor(id util.ID) IActor
+	StartActor(actor IActor) error
 }
 
 type IActorInfo interface {
