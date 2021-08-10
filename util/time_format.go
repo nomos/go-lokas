@@ -19,6 +19,10 @@ func FormatTimeToString(time time.Time) string {
 	return time.Format("2006-01-02 15:04:05")
 }
 
+func FormatTimeToISOString(time time.Time) string {
+	return time.Format("2006-01-02T15:04:05")
+}
+
 func UnixSecondToString(unix int64) string{
 	return FormatTimeToString(time.Unix(unix,0))
 }
