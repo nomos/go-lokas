@@ -11,11 +11,11 @@ import (
 	"time"
 )
 
-type SessionOption func(*ActiveSession)
+type ActiveSessionOption func(*ActiveSession)
 
 var _ lokas.ISession = &ActiveSession{}
 
-func NewActiveSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManager, opts ...SessionOption) *ActiveSession {
+func NewActiveSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManager, opts ...ActiveSessionOption) *ActiveSession {
 	s := &ActiveSession{
 		ID:       id,
 		Messages: make(chan []byte, 100),

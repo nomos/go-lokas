@@ -9,11 +9,12 @@ import (
 	"go.uber.org/zap"
 	"time"
 )
+type PassiveSessionOption func(*PassiveSession)
 
 var _ lokas.ISession = &PassiveSession{}
 var _ lokas.IActor = &PassiveSession{}
 
-func NewPassiveSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManager) *PassiveSession {
+func NewPassiveSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManager, opts ...PassiveSessionOption) *PassiveSession {
 	s := &PassiveSession{
 		Actor:NewActor(),
 		Messages: make(chan []byte, 100),
@@ -21,6 +22,9 @@ func NewPassiveSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManag
 		manager:  manager,
 		timeout: TimeOut,
 		ticker: time.NewTicker(UpdateTime),
+	}
+	for _, o := range opts {
+		o(s)
 	}
 	s.SetType("PassiveSession")
 	s.SetId(id)

@@ -68,7 +68,7 @@ func (this *Proxy) OnDestroy() error {
 
 func passiveSessionCreator(p *Proxy) func(conn lokas.IConn) lokas.ISession {
 	return func(conn lokas.IConn) lokas.ISession {
-		sess := NewPassiveSession(conn, p.GetProcess().GenId(), p.PassiveSessions)
+		sess := NewProcessPassiveSession(conn, p.GetProcess().GenId(), p.PassiveSessions)
 		//sess.AuthFunc = this.AuthFunc
 		sess.Protocol = protocol.BINARY
 		p.PassiveSessions.AddSession(sess.GetId(), sess)
@@ -105,9 +105,12 @@ func (this *Proxy) Unload() error {
 
 func activeSessionCreator(id util.ProcessId, p *Proxy) func(conn lokas.IConn) lokas.ISession {
 	return func(conn lokas.IConn) lokas.ISession {
-		sess := p.ActiveSessions.GetSession(id.Snowflake()).(*network.DefaultSession)
+		sess := p.ActiveSessions.GetSession(id.Snowflake()).(*ProcessActiveSession)
 		if sess == nil {
-			sess = network.NewDefaultSession(conn, id.Snowflake(), p.ActiveSessions)
+			sess = NewProcessActiveSession(conn, id.Snowflake(), p.ActiveSessions)
+		}
+		sess.OnOpenFunc = func(conn lokas.IConn) {
+
 		}
 		sess.Conn = conn
 		return sess
@@ -139,6 +142,7 @@ func (this *Proxy) Connect(id util.ProcessId, addr string) error {
 		log.Error(err.Error())
 		return err
 	}
+	mu.Lock()
 	defer mu.Unlock()
 	if this.checkIsConnected(id) {
 		log.Warnf("服务器已经连接",selfId.String(),id.String())
@@ -149,7 +153,6 @@ func (this *Proxy) Connect(id util.ProcessId, addr string) error {
 		log.Error(err.Error())
 		return err
 	}
-	mu.Lock()
 
 	context := &lokas.Context{
 		SessionCreator:    activeSessionCreator(id, this),
