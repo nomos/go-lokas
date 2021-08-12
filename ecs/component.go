@@ -19,6 +19,10 @@ func (this *Component) SetDirty(d bool) {
 	}
 }
 
+func (this *Component) Dirty()bool{
+	return this.dirty
+}
+
 func (this *Component) GetEntity()lokas.IEntity {
 	return this.entity
 }

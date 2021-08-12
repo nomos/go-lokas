@@ -1,9 +1,9 @@
 package lox
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/ecs"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/log/logfield"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"

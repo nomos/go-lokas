@@ -142,6 +142,7 @@ type IComponent interface {
 	protocol.ISerializable
 	GetEntity()IEntity
 	SetDirty(d bool)
+	Dirty() bool
 	SetRuntime(engine IRuntime)
 	GetRuntime()IRuntime
 	SetEntity(e IEntity)
