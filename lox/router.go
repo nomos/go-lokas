@@ -40,8 +40,10 @@ func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 			a.ReceiveMessage(msg)
 			return
 		}
+		log.Infof("proxy msg",msg.FromActor,msg.ToActor)
 		//TODO:proxy msg
-		_,err:=this.process.GetProcessIdByActor(msg.ToActor)
+		pid,err:=this.process.GetProcessIdByActor(msg.ToActor)
+		log.Infof("processId",pid)
 		if err != nil {
 			origin:=this.GetProcess().GetActor(msg.FromActor)
 			if !msg.Req {
@@ -49,6 +51,7 @@ func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 			}
 			return
 		}
+		this.process.Get("Proxy").(lokas.IProxy)
 	} else if msg.ToActor==0 {
 
 	} else {

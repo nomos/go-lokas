@@ -28,8 +28,20 @@ func (this *DefaultSessionManager) AddSession(id util.ID, session lokas.ISession
 		return
 	}
 	this.sessionsMu.Lock()
+	defer this.sessionsMu.Unlock()
 	this.sessions[id] = session
-	this.sessionsMu.Unlock()
+}
+
+func (this *DefaultSessionManager) ResetSession(id util.ID, session lokas.ISession) {
+	if !this.safeMode {
+		delete(this.sessions,session.GetId())
+		this.sessions[id] = session
+		return
+	}
+	this.sessionsMu.Lock()
+	defer this.sessionsMu.Unlock()
+	delete(this.sessions,session.GetId())
+	this.sessions[id] = session
 }
 
 func (this *DefaultSessionManager) RemoveSession(id util.ID) {
@@ -38,8 +50,8 @@ func (this *DefaultSessionManager) RemoveSession(id util.ID) {
 		return
 	}
 	this.sessionsMu.Lock()
+	defer this.sessionsMu.Unlock()
 	delete(this.sessions, id)
-	this.sessionsMu.Unlock()
 }
 
 func (this *DefaultSessionManager) GetSession(id util.ID) lokas.ISession {
@@ -47,64 +59,58 @@ func (this *DefaultSessionManager) GetSession(id util.ID) lokas.ISession {
 		return this.sessions[id]
 	}
 	this.sessionsMu.RLock()
+	defer this.sessionsMu.RUnlock()
 	session := this.sessions[id]
-	this.sessionsMu.RUnlock()
 	return session
 }
 
 func (this *DefaultSessionManager) GetRoundSession() (lokas.ISession, bool) {
 	var keys = make([]util.ID, 0)
 	this.sessionsMu.RLock()
+	defer this.sessionsMu.RUnlock()
 	for key, _ := range this.sessions {
 		keys = append(keys, key)
 	}
 	if len(keys) == 0 {
-		this.sessionsMu.RUnlock()
 		return nil, false
 	}
 	s := rand.NewSource(time.Now().Unix())
 	r := rand.New(s)
 	index := r.Intn(len(keys))
 	session := this.sessions[keys[index]]
-	this.sessionsMu.RUnlock()
+
 	return session, true
 }
 
 func (this *DefaultSessionManager) Range(f func(id util.ID, session lokas.ISession) bool) {
 	if this.safeMode {
 		this.sessionsMu.RLock()
+		defer this.sessionsMu.RUnlock()
 	}
 	for id, session := range this.sessions {
 		if f(id, session) {
 			break
 		}
 	}
-	if this.safeMode {
-		this.sessionsMu.RUnlock()
-	}
 }
 
 func (this *DefaultSessionManager) GetSessionCount() int {
 	if this.safeMode {
 		this.sessionsMu.RLock()
+		defer this.sessionsMu.RUnlock()
 	}
 	count := len(this.sessions)
-	if this.safeMode {
-		this.sessionsMu.RUnlock()
-	}
 	return count
 }
 
 func (this *DefaultSessionManager) Clear() {
 	if this.safeMode {
 		this.sessionsMu.RLock()
+		defer this.sessionsMu.RUnlock()
 	}
 	for id,sess := range this.sessions {
 		sess.GetConn().Close()
 		delete(this.sessions, id)
-	}
-	if this.safeMode {
-		this.sessionsMu.RUnlock()
 	}
 }
 

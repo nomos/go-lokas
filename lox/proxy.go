@@ -1,6 +1,7 @@
 package lox
 
 import (
+	"encoding/json"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/log/logfield"
@@ -47,15 +48,15 @@ type Proxy struct {
 }
 
 func (this *Proxy) OnStart() error {
-	panic("implement me")
+	return nil
 }
 
 func (this *Proxy) OnStop() error {
-	panic("implement me")
+	return nil
 }
 
 func (this *Proxy) Type() string {
-	return "Proxy"
+	return ProxyCtor.Type()
 }
 
 func (this *Proxy) OnCreate() error {
@@ -66,24 +67,13 @@ func (this *Proxy) OnDestroy() error {
 	panic("implement me")
 }
 
-func passiveSessionCreator(p *Proxy) func(conn lokas.IConn) lokas.ISession {
-	return func(conn lokas.IConn) lokas.ISession {
-		sess := NewProcessPassiveSession(conn, p.GetProcess().GenId(), p.PassiveSessions)
-		//sess.AuthFunc = this.AuthFunc
-		sess.Protocol = protocol.BINARY
-		p.PassiveSessions.AddSession(sess.GetId(), sess)
-		sess.Conn = conn
-		return sess
-	}
-}
-
 func (this *Proxy) Load(conf lokas.IConfig) error {
 	log.WithFields(log.Fields{
 		"host":     conf.Get("host"),
 		"port":     conf.Get("port"),
 		"protocol": conf.Get("protocol"),
 		"conn":     conf.Get("conn"),
-	}).Info("Gate:LoadConfig")
+	}).Info("Proxy:LoadConfig")
 	this.Host = conf.Get("host").(string)
 	this.Port = conf.Get("port").(string)
 	context := &lokas.Context{
@@ -103,14 +93,57 @@ func (this *Proxy) Unload() error {
 	return nil
 }
 
+type processHandShake struct {
+	Id util.ID
+}
+
+func passiveSessionCreator(p *Proxy) func(conn lokas.IConn) lokas.ISession {
+	return func(conn lokas.IConn) lokas.ISession {
+		sess := NewPassiveSession(conn, p.GetProcess().GenId(), p.PassiveSessions)
+		sess.AuthFunc = func(data []byte) error {
+			var hs processHandShake
+			err:=json.Unmarshal(data,hs)
+			if err != nil {
+				log.Error(err.Error())
+				return err
+			}
+			sess.manager.ResetSession(hs.Id,sess)
+			data,_=protocol.MarshalMessage(0,hs,protocol.BINARY)
+			sess.Conn.Write(data)
+			return nil
+		}
+		sess.Protocol = protocol.BINARY
+		p.PassiveSessions.AddSession(sess.GetId(), sess)
+		sess.Conn = conn
+		return sess
+	}
+}
+
 func activeSessionCreator(id util.ProcessId, p *Proxy) func(conn lokas.IConn) lokas.ISession {
 	return func(conn lokas.IConn) lokas.ISession {
-		sess := p.ActiveSessions.GetSession(id.Snowflake()).(*ProcessActiveSession)
+		sess := p.ActiveSessions.GetSession(id.Snowflake()).(*ActiveSession)
 		if sess == nil {
-			sess = NewProcessActiveSession(conn, id.Snowflake(), p.ActiveSessions)
+			sess = NewActiveSession(conn, id.Snowflake(), p.ActiveSessions)
 		}
 		sess.OnOpenFunc = func(conn lokas.IConn) {
+			//发送handshake
+			//等待回
+			d,_:=json.Marshal(&processHandShake{Id: id.Snowflake()})
+			hs:=&protocol.HandShake{
+				Data: d,
+			}
+			data,_:=protocol.MarshalMessage(0,hs,protocol.BINARY)
+			sess.Conn.Write(data)
+		}
+		sess.MsgHandler = func(msg *protocol.BinaryMessage) {
+			id,_:=msg.GetId()
+			switch id {
+			case protocol.TAG_HandShake:
 
+			default:
+
+			}
+			log.Warnf()
 		}
 		sess.Conn = conn
 		return sess
@@ -175,11 +208,12 @@ func (this *Proxy) Start() error {
 	if this.started {
 		return nil
 	}
-	err := this.server.Start(this.Host + ":" + this.Port)
+	err := this.server.Start("0.0.0.0" + ":" + this.Port)
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
+	this.started = true
 	return nil
 }
 

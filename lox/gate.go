@@ -151,7 +151,7 @@ func (this *Gate) Start() error {
 	if this.started {
 		return nil
 	}
-	err := this.server.Start(this.Host + ":" + this.Port)
+	err := this.server.Start("0.0.0.0" + ":" + this.Port)
 	if err != nil {
 		log.Error(err.Error())
 		return err

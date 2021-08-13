@@ -288,6 +288,7 @@ type Registry struct {
 
 func (this *Registry) GetActorIdsByTypeAndServerId(serverId int32, typ string) []util.ID {
 	if serverId == this.GetProcess().ServerId() {
+		log.Warnf("GetLocalServer",serverId,this.GetProcess().ServerId())
 		return this.LocalRegistry.GetActorIdsByTypeAndServerId(serverId, typ)
 	}
 	return this.GlobalRegistry.GetActorIdsByTypeAndServerId(serverId, typ)

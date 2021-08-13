@@ -297,7 +297,6 @@ type DefaultConfig struct {
 	SName     string          `mapstructure:"serverName"`
 	Name      string          `mapstructure:"name"`
 	Type      string          `mapstructure:"type"`
-	Host      string          `mapstructure:"host"`
 	Etcd      EtcdConfig      `mapstructure:"-"`
 	Mongo     MongoConfig     `mapstructure:"-"`
 	Mysql     MysqlConfig     `mapstructure:"-"`

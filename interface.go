@@ -87,6 +87,7 @@ type IProcess interface {
 
 //IProxy universal module interface for connection
 type IProxy interface {
+
 }
 
 type IActorContainer interface {
@@ -314,6 +315,7 @@ type ISession interface {
 
 type ISessionManager interface {
 	AddSession(id util.ID, session ISession)
+	ResetSession(id util.ID, session ISession)
 	RemoveSession(id util.ID)
 	GetSession(id util.ID) ISession
 	GetSessionCount() int
