@@ -31,7 +31,6 @@ type AppConfig struct {
 
 type ConfigOption func(*AppConfig) *AppConfig
 
-
 func ConfigFile(folder string) ConfigOption {
 	return func(config *AppConfig) *AppConfig {
 		config.folder = folder
@@ -48,9 +47,9 @@ func MongoFile(folder string) ConfigOption {
 	}
 }
 
-func EtcdFile(etcdPath string,addr string)ConfigOption{
+func EtcdFile(etcdPath string, addr string) ConfigOption {
 	return func(config *AppConfig) *AppConfig {
-		config.SetRemoteConfig(etcdPath,addr)
+		config.SetRemoteConfig(etcdPath, addr)
 		return config
 	}
 }
@@ -80,15 +79,15 @@ func NewSubAppConfig(name string, parent *AppConfig, conf *viper.Viper) *AppConf
 	ret.Viper = conf.Sub(name)
 	return ret
 }
-func (this *AppConfig) GetFolder()string {
+func (this *AppConfig) GetFolder() string {
 	return this.folder
 }
 
-func (this *AppConfig) SetFolder(f string){
+func (this *AppConfig) SetFolder(f string) {
 	this.folder = f
 }
 
-func (this *AppConfig) SetRemoteConfig(p string,etcd string) {
+func (this *AppConfig) SetRemoteConfig(p string, etcd string) {
 	this.etcdPath = p
 	this.etcdAddr = etcd
 }
@@ -103,15 +102,15 @@ func (this *AppConfig) LoadFromRemote() error {
 		}
 		return nil
 	} else {
-		client:=etcdclient.New(etcdclient.WithEndPoints(this.etcdAddr))
+		client := etcdclient.New(etcdclient.WithEndPoints(this.etcdAddr))
 		defer client.Client.Close()
-		resp,err:=client.Get(context.TODO(),this.etcdPath)
+		resp, err := client.Get(context.TODO(), this.etcdPath)
 		if err != nil {
 			log.Error(err.Error())
 			return err
 		}
-		if len(resp.Kvs)==1 {
-			err:=this.ReadConfig(bytes.NewBuffer(resp.Kvs[0].Value))
+		if len(resp.Kvs) == 1 {
+			err := this.ReadConfig(bytes.NewBuffer(resp.Kvs[0].Value))
 			if err != nil {
 				log.Error(err.Error())
 				return err
@@ -291,12 +290,13 @@ var _ lokas.IConfig = (*DefaultConfig)(nil)
 type DefaultConfig struct {
 	*AppConfig
 	ProcessId util.ProcessId  `mapstructure:"pid"`
-	ServerId  int32          `mapstructure:"sid"`
+	ServerId  int32           `mapstructure:"sid"`
 	GameId    string          `mapstructure:"gid"`
+	Host      string          `mapstructure:"host"`
+	Port      string          `mapstructure:"port"`
 	Version   string          `mapstructure:"version"`
 	SName     string          `mapstructure:"serverName"`
 	Name      string          `mapstructure:"name"`
-	Type      string          `mapstructure:"type"`
 	Etcd      EtcdConfig      `mapstructure:"-"`
 	Mongo     MongoConfig     `mapstructure:"-"`
 	Mysql     MysqlConfig     `mapstructure:"-"`

@@ -23,6 +23,9 @@ const (
 
 //Actor是基础的游戏物体,一个物体只有一个可寻址实例
 
+var _ lokas.IActor = (*Actor)(nil)
+
+
 func NewActor() *Actor {
 	ret := &Actor{
 		IEntity:ecs.CreateEntity(),
@@ -48,6 +51,34 @@ type Actor struct {
 	leaseId     clientv3.LeaseID
 	OnUpdateFunc func()
 	MsgHandler  func(actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error)
+}
+
+func (this *Actor) Send(id util.ProcessId, msg *protocol.RouteMessage) error {
+	return this.process.Send(id,msg)
+}
+
+func (this *Actor) Load(conf lokas.IConfig) error {
+	panic("implement me")
+}
+
+func (this *Actor) Unload() error {
+	panic("implement me")
+}
+
+func (this *Actor) Start() error {
+	panic("implement me")
+}
+
+func (this *Actor) Stop() error {
+	panic("implement me")
+}
+
+func (this *Actor) OnStart() error {
+	panic("implement me")
+}
+
+func (this *Actor) OnStop() error {
+	panic("implement me")
 }
 
 func (this *Actor) Type()string{
@@ -115,6 +146,7 @@ func (this *Actor) StartMessagePump() {
 	this.msgChan = make(chan *protocol.RouteMessage, 100)
 	this.done = make(chan struct{})
 	go func() {
+		LOOP:
 		for {
 			select {
 			case <-this.timer.C:
@@ -122,11 +154,9 @@ func (this *Actor) StartMessagePump() {
 			case rMsg := <-this.msgChan:
 				this.OnMessage(rMsg)
 			case <-this.done:
-				return
-				goto CLOSE
+				break LOOP
 			}
 		}
-	CLOSE:
 		close(this.msgChan)
 		close(this.done)
 	}()

@@ -40,6 +40,7 @@ type ActiveSession struct {
 	done        chan struct{}
 	OnCloseFunc func(conn lokas.IConn)
 	OnOpenFunc  func(conn lokas.IConn)
+	OnVerified func(conn lokas.IConn)
 	MsgHandler  func(msg *protocol.BinaryMessage)
 	timeout     time.Duration
 	pingIndex   uint32
@@ -78,11 +79,11 @@ func (this *ActiveSession) Update(dt time.Duration, now time.Time) {
 }
 
 func (this *ActiveSession) GetProcess() lokas.IProcess {
-	panic("implement me")
+	return this.process
 }
 
 func (this *ActiveSession) SetProcess(process lokas.IProcess) {
-	panic("implement me")
+	this.process = process
 }
 
 func (this *ActiveSession) OnCreate() error {
@@ -127,7 +128,7 @@ func (this *ActiveSession) OnClose(conn lokas.IConn) {
 		this.manager.RemoveSession(this.ID)
 	}
 	log.Warn("OnClose",logfield.FuncInfo(this,"OnClose")...)
-	if this.OnOpenFunc != nil {
+	if this.OnCloseFunc != nil {
 		this.OnCloseFunc(conn)
 	}
 	this.stop()
@@ -217,8 +218,4 @@ func (this *ActiveSession) stop() {
 		this.done <- struct{}{}
 		this.done = nil
 	}
-}
-
-func (this *ActiveSession) HandleMessage(f func(msg *protocol.BinaryMessage)) {
-	this.MsgHandler = f
 }

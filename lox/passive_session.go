@@ -228,12 +228,12 @@ func (this *PassiveSession) stop() {
 
 func (this *PassiveSession) OnOpen(conn lokas.IConn) {
 	this.StartMessagePump()
-	if this.OnOpenFunc != nil {
-		this.OnOpenFunc(conn)
-	}
 	log.Info("PassiveSession:OnOpen",logfield.ActorInfo(this)...)
 	if this.manager != nil {
 		this.manager.AddSession(this.GetId(), this)
+	}
+	if this.OnOpenFunc != nil {
+		this.OnOpenFunc(conn)
 	}
 }
 

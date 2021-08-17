@@ -13,6 +13,7 @@ var (
 	ERR_PACKAGE_FORMAT  = CreateError(-3, "wrong packet format")
 	ERR_INTERNAL_ERROR  = CreateError(-4, "internal error")
 	ERR_ACTOR_NOT_FOUND = CreateError(-101, "actor not found")
+	ERR_RPC_FAILED = CreateError(-102, "rpc failed")
 
 	//cs error
 	ERR_INTERNAL_SERVER        = CreateError(901, "服务器繁忙")

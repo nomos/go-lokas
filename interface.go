@@ -60,6 +60,7 @@ type IProcess interface {
 	IRegistry
 	IActorContainer
 	IRouter
+	IProxy
 	Add(modules IModule) IModule             //add a module
 	RegisterModule(ctor IModuleCtor)         //register a module ctor
 	LoadAllModule(IProcessConfig) error      //load all module from config
@@ -87,7 +88,7 @@ type IProcess interface {
 
 //IProxy universal module interface for connection
 type IProxy interface {
-
+	Send(id util.ProcessId,msg *protocol.RouteMessage)error
 }
 
 type IActorContainer interface {
@@ -195,19 +196,13 @@ type IModule interface {
 }
 
 type IRegistry interface {
-	RegisterProcessInfo() error
 	GetProcessIdByActor(actorId util.ID)(util.ProcessId,error)
 	RegisterActors() error
 	RegisterActorRemote(actor IActor) error
 	UnregisterActorRemote(actor IActor)error
-	RegisterServiceRemote(service *Service)error
-	UnregisterServiceRemote(service *Service)error
 	RegisterActorLocal(actor IActor) error
 	UnregisterActorLocal(actor IActor)error
-	RegisterServiceLocal(service *Service)error
-	UnregisterServiceLocal(service *Service)error
 	GetActorIdsByTypeAndServerId(serverId int32,typ string)[]util.ID
-
 }
 
 //IRouter interface for router

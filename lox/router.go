@@ -44,14 +44,20 @@ func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 		//TODO:proxy msg
 		pid,err:=this.process.GetProcessIdByActor(msg.ToActor)
 		log.Infof("processId",pid)
+
 		if err != nil {
-			origin:=this.GetProcess().GetActor(msg.FromActor)
+			log.Warnf("actor not found",msg.ToActor)
+			return
+		}
+		err=this.process.Get("Proxy").(lokas.IProxy).Send(pid,msg)
+		if err != nil {
+			log.Error(err.Error())
 			if !msg.Req {
-				origin.ReceiveMessage(protocol.NewRouteMessage(msg.ToActor,msg.FromActor,msg.TransId,protocol.ERR_ACTOR_NOT_FOUND.NewErrMsg(),true))
+				origin:=this.GetProcess().GetActor(msg.FromActor)
+				origin.ReceiveMessage(protocol.NewRouteMessage(msg.ToActor,msg.FromActor,msg.TransId,protocol.ERR_RPC_FAILED.NewErrMsg(),true))
 			}
 			return
 		}
-		this.process.Get("Proxy").(lokas.IProxy)
 	} else if msg.ToActor==0 {
 
 	} else {

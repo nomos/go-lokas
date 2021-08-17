@@ -125,7 +125,8 @@ func (this *ActorContainer) RemoveActorById(id util.ID) lokas.IActor {
 
 func (this *ActorContainer) GetActorIds()[]util.ID{
 	ret:=[]util.ID{}
-	for k,_:=range this.Actors {
+	for k,v:=range this.Actors {
+		log.Warnf(v.Type(),k.String())
 		ret = append(ret, k)
 	}
 	return ret

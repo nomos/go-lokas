@@ -24,10 +24,6 @@ func CreateProcess() *Process {
 		modules:        map[string]lokas.IModule{},
 		modulesCreator: map[string]lokas.IModuleCtor{},
 	}
-
-	ret.IRegistry = ret.Add(NewRegistry(ret)).(lokas.IRegistry)
-	ret.IActorContainer = ret.Add(NewActorContainer(ret)).(lokas.IActorContainer)
-	ret.IRouter = ret.Add(NewRouter(ret)).(lokas.IRouter)
 	return ret
 }
 
@@ -35,6 +31,7 @@ type Process struct {
 	lokas.IActorContainer
 	lokas.IRegistry
 	lokas.IRouter
+	lokas.IProxy
 	modulesMap     map[string]util.ID
 	modules        map[string]lokas.IModule
 	modulesCreator map[string]lokas.IModuleCtor
@@ -200,14 +197,12 @@ func (this *Process) LoadAllModule(conf lokas.IProcessConfig) error {
 
 func (this *Process) StartAllModule() error {
 	for _, mod := range this.modules {
-		if _, ok := mod.(lokas.IActor); ok {
 			log.Info("starting",logfield.FuncInfo(this,"StartAllModule").Append(logfield.Module(mod))...)
-			err := mod.(lokas.IActor).Start()
+			err := mod.Start()
 			if err != nil {
 				return err
 			}
 			log.Info("success",logfield.FuncInfo(this,"StartAllModule").Append(logfield.Module(mod))...)
-		}
 	}
 	return nil
 }
@@ -215,9 +210,8 @@ func (this *Process) StartAllModule() error {
 func (this *Process) StopAllModule() error {
 	log.Warnf("StopAllModule", this.modules)
 	for _, mod := range this.modules {
-		if _, ok := mod.(lokas.IActor); ok {
 			log.Info("stop", logfield.FuncInfo(this,"StopAllModule").Append(logfield.Module(mod))...)
-			err := mod.(lokas.IActor).Stop()
+			err := mod.Stop()
 			if err != nil {
 				return err
 			}
@@ -225,7 +219,6 @@ func (this *Process) StopAllModule() error {
 				logfield.FuncInfo(this, "StopAllModule").
 					Append(logfield.Module(mod))...
 			)
-		}
 	}
 	return nil
 }
@@ -244,6 +237,12 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 	this.gameId = config.GetGameId()
 	this.version = config.GetVersion()
 	this.id = config.GetProcessId()
+
+	this.IProxy = this.Add(NewProxy(this)).(lokas.IProxy)
+	this.IProxy.(*Proxy).SetPort(config.GetString("port"))
+	this.IRegistry = this.Add(NewRegistry(this)).(lokas.IRegistry)
+	this.IActorContainer = this.Add(NewActorContainer(this)).(lokas.IActorContainer)
+	this.IRouter = this.Add(NewRouter(this)).(lokas.IRouter)
 	if this.id == 0 {
 		log.Error("pid is not set",logfield.FuncInfo(this,"Load")...)
 		return errors.New("pid is not set")
