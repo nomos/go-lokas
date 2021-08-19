@@ -9,6 +9,7 @@ require (
 	github.com/gorilla/sessions v1.2.1
 	github.com/gorilla/websocket v1.4.2
 	github.com/iancoleman/orderedmap v0.2.0
+	github.com/mitchellh/go-ps v1.0.0 // indirect
 	github.com/noaway/dateparse v0.0.0-20171117034806-ad2b19d7b298
 	github.com/nomos/jwt-go v3.2.0+incompatible
 	github.com/nomos/qmgo v1.9.6

@@ -6,10 +6,12 @@ import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 type ProcessActiveSession struct {
 	*ActiveSession
+	clientv3.WatchChan
 	verified bool
 }
 
@@ -57,5 +59,6 @@ func (this *ProcessActiveSession) msgHandler(msg *protocol.BinaryMessage){
 }
 
 func (this *ProcessActiveSession) onVerified(){
+
 }
 
