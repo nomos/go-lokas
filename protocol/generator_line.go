@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -118,6 +119,31 @@ var line_regexp_replace_tag_name = make(map[LineType]string)
 var COMMENT_REGEXP = regexp.MustCompile(`(.*)((//).*)`)
 var ICOMPONENT_REGEXP = regexp.MustCompile(`Component`)
 var ISERIALIZABLE_REGEXP = regexp.MustCompile(`Serializable`)
+
+type REGEXP_LINE_ENUM Enum
+
+var _ IEnum = (*REGEXP_LINE_ENUM)(nil)
+
+func (this REGEXP_LINE_ENUM) ToString() string {
+	strArr := make([]string, 0)
+	for k, _ := range line_regexp_map {
+		strArr = append(strArr, k.String())
+	}
+	sort.Strings(strArr)
+	return strArr[this]
+}
+
+func (this REGEXP_LINE_ENUM) Enum() Enum {
+	return Enum(this)
+}
+
+func GetAllLineRegExpEnums()IEnumCollection{
+	var ret IEnumCollection =[]IEnum{}
+	for i:=0;i<len(line_regexp_map);i++ {
+		ret = append(ret, REGEXP_LINE_ENUM(i))
+	}
+	return ret
+}
 
 func GetLineRegExps()map[string]*regexp.Regexp{
 	ret:=make(map[string]*regexp.Regexp)
