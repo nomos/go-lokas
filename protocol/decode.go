@@ -166,7 +166,7 @@ func (this *decodeState) unmarshal(v interface{}) {
 func (this *decodeState) unmarshalMessage(v interface{}) {
 	length := this.readLength()
 	transId := this.readTransId()
-	tag := this.readTag16()
+	tag := this.readTag()
 	log.WithFields(log.Fields{
 		"transId": transId,
 		"length":  length,
@@ -196,23 +196,9 @@ func (this *decodeState) readLength() uint16 {
 	return len
 }
 
-func (this *decodeState) readTag16() BINARY_TAG {
-	var tag BINARY_TAG
-	this.r(&tag)
-	return tag
-}
-
 func (this *decodeState) readTag() BINARY_TAG {
 	var tag BINARY_TAG
-	var tagHigh uint8
-	this.r(&tagHigh)
-	if tagHigh < 128 {
-		tag = BINARY_TAG(tagHigh)
-	} else {
-		var tagLow uint8
-		this.r(&tagLow)
-		tag = (BINARY_TAG(tagHigh) << 8) + BINARY_TAG(tagLow)
-	}
+	this.r(&tag)
 	return tag
 }
 

@@ -354,11 +354,7 @@ func getTagId(v reflect.Value, t reflect.Type) (BINARY_TAG, reflect.Value, refle
 }
 
 func writeTag(out io.Writer, tag BINARY_TAG) {
-	if tag < 128 {
-		w(out, uint8(tag))
-	} else {
-		w(out, tag)
-	}
+	w(out, uint16(tag))
 }
 
 func writeValue(out io.Writer, tag BINARY_TAG, v reflect.Value, t reflect.Type) {
