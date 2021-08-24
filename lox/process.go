@@ -309,7 +309,7 @@ func (this *Process) loadMongo(config MongoConfig) error {
 
 func (this *Process) loadRedis(config RedisConfig) error {
 	var err error
-	this.redis, err = redisclient.NewClient(config.Host + ":" + config.Port)
+	this.redis, err = redisclient.NewClient(config.Host + ":" + config.Port,config.Password)
 	if err != nil {
 		log.Error(err.Error())
 		return err

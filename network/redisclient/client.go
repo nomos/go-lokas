@@ -10,13 +10,25 @@ type Client struct {
 	*redis.Pool
 }
 
-func NewClient(addr string) (*Client,error) {
+func NewClient(addr string, pwd string) (*Client, error) {
 	ret := &Client{
-		Pool : &redis.Pool{
+		Pool: &redis.Pool{
 			MaxIdle:     3,
 			IdleTimeout: 240 * time.Second,
 			// Dial or DialContext must be set. When both are set, DialContext takes precedence over Dial.
-			Dial: func() (redis.Conn, error) { return redis.Dial("tcp", addr) },
+			Dial: func() (redis.Conn, error) {
+				c, err := redis.Dial("tcp", addr)
+				if err != nil {
+					return nil, err
+				}
+				if pwd != "" {
+					if _, err := c.Do("AUTH", pwd); err != nil {
+						c.Close()
+						return nil, err
+					}
+				}
+				return c, nil
+			},
 		},
 	}
 	_, err := ret.ping()
