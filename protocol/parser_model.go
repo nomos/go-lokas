@@ -3,8 +3,8 @@ package protocol
 import (
 	"fmt"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/util/stringutil"
 	"github.com/nomos/go-lokas/promise"
+	"github.com/nomos/go-lokas/util/stringutil"
 	"regexp"
 	"sort"
 	"strconv"
@@ -17,6 +17,7 @@ type ModelPackageObject struct {
 	GoPackageName string
 	CsPackageName string
 	TsPackageName string
+	Imports map[string]*ModelPackageObject
 	Ids map[BINARY_TAG]*ModelId
 	Errors map[int]*ModelError
 }
@@ -418,7 +419,6 @@ func (this *ModelErrorsObject) CheckLine(line *LineText) bool {
 	return false
 }
 
-
 type ModelImportObject struct {
 	DefaultGeneratorObj
 	imports []string
@@ -453,6 +453,17 @@ type ModelId struct {
 	PackageName string
 	ClassObj *ModelClassObject
 	RespClassObj *ModelClassObject
+}
+
+func (this *ModelId) Deps(g *Generator)[]string{
+	ret:= []string{}
+	for _,v:=range this.ClassObj.Deps(g) {
+		ret = append(ret, v)
+	}
+	for _,v:=range this.RespClassObj.Deps(g) {
+		ret = append(ret, v)
+	}
+	return ret
 }
 
 func (this *ModelId) GetGoProtocolFuncString(g *Generator)string{
@@ -634,6 +645,16 @@ type ModelIdsObject struct {
 	Ids   map[int]*ModelId
 }
 
+func (this *ModelIdsObject) Deps(g *Generator)[]string{
+	ret:=[]string{}
+	for _,v:=range this.Ids {
+		for _,d:=range v.Deps(g) {
+			ret = append(ret, d)
+		}
+	}
+	return ret
+}
+
 func NewModelIdsObject(file GeneratorFile) *ModelIdsObject {
 	ret := &ModelIdsObject{DefaultGeneratorObj: DefaultGeneratorObj{}, Ids: map[int]*ModelId{}}
 	ret.DefaultGeneratorObj.init(OBJ_MODEL_IDS, file)
@@ -791,7 +812,6 @@ func (this {EnumName}) ToString()string{
 	return ret
 }
 
-
 func (this *ModelEnumObject) gsEnumListFields(g *Generator)string{
 	ret:=""
 	for _,l:=range this.lines {
@@ -921,6 +941,11 @@ type ModelClassFields struct {
 	Comment string
 }
 
+//TODO:dep
+func (this *ModelClassFields) Dep(g *Generator)string{
+	return ""
+}
+
 func (this *ModelClassFields) csString(g *Generator,lower bool)string {
 	name:=this.Name
 	if lower {
@@ -1037,6 +1062,14 @@ type ModelClassObject struct {
 	TsPackage string
 	ClassName string
 	Comment string
+}
+
+func (this *ModelClassObject) Deps(g *Generator)[]string{
+	ret:=[]string{}
+	for _,f:=range this.Fields {
+		ret = append(ret, f.Dep(g))
+	}
+	return ret
 }
 
 func NewModelClassObject(file GeneratorFile) *ModelClassObject {
@@ -1335,6 +1368,21 @@ func (this *ModelFile) ProcessEnums() []*ModelEnumObject {
 			ret = append(ret,o)
 		}
 	}
+	return ret
+}
+
+func (this *ModelFile) ProcessImports() []string {
+	ret := make([]string, 0)
+	for _, obj := range this.Objects {
+		if obj.ObjectType() == OBJ_MODEL_IMPORTS {
+			for _,v:=range obj.(*ModelImportObject).imports {
+				ret = append(ret, v)
+			}
+		}
+	}
+	sort.Slice(ret, func(i, j int) bool {
+		return ret[i]<ret[j]
+	})
 	return ret
 }
 
