@@ -38,7 +38,7 @@ func (this *ModelPackageObject) GoString(g *Generator)string {
 package {PackageName}
 
 import (
-	"github.com/nomos/go-lokas/protocol"
+	"github.com/nomos/go-lokas/protocol"{Imports}
 	"reflect"
 )
 
@@ -56,7 +56,7 @@ func init() {
 	ret:=`//this is a generated file,do not modify it!!!
 package {PackageName}
 
-import (
+import ({Imports}
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/protocol"
@@ -78,8 +78,19 @@ func init() {
 	if funcStr == "" {
 		ret = ret0
 	}
+	deps:=[]string{}
+	for _,v:=range this.Ids {
+		for _,d:=range v.Deps(g) {
+			deps = append(deps, d)
+		}
+	}
+	if len(deps)>0 {
+		ret = strings.Replace(ret,`{Imports}`,g.getGoImportsString(deps),-1)
+	} else {
+		ret = strings.Replace(ret,`{Imports}`,"",-1)
+	}
 	ret = strings.Replace(ret,`{Errors}`,this.GoErrorString(g),-1)
-	ret = strings.Replace(ret,`{PackageName}`,this.GoPackageName,-1)
+	ret = strings.Replace(ret,`{PackageName}`,this.PackageName,-1)
 	ret = strings.Replace(ret,`{Ids}`,this.GetGoIdAssignString(g),-1)
 	ret = strings.Replace(ret,`{IdRegister}`,this.GetGoIdRegString(g),-1)
 	ret = strings.Replace(ret,`{Protocols}`,this.GetGoFuncString(g),-1)
@@ -457,11 +468,11 @@ type ModelId struct {
 
 func (this *ModelId) Deps(g *Generator)[]string{
 	ret:= []string{}
-	for _,v:=range this.ClassObj.Deps(g) {
-		ret = append(ret, v)
+	if this.ClassObj!=nil&&this.ClassObj.Package!=this.PackageName {
+		ret = append(ret, this.ClassObj.Package)
 	}
-	for _,v:=range this.RespClassObj.Deps(g) {
-		ret = append(ret, v)
+	if this.RespClassObj!=nil&&this.RespClassObj.Package!=this.PackageName {
+		ret = append(ret, this.RespClassObj.Package)
 	}
 	return ret
 }
@@ -542,7 +553,6 @@ func RegisterOnEvent{ClassB}(f func(c lokas.IEntityNetClient,event *{ClassB})err
 }
 
 func (this *ModelId) GetCsProtocolFuncString(g *Generator)string{
-	log.Warnf("this.Type",this.Type)
 	switch this.Type {
 	case "REQ":
 		comment:=strings.ReplaceAll(this.Comment,`//`,"")
@@ -803,7 +813,7 @@ func (this {EnumName}) ToString()string{
 	} else {
 		ret = strings.Replace(ret,`{Comment}`,"",-1)
 	}
-	ret = strings.Replace(ret,`{PackageName}`,this.GoPackage,-1)
+	ret = strings.Replace(ret,`{PackageName}`,this.Package,-1)
 	ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSlash(this.EnumName),-1)
 	ret = strings.Replace(ret,`{ClassBody}`,this.goFields(g),-1)
 	ret = strings.Replace(ret,`{StringToEnum}`,this.gsString2EnumFields(g),-1)
@@ -942,8 +952,68 @@ type ModelClassFields struct {
 }
 
 //TODO:dep
-func (this *ModelClassFields) Dep(g *Generator)string{
-	return ""
+func (this *ModelClassFields) Deps(g *Generator)[]string{
+	protos:=[]string{}
+	t:= MatchModelProtoTag(this.Type)
+	if t!=0 {
+		t=GetModelProtoTag(this.Type)
+		protos = append(protos, this.Type)
+	} else if t,s1,s2:=MatchModelSystemTag(this.Type);t!=0 {
+		if t==TAG_List {
+			t = MatchModelProtoTag(s1)
+			if t!=0 {
+			} else {
+				protos = append(protos, s1)
+			}
+		} else if t==TAG_Map {
+			t1 := MatchModelProtoTag(s1)
+			t2 := MatchModelProtoTag(s2)
+			//type1 := "*"+s1
+			if t1!=0 {
+				//type1 = t1.GoTypeString()
+			} else {
+				if g.IsEnum(s1) {
+					//type1 = stringutil.SplitCamelCaseUpperSlash(s1)
+					protos = append(protos,s1)
+				} else {
+					protos = append(protos,s1)
+				}
+			}
+
+			//type2 := "*"+s2
+			if t2!=0 {
+				//type2 = t2.GoTypeString()
+			}else {
+				if g.IsEnum(s2) {
+					//type2 = stringutil.SplitCamelCaseUpperSlash(s2)
+					protos = append(protos,s2)
+				} else {
+					protos = append(protos,s2)
+				}
+			}
+
+		}
+	} else {
+		if g.IsEnum(this.Type) {
+			protos = append(protos,this.Type)
+			//ret = "\t"+this.Name+" "+stringutil.SplitCamelCaseUpperSlash(this.Type)
+		} else {
+			protos = append(protos,this.Type)
+			//ret = "\t"+this.Name+" *"+this.Type
+		}
+	}
+	ret:=[]string{}
+	for _,p:=range protos {
+		m:=g.GetModelByName(p)
+		if m!=nil {
+			ret = append(ret, m.Package)
+		}
+		e:=g.GetEnumByName(p)
+		if e!=nil {
+			ret = append(ret, e.Package)
+		}
+	}
+	return ret
 }
 
 func (this *ModelClassFields) csString(g *Generator,lower bool)string {
@@ -1067,7 +1137,13 @@ type ModelClassObject struct {
 func (this *ModelClassObject) Deps(g *Generator)[]string{
 	ret:=[]string{}
 	for _,f:=range this.Fields {
-		ret = append(ret, f.Dep(g))
+		deps:=f.Deps(g)
+		for _,d:=range deps {
+			if d == this.Package {
+				continue
+			}
+			ret = append(ret, d)
+		}
 	}
 	return ret
 }
@@ -1193,7 +1269,7 @@ func (this *{ClassName}) OnCreate(r lokas.IRuntime) {
 func (this *{ClassName}) OnDestroy(r lokas.IRuntime) {
 	
 }`
-	ret = strings.Replace(ret,`{PackageName}`,this.GoPackage,-1)
+	ret = strings.Replace(ret,`{PackageName}`,this.Package,-1)
 	ret = strings.Replace(ret,`{ClassName}`,this.ClassName,-1)
 	return ret
 }
@@ -1206,7 +1282,7 @@ import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/ecs"
 	"github.com/nomos/go-lokas/protocol"
-	"reflect"{OtherImport}
+	"reflect"{OtherImport}{Import}
 )
 
 var _ lokas.IComponent = (*{EnumName})(nil)
@@ -1229,13 +1305,18 @@ func (this *{EnumName}) Serializable()protocol.ISerializable {
 	} else {
 		ret = strings.Replace(ret,`{OtherImport}`,"",-1)
 	}
+	if len(this.Deps(g))>0 {
+		ret = strings.Replace(ret,`{Import}`,g.getGoImportsString(this.Deps(g)),-1)
+	} else {
+		ret = strings.Replace(ret,`{Import}`,"",-1)
+	}
 	if this.Comment!="" {
 		comment:="\n"+this.Comment
 		ret = strings.Replace(ret,`{Comment}`,comment,-1)
 	} else {
 		ret = strings.Replace(ret,`{Comment}`,"",-1)
 	}
-	ret = strings.Replace(ret,`{PackageName}`,this.GoPackage,-1)
+	ret = strings.Replace(ret,`{PackageName}`,this.Package,-1)
 	ret = strings.Replace(ret,`{EnumName}`,this.ClassName,-1)
 	ret = strings.Replace(ret,`{ClassBody}`,this.goFields(g),-1)
 	return ret

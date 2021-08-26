@@ -19,6 +19,22 @@ func ByteArr(i... byte)[]byte {
 	return i
 }
 
+func RemoveDuplicateString(a []string)[]string {
+	ret:=[]string{}
+	for _,v:=range a {
+		found:=false
+		for _,r:=range ret {
+			if v==r {
+				found = true
+			}
+		}
+		if !found {
+			ret = append(ret, v)
+		}
+	}
+	return ret
+}
+
 func SliceConcat(a... []interface{})[]interface{} {
 	ret:=make([]interface{},0)
 	for _,arr:=range a {

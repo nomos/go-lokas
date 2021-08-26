@@ -181,9 +181,6 @@ func (this *Generator) processModelPackages()error{
 			}
 			pack.Errors[v.ErrorId] = v
 		}
-		for _,v:=range this.ModelClassObjects {
-			v.Deps()
-		}
 	}
 	return nil
 }

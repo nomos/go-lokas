@@ -367,7 +367,7 @@ func init() {
 
 	line_regexp_map[LINE_MODEL_PACKAGE] = regexp.MustCompile(`\s*package\s+(\w+)\s*`)
 	line_regexp_replace_pkg[LINE_MODEL_PACKAGE] = "$1"
-	line_regexp_map[LINE_MODEL_GOPACKAGE] = regexp.MustCompile(`\s*go[-]package\s+(\w+)\s*`)
+	line_regexp_map[LINE_MODEL_GOPACKAGE] = regexp.MustCompile(`\s*go[-]package\s+(.+)\s*`)
 	line_regexp_replace_pkg[LINE_MODEL_GOPACKAGE] = "$1"
 	line_regexp_map[LINE_MODEL_CSPACKAGE] = regexp.MustCompile(`\s*cs[-]package\s+((\w|[.])+)\s*`)
 	line_regexp_replace_pkg[LINE_MODEL_CSPACKAGE] = "$1"

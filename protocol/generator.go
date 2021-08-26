@@ -118,6 +118,24 @@ func (this *Generator) Clear() {
 	this.InitDefaultSchemas()
 }
 
+func (this *Generator) GetModelByName(s string)*ModelClassObject{
+	for _,v:=range this.ModelClassObjects {
+		if v.ClassName == s {
+			return v
+		}
+	}
+	return nil
+}
+
+func (this *Generator) GetEnumByName(s string)*ModelEnumObject{
+	for _,v:=range this.ModelEnumObjects {
+		if v.EnumName == s {
+			return v
+		}
+	}
+	return nil
+}
+
 func (this *Generator) InitDefaultSchemas() {
 
 }

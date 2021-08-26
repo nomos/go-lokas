@@ -46,6 +46,9 @@ func (this *Generator) GenerateModel2Cs()error{
 func (this *Generator) generateModel2CsClasses()error{
 	log.Warnf("CsPath",this.CsPath)
 	for _,m:=range this.ModelClassObjects {
+		if m.CsPackage=="" {
+			continue
+		}
 		err:=this.generateModel2CsClass(m)
 		if err != nil {
 			log.Error(err.Error())
@@ -69,6 +72,9 @@ func (this *Generator) generateModel2CsClass(m *ModelClassObject)error{
 func (this *Generator) generateModel2CsEnums()error{
 	log.Warnf("CsPath",this.CsPath)
 	for _,m:=range this.ModelEnumObjects {
+		if m.CsPackage=="" {
+			continue
+		}
 		err:=this.generateModel2CsEnum(m)
 		if err != nil {
 			log.Error(err.Error())
@@ -126,6 +132,9 @@ func (this *Generator) generateModel2CsIds()error{
 	}
 
 	for _,p:=range this.ModelPackages {
+		if p.CsPackageName=="" {
+			continue
+		}
 		err:=this.generateModel2CsPackage(p)
 		if err != nil {
 			log.Error(err.Error())
@@ -137,7 +146,6 @@ func (this *Generator) generateModel2CsIds()error{
 
 func (this *Generator) generateModel2CsPackage(pack *ModelPackageObject)error{
 	className:=pack.GetCsPackageName()
-	log.Warnf(className)
 	p:=path.Join(this.CsPath,className)
 	p+=".cs"
 	err:=ioutil.WriteFile(p, []byte(pack.CsString(this)), 0644)
