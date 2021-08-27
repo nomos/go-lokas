@@ -181,7 +181,7 @@ func (this *ActiveSession) start() {
 				_, err := this.Conn.Write(data)
 				if err != nil {
 					log.Error(err.Error())
-					return
+					break Loop
 				}
 			case data := <-this.Messages:
 				cmdId := protocol.GetCmdId16(data)

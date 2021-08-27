@@ -6,11 +6,12 @@ import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/log/logfield"
-	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/network/tcp"
+	"github.com/nomos/go-lokas/promise"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"sync"
+	"time"
 )
 
 var ProxyCtor = proxyCtor{}
@@ -24,8 +25,7 @@ func (this proxyCtor) Type() string {
 func (this proxyCtor) Create() lokas.IModule {
 	ret := &Proxy{
 		dialerCloseChans: map[util.ProcessId]chan struct{}{},
-		ActiveSessions:   network.NewDefaultSessionManager(true),
-		PassiveSessions:   network.NewDefaultSessionManager(true),
+		Sessions:         NewProxySessionManager(true),
 	}
 	return ret
 }
@@ -41,9 +41,8 @@ type Proxy struct {
 	mu                 sync.Mutex
 
 	dialerCloseChans map[util.ProcessId]chan struct{}
-	process lokas.IProcess
-	ActiveSessions   lokas.ISessionManager
-	PassiveSessions  lokas.ISessionManager
+	process         lokas.IProcess
+	Sessions        *ProxySessionManager
 }
 
 func (this *Proxy) GetProcess() lokas.IProcess {
@@ -57,8 +56,7 @@ func (this *Proxy) SetProcess(process lokas.IProcess) {
 func NewProxy(process lokas.IProcess)*Proxy{
 	ret := &Proxy{
 		dialerCloseChans: map[util.ProcessId]chan struct{}{},
-		ActiveSessions:   network.NewDefaultSessionManager(true),
-		PassiveSessions:   network.NewDefaultSessionManager(true),
+		Sessions:         NewProxySessionManager(true),
 	}
 	ret.process = process
 	return ret
@@ -108,9 +106,24 @@ type processHandShake struct {
 	Id util.ID
 }
 
+func activeSessionCreator(id util.ID,p *Proxy) func(conn lokas.IConn) lokas.ISession {
+	return func(conn lokas.IConn) lokas.ISession {
+		sess := NewProxySession(conn, id, p.Sessions,false)
+		sess.AuthFunc = func(data []byte) error {
+			sess.Verified = true
+			p.Sessions.AddSession(sess.GetId(), sess)
+			sess.OnVerified(true)
+			return nil
+		}
+		sess.Protocol = protocol.BINARY
+		sess.Conn = conn
+		return sess
+	}
+}
+
 func passiveSessionCreator(p *Proxy) func(conn lokas.IConn) lokas.ISession {
 	return func(conn lokas.IConn) lokas.ISession {
-		sess := NewPassiveSession(conn, p.GetProcess().GenId(), p.PassiveSessions)
+		sess := NewProxySession(conn, p.GetProcess().GenId(), p.Sessions,true)
 		sess.AuthFunc = func(data []byte) error {
 			var hs processHandShake
 			err:=json.Unmarshal(data,hs)
@@ -118,13 +131,20 @@ func passiveSessionCreator(p *Proxy) func(conn lokas.IConn) lokas.ISession {
 				log.Error(err.Error())
 				return err
 			}
-			sess.manager.ResetSession(hs.Id,sess)
+			p.Sessions.AddSession(hs.Id, sess)
 			data,_=protocol.MarshalMessage(0,hs,protocol.BINARY)
-			sess.Conn.Write(data)
+			_,err=sess.Conn.Write(data)
+			if err != nil {
+				log.Error(err.Error())
+				sess.Conn.Close()
+				sess.closeSession()
+				sess.OnVerified(false)
+				return err
+			}
+			sess.OnVerified(true)
 			return nil
 		}
 		sess.Protocol = protocol.BINARY
-		p.PassiveSessions.AddSession(sess.GetId(), sess)
 		sess.Conn = conn
 		return sess
 	}
@@ -145,10 +165,10 @@ func getIdMutexKey(a,b util.ProcessId)string{
 }
 
 func (this *Proxy) checkIsConnected(id util.ProcessId)bool{
-	return this.PassiveSessions.GetSession(id.Snowflake())!=nil||this.ActiveSessions.GetSession(id.Snowflake())!=nil
+	return this.Sessions.GetSession(id.Snowflake())!=nil||this.Sessions.GetSession(id.Snowflake())!=nil
 }
 
-func (this *Proxy) connect(id util.ProcessId,addr string) (*ProcessActiveSession,error) {
+func (this *Proxy) connect(id util.ProcessId,addr string) (*ProxySession,error) {
 	selfId:=this.GetProcess().PId()
 	mu,err:=this.GetProcess().GlobalMutex(getIdMutexKey(selfId,id),15)
 	if err != nil {
@@ -159,7 +179,7 @@ func (this *Proxy) connect(id util.ProcessId,addr string) (*ProcessActiveSession
 	defer mu.Unlock()
 	if this.checkIsConnected(id) {
 		log.Warnf("服务器已经连接",selfId.String(),id.String())
-		return this.getProcessSession(id),nil
+		return this.getProxySession(id),nil
 	}
 	//如果连上
 	if err != nil {
@@ -168,7 +188,7 @@ func (this *Proxy) connect(id util.ProcessId,addr string) (*ProcessActiveSession
 	}
 
 	context := &lokas.Context{
-		SessionCreator:    processActiveSessionCreator(id, this),
+		SessionCreator:    activeSessionCreator(id.Snowflake(), this),
 		Splitter:          protocol.Split,
 		ReadBufferSize:    1024 * 1024 * 4,
 		ChanSize:          10000,
@@ -184,21 +204,41 @@ func (this *Proxy) connect(id util.ProcessId,addr string) (*ProcessActiveSession
 	if conn==nil {
 		return nil,errors.New("create session failed")
 	}
-	activeSession:=conn.Session.(*ProcessActiveSession)
+	activeSession:=conn.Session.(*ProxySession)
+	_,err=promise.Async(func(resolve func(interface{}), reject func(interface{})) {
+		timeout:=promise.SetTimeout(time.Second*14, func() {
+			reject("connect to server timeout:"+id.String())
+			activeSession.Conn.Close()
+			activeSession.closeSession()
+			return
+		})
+		activeSession.OnVerified = func(success bool) {
+			timeout.Close()
+			if success {
+				resolve(nil)
+			} else {
+				reject("connect to server failed:"+id.String())
+			}
+		}
+	}).Await()
+	if err != nil {
+		log.Error(err.Error())
+		return nil,err
+	}
 
 	return activeSession,nil
 }
 
-func (this *Proxy) getProcessSession(id util.ProcessId)*ProcessActiveSession{
-	sess:=this.ActiveSessions.GetSession(id.Snowflake())
+func (this *Proxy) getProxySession(id util.ProcessId)*ProxySession {
+	sess:=this.Sessions.GetSession(id.Snowflake())
 	if sess!=nil {
-		return sess.(*ProcessActiveSession)
+		return sess.(*ProxySession)
 	}
 	return nil
 }
 
 func (this *Proxy) Send(id util.ProcessId,msg *protocol.RouteMessage)error{
-	sess:=this.getProcessSession(id)
+	sess:=this.getProxySession(id)
 	if sess == nil {
 		//info:=this.GetProcess().GetProcessInfo
 		//sess,err:=this.connect(id,addr)
@@ -240,8 +280,7 @@ func (this *Proxy) Stop() error {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	log.Warn("stop",logfield.FuncInfo(this,"Stop")...)
-	this.ActiveSessions.Clear()
-	this.PassiveSessions.Clear()
+	this.Sessions.Clear()
 	this.started = false
 	this.server.Stop()
 	return nil

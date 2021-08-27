@@ -99,12 +99,15 @@ func (this *PassiveSession) StartMessagePump() {
 				}
 			}
 		}()
+		LOOP:
 		for {
 			select {
 			case <-this.ticker.C:
 				if this.OnUpdateFunc!=nil&&this.Verified {
 					this.OnUpdateFunc()
 				}
+			case rMsg := <-this.msgChan:
+				this.OnMessage(rMsg)
 			case data := <-this.Messages:
 				cmdId := protocol.GetCmdId16(data)
 				if !this.Verified && cmdId != protocol.TAG_HandShake {
@@ -133,7 +136,7 @@ func (this *PassiveSession) StartMessagePump() {
 						log.Error(err.Error())
 					}
 					this.Conn.Close()
-					return
+					break LOOP
 				}
 				if cmdId == protocol.TAG_HandShake {
 					var err error
@@ -153,13 +156,13 @@ func (this *PassiveSession) StartMessagePump() {
 						this.Conn.Write(msg)
 						this.Conn.Wait()
 						this.Conn.Close()
-						return
+						break LOOP
 					}
 					_, err = this.Conn.Write(data)
 					if err != nil {
 						log.Error(err.Error())
 						this.Conn.Close()
-						return
+						break LOOP
 					}
 					this.Verified = true
 					continue
@@ -172,13 +175,13 @@ func (this *PassiveSession) StartMessagePump() {
 						log.Error(err.Error())
 						this.Conn.Wait()
 						this.Conn.Close()
-						return
+						break LOOP
 					}
 					_,err =this.Conn.Write(data)
 					if err != nil {
 						log.Error(err.Error())
 						this.Conn.Close()
-						return
+						break LOOP
 					}
 					continue
 				}
@@ -190,29 +193,12 @@ func (this *PassiveSession) StartMessagePump() {
 			case <-this.done:
 				this.closeSession()
 				//log.Warnf("done")
-				return
+				break LOOP
 			}
 		}
-	}()
-	go func() {
-		defer func() {
-			r:=recover()
-			if r!=nil {
-				if e,ok:=r.(error);ok {
-					log.Errorf(e.Error())
-					log.Error("内部错误")
-					this.Conn.Close()
-				}
-			}
-		}()
-		for {
-			select {
-			case rMsg := <-this.msgChan:
-				this.OnMessage(rMsg)
-			case <-this.done:
-				return
-			}
-		}
+		close(this.msgChan)
+		close(this.done)
+		close(this.Messages)
 	}()
 }
 
