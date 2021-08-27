@@ -772,6 +772,7 @@ func (this *Generator) getTsModelFileBySchema(schema *ModelSchema) *TsModelFile 
 	return file
 }
 
+//FIXME:OLD GO
 func (this *Generator) ProcessGoModel2Schema(model *GoStructObject) {
 	if !model.IsModel() {
 		return
@@ -793,6 +794,7 @@ func (this *Generator) ProcessGoModel2Schema(model *GoStructObject) {
 	this.Schemas = append(this.Schemas, schema)
 }
 
+//FIXME:OLD GO
 func (this *Generator) PostProcessAllGoSchemas() {
 	for _, schema := range this.Schemas {
 		for index, member := range schema.model.Fields {
@@ -851,6 +853,7 @@ func (this *Generator) PostProcessAllGoSchemas() {
 	}
 }
 
+//FIXME:OLD GO
 func (this *Generator) MatchGoExistTag(s string) (tag BINARY_TAG, isEnum bool, tagstr1 string, tagstr2 string) {
 	log.Warnf("MatchGoExistTag", s)
 	sysTag, tagstr1, tagstr2 := MatchGoSystemTag(s)
