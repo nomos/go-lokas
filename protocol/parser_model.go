@@ -98,6 +98,71 @@ func init() {
 	return ret
 }
 
+func (this *ModelPackageObject) CsString(g *Generator)string {
+	ret0:=`//this is a generated file,do not modify it!!!
+package {PackageName}
+
+import (
+	"github.com/nomos/go-lokas/protocol"{Imports}
+	"reflect"
+)
+
+const (
+{Ids}
+)
+{Errors}
+func init() {
+{IdRegister}
+}
+
+{Protocols}
+`
+
+	ret:=`//this is a generated file,do not modify it!!!
+package {PackageName}
+
+import ({Imports}
+	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/protocol"
+	"github.com/nomos/go-lokas/util"
+	"reflect"
+)
+
+const (
+{Ids}
+)
+{Errors}
+func init() {
+{IdRegister}
+}
+
+{Protocols}
+`
+	funcStr:=this.GetGoFuncString(g)
+	if funcStr == "" {
+		ret = ret0
+	}
+	deps:=[]string{}
+	for _,v:=range this.Ids {
+		for _,d:=range v.Deps(g) {
+			deps = append(deps, d)
+		}
+	}
+	if len(deps)>0 {
+		ret = strings.Replace(ret,`{Imports}`,g.getGoImportsString(deps),-1)
+	} else {
+		ret = strings.Replace(ret,`{Imports}`,"",-1)
+	}
+	ret = strings.Replace(ret,`{Errors}`,this.GoErrorString(g),-1)
+	ret = strings.Replace(ret,`{PackageName}`,this.PackageName,-1)
+	ret = strings.Replace(ret,`{Ids}`,this.GetGoIdAssignString(g),-1)
+	ret = strings.Replace(ret,`{IdRegister}`,this.GetGoIdRegString(g),-1)
+	ret = strings.Replace(ret,`{Protocols}`,this.GetGoFuncString(g),-1)
+	ret = strings.ReplaceAll(ret,"\r","")
+	return ret
+}
+
 func (this *ModelPackageObject) GoErrorString(g *Generator)string{
 	if len(this.Errors)==0 {
 		return ""
@@ -145,7 +210,7 @@ func (this *ModelPackageObject) CsErrorString(g *Generator)string{
 	return ret
 }
 
-func (this *ModelPackageObject) CsString(g *Generator)string {
+func (this *ModelPackageObject) TsString(g *Generator)string {
 	ret:=`//this is a generated file,do not modify it!!!
 using System;
 using System.Threading.Tasks;
@@ -347,9 +412,6 @@ func (this *ModelPackageObject) CheckLine(line *LineText) bool {
 	if this.GoPackageName == "" {
 		this.GoPackageName = this.PackageName
 	}
-	if this.TsPackageName == "" {
-		this.TsPackageName = this.PackageName
-	}
 	this.file.(*ModelFile).Package = this.PackageName
 	this.file.(*ModelFile).GoPackage = this.GoPackageName
 	this.file.(*ModelFile).TsPackage = this.TsPackageName
@@ -367,7 +429,7 @@ type ModelError struct {
 
 func (this *ModelError) GoString(g *Generator)string{
 	ret := `{ErrorName}     = protocol.CreateError({Id}, "{Text}")`
-	ret  = strings.Replace(ret,"{ErrorName}","ERR_"+stringutil.SplitCamelCaseUpperSlash(this.ErrorName),-1)
+	ret  = strings.Replace(ret,"{ErrorName}","ERR_"+stringutil.SplitCamelCaseUpperSnake(this.ErrorName),-1)
 	ret  = strings.Replace(ret,"{Id}",strconv.Itoa(this.ErrorId),-1)
 	ret  = strings.Replace(ret,"{Text}",this.ErrorText,-1)
 	return ret
@@ -375,7 +437,7 @@ func (this *ModelError) GoString(g *Generator)string{
 
 func (this *ModelError) CsString(g *Generator)string{
 	ret := `public static readonly FunnelServerError {ErrorName} = NewServerErrorMsg({Id}, "{Text}");`
-	ret  = strings.Replace(ret,"{ErrorName}","ERR_"+stringutil.SplitCamelCaseUpperSlash(this.ErrorName),-1)
+	ret  = strings.Replace(ret,"{ErrorName}","ERR_"+stringutil.SplitCamelCaseUpperSnake(this.ErrorName),-1)
 	ret  = strings.Replace(ret,"{Id}",strconv.Itoa(this.ErrorId),-1)
 	ret  = strings.Replace(ret,"{Text}",this.ErrorText,-1)
 	ret = strings.ReplaceAll(ret,"\r","")
@@ -505,7 +567,7 @@ func Register{ClassB}(f OnRequest{ClassB}Func,r func(protocol.BINARY_TAG,func(da
 		return f(data,avatar,actorId,transId,msg.(*{ClassB}))
 	})
 }`
-		ret = strings.ReplaceAll(ret,"{TAG}","TAG_"+stringutil.SplitCamelCaseUpperSlash(this.Name))
+		ret = strings.ReplaceAll(ret,"{TAG}","TAG_"+stringutil.SplitCamelCaseUpperSnake(this.Name))
 		ret = strings.ReplaceAll(ret,"{ClassB}",this.Name)
 		ret = strings.ReplaceAll(ret,"{ClassA}",this.Resp)
 		return ret
@@ -525,7 +587,7 @@ func Register{ClassB}(f OnNotify{ClassB}Func,r func(protocol.BINARY_TAG,func(dat
 		f(data,avatar,actorId,msg.(*{ClassB}))
 	})
 }`
-		ret = strings.ReplaceAll(ret,"{TAG}","TAG_"+stringutil.SplitCamelCaseUpperSlash(this.Name))
+		ret = strings.ReplaceAll(ret,"{TAG}","TAG_"+stringutil.SplitCamelCaseUpperSnake(this.Name))
 		ret = strings.ReplaceAll(ret,"{ClassB}",this.Name)
 		return ret
 	case "EVT":
@@ -544,7 +606,7 @@ func RegisterOnEvent{ClassB}(f func(c lokas.IEntityNetClient,event *{ClassB})err
 		f(client,serializable.(*{ClassB}))
 	})
 }`
-		ret = strings.ReplaceAll(ret,"{TAG}","TAG_"+stringutil.SplitCamelCaseUpperSlash(this.Name))
+		ret = strings.ReplaceAll(ret,"{TAG}","TAG_"+stringutil.SplitCamelCaseUpperSnake(this.Name))
 		ret = strings.ReplaceAll(ret,"{ClassB}",this.Name)
 		return ret
 	default:
@@ -636,7 +698,7 @@ func (this *ModelId) GetCsIdRegisterString(g *Generator)string {
 
 func (this *ModelId) GetGoIdAssignString(g *Generator)string {
 	ret:= "\t{TagName}  protocol.BINARY_TAG = {TagId}"
-	ret = strings.ReplaceAll(ret,"{TagName}","TAG_"+stringutil.SplitCamelCaseUpperSlash(this.Name))
+	ret = strings.ReplaceAll(ret,"{TagName}","TAG_"+stringutil.SplitCamelCaseUpperSnake(this.Name))
 	ret = strings.ReplaceAll(ret,"{TagId}",strconv.Itoa(this.Id))
 	return ret
 }
@@ -644,7 +706,7 @@ func (this *ModelId) GetGoIdAssignString(g *Generator)string {
 func (this *ModelId) GetGoIdRegisterString(g *Generator)string {
 	ret:= line_parse_map[LINE_GO_TAG_REGISTRY]
 	ret = strings.ReplaceAll(ret,"{$type}",this.Name)
-	ret = strings.ReplaceAll(ret,"{$name}","TAG_"+stringutil.SplitCamelCaseUpperSlash(this.Name))
+	ret = strings.ReplaceAll(ret,"{$name}","TAG_"+stringutil.SplitCamelCaseUpperSnake(this.Name))
 	return ret
 }
 
@@ -749,7 +811,7 @@ namespace {CsPackageName}
 		ret = strings.Replace(ret,`{Comment}`,"",-1)
 	}
 	ret = strings.Replace(ret,`{CsPackageName}`,this.CsPackage,1)
-	ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSlash(this.EnumName),-1)
+	ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSnake(this.EnumName),-1)
 	ret = strings.Replace(ret,`{ClassBody}`,this.csFields(g),-1)
 	return ret
 }
@@ -759,7 +821,42 @@ func (this *ModelEnumObject) csFields(g *Generator)string{
 	for _,l:=range this.lines {
 		if l.LineType ==LINE_MODEL_ENUM_FIELD {
 			ret+="\t\t"
-			ret+=stringutil.SplitCamelCaseUpperSlash(l.Name)
+			ret+=stringutil.SplitCamelCaseUpperSnake(l.Name)
+			ret+= " = "
+			ret+=strconv.Itoa(l.GetValue())
+			ret+=","
+			ret+=" "
+			ret+=l.Comment
+			ret+="\n"
+		}
+	}
+	ret = strings.TrimRight(ret,"\n")
+	return ret
+}
+
+func (this *ModelEnumObject) TsString(g *Generator)string{
+	ret:=`export enum {EnumName} {
+{ClassBody}
+}
+
+`
+	if this.Comment!="" {
+		comment:="\n"+this.Comment
+		ret = strings.Replace(ret,`{Comment}`,comment,-1)
+	} else {
+		ret = strings.Replace(ret,`{Comment}`,"",-1)
+	}
+	ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSnake(this.EnumName),-1)
+	ret = strings.Replace(ret,`{ClassBody}`,this.tsFields(g),-1)
+	return ret
+}
+
+func (this *ModelEnumObject) tsFields(g *Generator)string{
+	ret:=""
+	for _,l:=range this.lines {
+		if l.LineType ==LINE_MODEL_ENUM_FIELD {
+			ret+="\t"
+			ret+=stringutil.SplitCamelCaseUpperSnake(l.Name)
 			ret+= " = "
 			ret+=strconv.Itoa(l.GetValue())
 			ret+=","
@@ -814,7 +911,7 @@ func (this {EnumName}) ToString()string{
 		ret = strings.Replace(ret,`{Comment}`,"",-1)
 	}
 	ret = strings.Replace(ret,`{PackageName}`,this.Package,-1)
-	ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSlash(this.EnumName),-1)
+	ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSnake(this.EnumName),-1)
 	ret = strings.Replace(ret,`{ClassBody}`,this.goFields(g),-1)
 	ret = strings.Replace(ret,`{StringToEnum}`,this.gsString2EnumFields(g),-1)
 	ret = strings.Replace(ret,`{EnumToString}`,this.gsEnum2StringFields(g),-1)
@@ -826,9 +923,9 @@ func (this *ModelEnumObject) gsEnumListFields(g *Generator)string{
 	ret:=""
 	for _,l:=range this.lines {
 		if l.LineType ==LINE_MODEL_ENUM_FIELD {
-			ret+=stringutil.SplitCamelCaseUpperSlash(this.EnumName)
+			ret+=stringutil.SplitCamelCaseUpperSnake(this.EnumName)
 			ret+="_"
-			ret+=stringutil.SplitCamelCaseUpperSlash(l.Name)
+			ret+=stringutil.SplitCamelCaseUpperSnake(l.Name)
 			ret+=","
 		}
 	}
@@ -852,9 +949,9 @@ func (this *ModelEnumObject) gsString2EnumFields(g *Generator)string{
 			ret+=":\n"
 			ret+="\t\t"
 			ret+= "return "
-			ret+=stringutil.SplitCamelCaseUpperSlash(this.EnumName)
+			ret+=stringutil.SplitCamelCaseUpperSnake(this.EnumName)
 			ret+="_"
-			ret+=stringutil.SplitCamelCaseUpperSlash(l.Name)
+			ret+=stringutil.SplitCamelCaseUpperSnake(l.Name)
 			ret+="\n"
 		}
 	}
@@ -871,9 +968,9 @@ func (this *ModelEnumObject) gsEnum2StringFields(g *Generator)string{
 				break
 			}
 			ret+="\tcase "
-			ret+=stringutil.SplitCamelCaseUpperSlash(this.EnumName)
+			ret+=stringutil.SplitCamelCaseUpperSnake(this.EnumName)
 			ret+="_"
-			ret+=stringutil.SplitCamelCaseUpperSlash(l.Name)
+			ret+=stringutil.SplitCamelCaseUpperSnake(l.Name)
 			ret+=":\n"
 			ret+="\t\t"
 			ret+= "return "
@@ -888,17 +985,16 @@ func (this *ModelEnumObject) gsEnum2StringFields(g *Generator)string{
 	return ret
 }
 
-
 func (this *ModelEnumObject) goFields(g *Generator)string{
 	ret:=""
 	for _,l:=range this.lines {
 		if l.LineType ==LINE_MODEL_ENUM_FIELD {
 			ret+="\t"
-			ret+=stringutil.SplitCamelCaseUpperSlash(this.EnumName)
+			ret+=stringutil.SplitCamelCaseUpperSnake(this.EnumName)
 			ret+="_"
-			ret+=stringutil.SplitCamelCaseUpperSlash(l.Name)
+			ret+=stringutil.SplitCamelCaseUpperSnake(l.Name)
 			ret+=" "
-			ret+=stringutil.SplitCamelCaseUpperSlash(this.EnumName)
+			ret+=stringutil.SplitCamelCaseUpperSnake(this.EnumName)
 			ret+=" "
 			ret+= " = "
 			ret+=strconv.Itoa(l.GetValue())
@@ -973,7 +1069,7 @@ func (this *ModelClassFields) Deps(g *Generator)[]string{
 				//type1 = t1.GoTypeString()
 			} else {
 				if g.IsEnum(s1) {
-					//type1 = stringutil.SplitCamelCaseUpperSlash(s1)
+					//type1 = stringutil.SplitCamelCaseUpperSnake(s1)
 					protos = append(protos,s1)
 				} else {
 					protos = append(protos,s1)
@@ -985,7 +1081,7 @@ func (this *ModelClassFields) Deps(g *Generator)[]string{
 				//type2 = t2.GoTypeString()
 			}else {
 				if g.IsEnum(s2) {
-					//type2 = stringutil.SplitCamelCaseUpperSlash(s2)
+					//type2 = stringutil.SplitCamelCaseUpperSnake(s2)
 					protos = append(protos,s2)
 				} else {
 					protos = append(protos,s2)
@@ -996,7 +1092,7 @@ func (this *ModelClassFields) Deps(g *Generator)[]string{
 	} else {
 		if g.IsEnum(this.Type) {
 			protos = append(protos,this.Type)
-			//ret = "\t"+this.Name+" "+stringutil.SplitCamelCaseUpperSlash(this.Type)
+			//ret = "\t"+this.Name+" "+stringutil.SplitCamelCaseUpperSnake(this.Type)
 		} else {
 			protos = append(protos,this.Type)
 			//ret = "\t"+this.Name+" *"+this.Type
@@ -1042,29 +1138,74 @@ func (this *ModelClassFields) csString(g *Generator,lower bool)string {
 				type1 = t1.CsTypeString()
 			}
 			if g.IsEnum(s1) {
-				type1 = stringutil.SplitCamelCaseUpperSlash(s1)
+				type1 = stringutil.SplitCamelCaseUpperSnake(s1)
 			}
 			type2 := s2
 			if t2!=0 {
 				type2 = t2.CsTypeString()
 			}
 			if g.IsEnum(s2) {
-				type1 = stringutil.SplitCamelCaseUpperSlash(s2)
+				type1 = stringutil.SplitCamelCaseUpperSnake(s2)
 			}
 			ret =  "Dictionary<"+type1+","+type2+"> "+name
 
 		}
 	} else if g.IsEnum(this.Type) {
-		ret = stringutil.SplitCamelCaseUpperSlash(this.Type)+" "+name
+		ret = stringutil.SplitCamelCaseUpperSnake(this.Type)+" "+name
 	} else {
 		ret = this.Type+" "+name
 	}
 	return ret
-
 }
 
 func (this *ModelClassFields) CsString(g *Generator)string {
 	return "\t\tpublic "+this.csString(g,false)+"{ get;set; }"+" "+this.Comment
+}
+
+func (this *ModelClassFields) TsDefineTags(g *Generator)string{
+	str := "\t[" + `"`
+	str += this.Name + `",`
+	name:=this.Name
+	t:= MatchModelProtoTag(this.Type)
+	if t!=0 {
+		t:=GetModelProtoTag(this.Type)
+		str += t.TsTypeString()
+	} else if t,s1,s2:=MatchModelSystemTag(this.Type);t!=0 {
+		if t==TAG_List {
+			t = MatchModelProtoTag(s1)
+			str += "Tag.List"
+			if t!=0 {
+				str+="," + t.TsTagString()
+			} else {
+				str+="," + s1
+			}
+		} else if t==TAG_Map {
+			str += "Tag.Map"
+			t1 := MatchModelProtoTag(s1)
+			t2 := MatchModelProtoTag(s2)
+			type1 := s1
+			if t1!=0 {
+				type1 = t1.TsTypeString()
+			}
+			if g.IsEnum(s1) {
+				type1 = stringutil.SplitCamelCaseUpperSnake(s1)
+			}
+			type2 := s2
+			if t2!=0 {
+				type2 = t2.TsTypeString()
+			}
+			if g.IsEnum(s2) {
+				type1 = stringutil.SplitCamelCaseUpperSnake(s2)
+			}
+			str+="," + type1+","+type2
+		}
+	} else if g.IsEnum(this.Type) {
+		str+=","
+		str+=TAG_Int.TsTagString()
+	} else {
+		str+=","+name
+	}
+	return str
 }
 
 func (this *ModelClassFields) ParamString(g *Generator)string {
@@ -1097,27 +1238,76 @@ func (this *ModelClassFields) GoString(g *Generator)string {
 				type1 = t1.GoTypeString()
 			}
 			if g.IsEnum(s1) {
-				type1 = stringutil.SplitCamelCaseUpperSlash(s1)
+				type1 = stringutil.SplitCamelCaseUpperSnake(s1)
 			}
 			type2 := "*"+s2
 			if t2!=0 {
 				type2 = t2.GoTypeString()
 			}
 			if g.IsEnum(s2) {
-				type2 = stringutil.SplitCamelCaseUpperSlash(s2)
+				type2 = stringutil.SplitCamelCaseUpperSnake(s2)
 			}
 			ret =  "\t"+this.Name+" map["+type1+"]"+type2
 
 		}
 	} else {
 		if g.IsEnum(this.Type) {
-			ret = "\t"+this.Name+" "+stringutil.SplitCamelCaseUpperSlash(this.Type)
+			ret = "\t"+this.Name+" "+stringutil.SplitCamelCaseUpperSnake(this.Type)
 		} else {
 			ret = "\t"+this.Name+" *"+this.Type
 		}
 	}
 	ret+=" "
 	ret+=this.Comment
+	return ret
+}
+
+func (this *ModelClassFields) TsPublicString(g *Generator)string{
+	ret:="\tpublic "
+	ret+= this.Name+":"
+	ret += this.TsPublicType(g)
+	return ret
+}
+
+func (this *ModelClassFields) TsPublicType(g *Generator)string{
+	ret:=""
+	t:= MatchModelProtoTag(this.Type)
+	if t!=0 {
+		t:=GetModelProtoTag(this.Type)
+		ret = t.TsTypeString()
+	} else if t,s1,s2:=MatchModelSystemTag(this.Type);t!=0 {
+		if t==TAG_List {
+			t = MatchModelProtoTag(s1)
+			if t!=0 {
+				ret = t.TsTypeString()+"[]"
+			} else {
+				ret = s1+"[]"
+			}
+		} else if t==TAG_Map {
+			t1 := MatchModelProtoTag(s1)
+			t2 := MatchModelProtoTag(s2)
+			type1 := s1
+			if t1!=0 {
+				type1 = t1.TsTypeString()
+			}
+			if g.IsEnum(s1) {
+				type1 = stringutil.SplitCamelCaseUpperSnake(s1)
+			}
+			type2 := s2
+			if t2!=0 {
+				type2 = t2.TsTypeString()
+			}
+			if g.IsEnum(s2) {
+				type1 = stringutil.SplitCamelCaseUpperSnake(s2)
+			}
+			ret =  "Map<"+type1+","+type2+"> "
+
+		}
+	} else if g.IsEnum(this.Type) {
+		ret = stringutil.SplitCamelCaseUpperSnake(this.Type)
+	} else {
+		ret = this.Type
+	}
 	return ret
 }
 
@@ -1132,6 +1322,7 @@ type ModelClassObject struct {
 	TsPackage string
 	ClassName string
 	Comment string
+	Depends []string
 }
 
 func (this *ModelClassObject) Deps(g *Generator)[]string{
@@ -1149,8 +1340,54 @@ func (this *ModelClassObject) Deps(g *Generator)[]string{
 }
 
 func NewModelClassObject(file GeneratorFile) *ModelClassObject {
-	ret := &ModelClassObject{DefaultGeneratorObj: DefaultGeneratorObj{}, Fields: []*ModelClassFields{}}
+	ret := &ModelClassObject{DefaultGeneratorObj: DefaultGeneratorObj{}, Fields: []*ModelClassFields{},Depends: []string{}}
 	ret.DefaultGeneratorObj.init(OBJ_MODEL_CLASS, file)
+	return ret
+}
+
+func (this *ModelClassObject) TsDefineLines(g *Generator) []string {
+	ret := make([]string, 0)
+	for _, field := range this.Fields {
+		str:=field.TsDefineTags(g)
+		ret = append(ret,str)
+	}
+	return ret
+}
+
+func (this *ModelClassObject) TsDefineEnd(g *Generator) string {
+	ret := "]"
+	for _, depend := range this.Depends {
+		ret += `,"` + depend + `"`
+	}
+	ret += `)`
+	return ret
+}
+
+func (this *ModelClassObject) TsDefineStart(g *Generator) string {
+	return `@define("` + this.ClassName + `"` + `,[`
+}
+
+func (this *ModelClassObject) TsDefineSingleLine(g *Generator) string {
+	ret := `@define("` + this.ClassName + `"`
+	if len(this.Fields) > 0 {
+		log.Panicf("single line must not have members")
+	}
+	if len(this.Depends) > 0 {
+		ret += ",[]"
+		for _, depend := range this.Depends {
+			ret += `,"` + depend + `"`
+		}
+	}
+	ret += `)`
+	return ret
+}
+
+func (this *ModelClassObject) ToTsClassHeader(g *Generator)string{
+	compStr:="ISerializable"
+	//if this.Component {
+	//	compStr = "IComponent"
+	//}
+	ret:="export class "+this.ClassName+" extends "+compStr+" {"
 	return ret
 }
 

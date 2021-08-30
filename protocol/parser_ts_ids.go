@@ -38,6 +38,10 @@ func (this *TsIdsObject) CheckLine(line *LineText) bool {
 		if this.TryAddLine(line, LINE_COMMENT) {
 			return true
 		}
+
+		if this.TryAddLine(line, LINE_TS_INIT_FUNC_COCOS) {
+			return true
+		}
 		if this.TryAddLine(line, LINE_TS_ID_REG) {
 			return true
 		}

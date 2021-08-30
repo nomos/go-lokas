@@ -77,6 +77,7 @@ const (
 	LINE_TS_DEFINE_END
 
 	LINE_TS_INIT_FUNC_HEADER
+	LINE_TS_INIT_FUNC_COCOS
 	LINE_TS_INIT_FUNC_END
 	LINE_TS_ID_REG
 	LINE_TS_PROTO_ID_REG
@@ -220,6 +221,7 @@ func init() {
 	line_string[LINE_TS_DEFINE_OBJ] = "LINE_TS_DEFINE_OBJ"
 	line_string[LINE_TS_DEFINE_END] = "LINE_TS_DEFINE_END"
 	line_string[LINE_TS_INIT_FUNC_HEADER] = "LINE_TS_INIT_FUNC_HEADER"
+	line_string[LINE_TS_INIT_FUNC_COCOS] = "LINE_TS_INIT_FUNC_COCOS"
 	line_string[LINE_TS_INIT_FUNC_END] = "LINE_TS_INIT_FUNC_END"
 	line_string[LINE_TS_ID_REG] = "LINE_TS_ID_REG"
 	line_string[LINE_TS_PROTO_ID_REG] = "LINE_TS_PROTO_ID_REG"
@@ -360,7 +362,8 @@ func init() {
 	line_regexp_map[LINE_TS_DEFINE_OBJ] = regexp.MustCompile(`\s*\[\s*"\s*(\w+)\s*"\s*(,(\w|[.])+)+\]\s*[,]\s*`)
 	line_regexp_replace_name[LINE_TS_DEFINE_OBJ] = "$1"
 	line_regexp_map[LINE_TS_DEFINE_END] = regexp.MustCompile(`\]\s*([,]["]\s*\w+\s*["])*\s*\)\s*`)
-	line_regexp_map[LINE_TS_INIT_FUNC_HEADER] = regexp.MustCompile(`\(\s*function\s*\(\s*\)\s*\{\s*`)
+	line_regexp_map[LINE_TS_INIT_FUNC_HEADER] = regexp.MustCompile(`\(\s*function\s*(reg)*\s*\(\s*\)\s*\{\s*`)
+	line_regexp_map[LINE_TS_INIT_FUNC_COCOS] = regexp.MustCompile(`(\s*if\s*\(CC_EDITOR\)\s*[{]\s*)|(\s*return[;]?\s*)|(\s*[}]\s*)`)
 	line_regexp_map[LINE_TS_INIT_FUNC_END] = regexp.MustCompile(`\}\)\(\)\s*`)
 	line_regexp_map[LINE_TS_ID_REG] = regexp.MustCompile(`\s*TypeRegistry[.]getInstance\(\)[.]RegisterCustomTag\(\s*"\w+"\s*[,]\s*[0-9]+\s*\)[;|\s]*`)
 	line_regexp_map[LINE_TS_PROTO_ID_REG] = regexp.MustCompile(`\s*TypeRegistry[.]getInstance\(\)[.]RegisterProtoTag\(\s*([.]|\w)+\s*[,]\s*[0-9]+\s*\)[;|\s]*`)

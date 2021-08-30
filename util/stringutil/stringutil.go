@@ -115,7 +115,7 @@ func FirstToUpper(str string) string {
 }
 
 
-func CamelToUnder(str string) string {
+func CamelToSnake(str string) string {
 	var upperStr string
 	vv := []rune(str)   // 后文有介绍
 	for i := 0; i < len(vv); i++ {
@@ -250,7 +250,7 @@ func SplitCamelCase(src string) []string {
 	return ret
 }
 
-func SplitCamelCaseUpper(src string) (entries []string) {
+func SplitCamelCaseUpperSlice(src string) (entries []string) {
 	ret:=SplitCamelCase(src)
 	for i,v:=range ret {
 		ret[i] = strings.TrimSpace(strings.ToUpper(v))
@@ -289,12 +289,12 @@ func SplitCamelCaseCapitalizeSlash(src string) string {
 	return strings.Join(ret,"_")
 }
 
-func SplitCamelCaseUpperSlash(src string) string {
-	ret:=SplitCamelCaseUpper(src)
+func SplitCamelCaseUpperSnake(src string) string {
+	ret:= SplitCamelCaseUpperSlice(src)
 	return strings.Join(ret,"_")
 }
 
-func SplitCamelCaseLower(src string) (entries []string) {
+func SplitCamelCaseLowerSlice(src string) (entries []string) {
 	ret:=SplitCamelCase(src)
 	for i,v:=range ret {
 		ret[i] = strings.TrimSpace(strings.ToLower(v))
@@ -302,7 +302,7 @@ func SplitCamelCaseLower(src string) (entries []string) {
 	return ret
 }
 
-func SplitCamelCaseLowerSlash(src string) string {
-	ret:=SplitCamelCaseLower(src)
+func SplitCamelCaseLowerSnake(src string) string {
+	ret:= SplitCamelCaseLowerSlice(src)
 	return strings.Join(ret,"_")
 }
