@@ -13,13 +13,13 @@ import (
 	"strconv"
 )
 
-func (this *Generator) GenerateModel2Ts()error{
-	err:=this.processModelPackages()
+func (this *Generator) GenerateModel2Ts() error {
+	err := this.processModelPackages()
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	err=this.generateModel2TsEnums()
+	err = this.generateModel2TsEnums()
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -106,35 +106,25 @@ func (this *Generator) LoadGo2TsIds(p string) error {
 
 func (this *Generator) LoadGo2TsModels(p string) error {
 	baseName := path.Base(p)
-	if this.Individual {
-		var err error
-		util.WalkDirFilesWithFunc(p, func(filePath string, file os.FileInfo) bool {
-			if path.Ext(filePath) != "ts" {
-				return false
-			}
-			fileName := path.Base(filePath)
-			switch fileName {
-			case baseName + "_ids.ts", baseName + "_models.ts", baseName + "_enums.ts":
-				return false
-			default:
-				_, err := this.LoadAndParseTsFile(filePath)
-				if err != nil {
-					log.Error(err.Error())
-					return true
-				}
-				return false
-			}
-		}, true)
-		return err
-	} else {
-		modelsPath := util.FindFile(p, baseName+"_models.ts", false)
-		if modelsPath == "" {
-			modelsPath = path.Join(p, baseName+"_models.ts")
-			util.CreateFile(modelsPath)
+	var err error
+	util.WalkDirFilesWithFunc(p, func(filePath string, file os.FileInfo) bool {
+		if path.Ext(filePath) != "ts" {
+			return false
 		}
-		_, err := this.LoadAndParseTsFile(modelsPath)
-		return err
-	}
+		fileName := path.Base(filePath)
+		switch fileName {
+		case baseName + "_ids.ts", baseName + "_models.ts", baseName + "_enums.ts":
+			return false
+		default:
+			_, err := this.LoadAndParseTsFile(filePath)
+			if err != nil {
+				log.Error(err.Error())
+				return true
+			}
+			return false
+		}
+	}, true)
+	return err
 }
 
 func (this *Generator) LoadAndParseTsFile(modelsPath string) (*TsModelFile, error) {
@@ -156,10 +146,11 @@ func (this *Generator) LoadAndParseTsFile(modelsPath string) (*TsModelFile, erro
 		}
 	}
 	this.TsModels = append(this.TsModels, file)
+	this.processTsClassObjects()
 	return file, nil
 }
 
-func (this *Generator) generateModel2TsIds() error{
+func (this *Generator) generateModel2TsIds() error {
 	strs := auto_gen_header
 	importObjs := this.TsIds.GetObj(OBJ_TS_IMPORTS)
 	for _, obj := range importObjs {
@@ -176,20 +167,20 @@ func (this *Generator) generateModel2TsIds() error{
 	strs += "\tif (CC_EDITOR) {\n"
 	strs += "\t\treturn;\n"
 	strs += "\t}\n"
-	ids:=[]*ModelId{}
-	for _,p:=range this.ModelPackages {
-		if p.TsPackageName=="" {
+	ids := []*ModelId{}
+	for _, p := range this.ModelPackages {
+		if p.TsPackageName == "" {
 			continue
 		}
-		for _,id:=range p.Ids {
+		for _, id := range p.Ids {
 			ids = append(ids, id)
 			strs += "\tTypeRegistry.getInstance().RegisterCustomTag(\"" + id.Name + "\"," + strconv.Itoa(id.Id) + ")\n"
 		}
 	}
 	sort.Slice(ids, func(i, j int) bool {
-		return ids[i].Id<ids[j].Id
+		return ids[i].Id < ids[j].Id
 	})
-	for _,id:=range ids {
+	for _, id := range ids {
 		strs += "\tTypeRegistry.getInstance().RegisterCustomTag(\"" + id.Name + "\"," + strconv.Itoa(id.Id) + ")\n"
 	}
 	strs += "})()\n"
@@ -201,40 +192,21 @@ func (this *Generator) generateModel2TsIds() error{
 	return nil
 }
 
-func (this *Generator) generateModel2TsClass(m *ModelClassObject)error{
-	p:=path.Join(this.TsPath,m.Package,"model_"+stringutil.SplitCamelCaseLowerSnake(m.ClassName))
-	p+=".ts"
-	err:=ioutil.WriteFile(p, []byte(m.GoString(this)), 0644)
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
-	p=path.Join(this.GoPath,m.Package,"model_"+stringutil.SplitCamelCaseLowerSnake(m.ClassName))
-	p+="_impl.go"
-	if !util.IsFileExist(p) {
-		err=ioutil.WriteFile(p, []byte(m.GoImplString(this)), 0644)
-		if err != nil {
-			log.Error(err.Error())
-			return err
-		}
-	}
-	return nil
-}
-
-func (this *Generator) generateModel2TsClasses() error{
-	log.Warnf("models", this.GoStructObjects)
-	log.Warnf("GoPath",this.GoPath)
-	for _,m:=range this.ModelClassObjects {
-		err:=this.generateModel2TsClass(m)
-		if err != nil {
-			log.Error(err.Error())
-			return err
-		}
-	}
-
+func (this *Generator) generateModel2TsClasses() error {
+	//log.Warnf("models", this.GoStructObjects)
+	//log.Warnf("GoPath",this.GoPath)
+	//for _,m:=range this.ModelClassObjects {
+	//	err:=this.generateModel2TsClass(m)
+	//	if err != nil {
+	//		log.Error(err.Error())
+	//		return err
+	//	}
+	//}
+	this.processTsClassObjects()
 	for i := len(this.ModelClassObjects) - 1; i >= 0; i-- {
 		schema := this.ModelClassObjects[i]
 		tsFile := this.getTsModelFileByModel(schema)
+		tsFile.Package = schema.TsPackage
 		tsClass := this.getTsClassByName(schema.ClassName)
 		if tsClass == nil {
 			this.genTsClass(tsFile, schema)
@@ -267,14 +239,16 @@ func (this *Generator) generateModel2TsClasses() error{
 			imports.AddLine(&LineText{
 				Obj:     imports,
 				LineNum: 0,
-				Text:    "import {ISerializable} from \"" + relative + "/protocol/protocol\"",
+				Text:    "import {BaseComponent} from \"" + relative + "/ecs/default_component\"",
 			}, LINE_TS_IMPORT_SINGLELINE)
 			modelFile.InsertObject(0, imports)
 		}
 		for _, obj := range modelFile.Objects {
 			strs += obj.String()
 		}
-		ioutil.WriteFile(modelFile.FilePath, []byte(strs), 0644)
+		p := path.Join(this.TsPath, modelFile.Package, "model_"+stringutil.SplitCamelCaseLowerSnake(modelFile.ClassName))
+		p += ".ts"
+		ioutil.WriteFile(p, []byte(strs), 0644)
 	}
 	return nil
 }
@@ -282,6 +256,7 @@ func (this *Generator) generateModel2TsClasses() error{
 func (this *Generator) genTsClass(tsFile *TsModelFile, schema *ModelClassObject) {
 	var tsClass *TsClassObject
 	tsClass = NewTsClassObject(tsFile)
+	tsClass.Package = schema.TsPackage
 	imports := tsFile.GetObj(OBJ_TS_IMPORTS)
 	for _, impor := range imports {
 		impor.RemoveLineType(LINE_EMPTY)
@@ -420,13 +395,8 @@ func (this *Generator) getTsClassByName(s string) *TsClassObject {
 }
 
 func (this *Generator) getTsModelFileByModel(schema *ModelClassObject) *TsModelFile {
-	if !this.Individual {
-		return this.TsModels[0]
-	}
-	tsPath := stringutil.CamelToSnake(schema.ClassName)+".ts"
-	tsPath = path.Join(this.TsPath, tsPath)
+	tsPath := path.Join(this.TsPath, schema.TsPackage, "model_"+stringutil.SplitCamelCaseLowerSnake(schema.ClassName)) + ".ts"
 
-	log.Infof("tsPath", tsPath)
 	for _, file := range this.TsModels {
 		if file.FilePath == tsPath {
 			return file
@@ -442,10 +412,33 @@ func (this *Generator) getTsModelFileByModel(schema *ModelClassObject) *TsModelF
 		log.Error(err.Error())
 		return nil
 	}
+	file.ClassName = schema.ClassName
 	return file
 }
 
-func (this *Generator) generateModel2TsEnums() error{
+func (this *Generator) processTsClassObjects(){
+	ret := make([]*TsClassObject, 0)
+	for _, file := range this.TsModels {
+		objects := file.ProcessClasses()
+		for _, toAddObj := range objects {
+			foundSame := false
+			for _, addedObj := range ret {
+				if addedObj.ClassName == toAddObj.ClassName {
+					foundSame = true
+					panic("duplicated class")
+					break
+				}
+			}
+			if foundSame {
+				continue
+			}
+			ret = append(ret, toAddObj)
+		}
+	}
+	this.TsClassObjects = ret
+}
+
+func (this *Generator) generateModel2TsEnums() error {
 	strs := auto_gen_header
 	importObjs := this.TsEnums.GetObj(OBJ_TS_IMPORTS)
 	for _, obj := range importObjs {
@@ -453,7 +446,7 @@ func (this *Generator) generateModel2TsEnums() error{
 	}
 	strs += "\n"
 	for _, enum := range this.ModelEnumObjects {
-		strs+=enum.TsString(this)
+		strs += enum.TsString(this)
 	}
 
 	err := ioutil.WriteFile(this.TsEnums.FilePath, []byte(strs), 0)
@@ -463,4 +456,3 @@ func (this *Generator) generateModel2TsEnums() error{
 	}
 	return nil
 }
-

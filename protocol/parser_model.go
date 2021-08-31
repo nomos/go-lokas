@@ -1169,7 +1169,7 @@ func (this *ModelClassFields) TsDefineTags(g *Generator)string{
 	t:= MatchModelProtoTag(this.Type)
 	if t!=0 {
 		t:=GetModelProtoTag(this.Type)
-		str += t.TsTypeString()
+		str += t.TsTagString()
 	} else if t,s1,s2:=MatchModelSystemTag(this.Type);t!=0 {
 		if t==TAG_List {
 			t = MatchModelProtoTag(s1)
@@ -1185,14 +1185,14 @@ func (this *ModelClassFields) TsDefineTags(g *Generator)string{
 			t2 := MatchModelProtoTag(s2)
 			type1 := s1
 			if t1!=0 {
-				type1 = t1.TsTypeString()
+				type1 = t1.TsTagString()
 			}
 			if g.IsEnum(s1) {
 				type1 = stringutil.SplitCamelCaseUpperSnake(s1)
 			}
 			type2 := s2
 			if t2!=0 {
-				type2 = t2.TsTypeString()
+				type2 = t2.TsTagString()
 			}
 			if g.IsEnum(s2) {
 				type1 = stringutil.SplitCamelCaseUpperSnake(s2)
@@ -1200,11 +1200,11 @@ func (this *ModelClassFields) TsDefineTags(g *Generator)string{
 			str+="," + type1+","+type2
 		}
 	} else if g.IsEnum(this.Type) {
-		str+=","
 		str+=TAG_Int.TsTagString()
 	} else {
-		str+=","+name
+		str+=name
 	}
+	str+="],"
 	return str
 }
 
@@ -1316,6 +1316,7 @@ type ModelClassObject struct {
 	TagId     BINARY_TAG
 	state     int
 	Fields    []*ModelClassFields
+	Component bool
 	Package   string
 	CsPackage string
 	GoPackage string
@@ -1340,7 +1341,7 @@ func (this *ModelClassObject) Deps(g *Generator)[]string{
 }
 
 func NewModelClassObject(file GeneratorFile) *ModelClassObject {
-	ret := &ModelClassObject{DefaultGeneratorObj: DefaultGeneratorObj{}, Fields: []*ModelClassFields{},Depends: []string{}}
+	ret := &ModelClassObject{DefaultGeneratorObj: DefaultGeneratorObj{},Component: true,Fields: []*ModelClassFields{},Depends: []string{}}
 	ret.DefaultGeneratorObj.init(OBJ_MODEL_CLASS, file)
 	return ret
 }
@@ -1384,9 +1385,9 @@ func (this *ModelClassObject) TsDefineSingleLine(g *Generator) string {
 
 func (this *ModelClassObject) ToTsClassHeader(g *Generator)string{
 	compStr:="ISerializable"
-	//if this.Component {
-	//	compStr = "IComponent"
-	//}
+	if this.Component {
+		compStr = "BaseComponent"
+	}
 	ret:="export class "+this.ClassName+" extends "+compStr+" {"
 	return ret
 }

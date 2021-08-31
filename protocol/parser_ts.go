@@ -138,6 +138,7 @@ type TsClassMember struct {
 
 type TsClassObject struct {
 	DefaultGeneratorObj
+	Package string
 	ClassName      string
 	IsComponent    bool
 	IsSerializable bool
@@ -201,7 +202,7 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 			this.state = TS_CLASSOBJ_MEMBER_FIELD
 			this.ClassName = line.GetStructName()
 			extendStr := LINE_TS_CLASS_HEADER.RegExp().ReplaceAllString(line.Text, "$6")
-			if extendStr == "IComponent" {
+			if extendStr == "BaseComponent" {
 				this.IsComponent = true
 			}
 			if extendStr == "ISerializable" {
@@ -331,7 +332,7 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 		}
 		return false
 	} else if this.state == TS_CLASSOBJ_CLASS_END {
-		return false
+		return true
 	}
 	log.Panic("parse TsClassObject error")
 	return false
@@ -388,6 +389,8 @@ func (this *TsImportObject) CheckLine(line *LineText) bool {
 
 type TsModelFile struct {
 	*DefaultGeneratorFile
+	Package string
+	ClassName string
 }
 
 var _ GeneratorFile = (*TsModelFile)(nil)
@@ -408,10 +411,7 @@ func (this *TsModelFile) Parse() *promise.Promise {
 		offset, success := this.parse(0, OBJ_TS_IMPORTS)
 		log.Warnf("parseTsImports", offset, success)
 		offset, success = this.parse(offset, OBJ_COMMENT, OBJ_TS_CLASS, OBJ_TS_FUNC, OBJ_TS_ENUM, OBJ_TS_VAR)
-		//offset, success = this.parseGoImports(offset, nil)
-		//log.Warnf("parseGoImports", offset, success)
-		//offset, success = this.parseGoMain(offset, nil)
-		//log.Warnf("parseGoMain finish", offset, success)
+		log.Warnf("parse TsModelFile Finish")
 		resolve(nil)
 	})
 }
