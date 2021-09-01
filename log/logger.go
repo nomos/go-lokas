@@ -252,6 +252,7 @@ func (this *LoggerWithFields) reset() {
 
 type TestLogger struct {
 	_logger *zap.Logger
+	enabled bool
 }
 
 type ILogger interface {
@@ -281,29 +282,38 @@ type StdLogger interface {
 
 var _ StdLogger = (*TestLogger)(nil)
 
-func NewAstilecTronLogger() *TestLogger {
-	ret := &TestLogger{}
+func NewAstilecTronLogger(enabled bool) *TestLogger {
+	ret := &TestLogger{enabled: enabled}
 	ret._logger, _ = newLogConfig().Build(zap.AddCallerSkip(3))
 	return ret
 }
 
 func (this *TestLogger) Fatal(fields ...interface{}) {
-	return
+	if !this.enabled {
+		return
+	}
 	this._logger.Fatal(fields[0].(string))
 }
 
 func (this *TestLogger) Fatalf(msg string, fields ...interface{}) {
-	return
+	if !this.enabled {
+		return
+	}
 	this._logger.Fatal(fmt.Sprintf(msg, fields))
 }
 
 func (this *TestLogger) Print(fields ...interface{}) {
+	if !this.enabled {
+		return
+	}
 	this._logger.Info(fields[0].(string))
 }
 
 func (this *TestLogger) Printf(msg string, fields ...interface{}) {
+	if !this.enabled {
+		return
+	}
 	this._logger.Info(fmt.Sprintf(msg, fields))
-
 }
 
 func Infof(args ...interface{}) {
