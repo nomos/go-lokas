@@ -11,7 +11,6 @@ const (
 	TS_CLASSOBJ_MEMBER_FIELD
 	TS_CLASSOBJ_CONSTRUCTOR
 	TS_CLASSOBJ_GETTER_SETTER
-	TS_CLASSOBJ_FUNCTION_FIELD
 	TS_CLASSOBJ_FUNCTION
 	TS_CLASSOBJ_CLASS_END
 )
@@ -141,6 +140,7 @@ type TsClassObject struct {
 	Package string
 	ClassName      string
 	IsComponent    bool
+	IsRenderComponent    bool
 	IsSerializable bool
 	members        []*TsClassMember
 	LongStringTag  map[string]bool
@@ -175,7 +175,7 @@ func (this *TsClassObject) GetClassName() string {
 }
 
 func (this *TsClassObject) IsModel() bool {
-	return this.IsSerializable || this.IsComponent
+	return this.IsSerializable || this.IsComponent || this.IsRenderComponent
 }
 
 func (this *TsClassObject) CheckLongString(mName string)bool{
@@ -194,6 +194,9 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 		if this.TryAddLine(line, LINE_TS_DEFINE_SINGLELINE) {
 			return true
 		}
+		if this.TryAddLine(line, LINE_TS_CLASS_DECORATOR_COCOS) {
+			return true
+		}
 		if this.TryAddLine(line, LINE_TS_DEFINE_START) {
 			this.state = TS_CLASSOBJ_DEFINER
 			return true
@@ -204,6 +207,9 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 			extendStr := LINE_TS_CLASS_HEADER.RegExp().ReplaceAllString(line.Text, "$6")
 			if extendStr == "BaseComponent" {
 				this.IsComponent = true
+			}
+			if extendStr == "RenderComponent" {
+				this.IsRenderComponent = true
 			}
 			if extendStr == "ISerializable" {
 				this.IsSerializable = true
@@ -236,7 +242,17 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 		if this.TryAddLine(line, LINE_COMMENT) {
 			return true
 		}
+		if this.TryAddLine(line, LINE_TS_CLASS_FUNC_HEADER) {
+			this.state = TS_CLASSOBJ_FUNCTION
+			return true
+		}
 		if this.TryAddLine(line, LINE_TS_CLASS_FIELD_PRIVATE) {
+			return true
+		}
+		if this.TryAddLine(line, LINE_TS_CLASS_FIELD) {
+			return true
+		}
+		if this.TryAddLine(line, LINE_TS_CLASS_FIELD_PROTECTED) {
 			return true
 		}
 		if this.TryAddLine(line, LINE_TS_CLASS_FIELD_PUBLIC) {
@@ -276,6 +292,10 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 			this.state = TS_CLASSOBJ_CONSTRUCTOR
 			return true
 		}
+		if this.TryAddLine(line,LINE_CLOSURE_END) {
+			this.state = TS_CLASSOBJ_CLASS_END
+			return true
+		}
 	} else if this.state == TS_CLASSOBJ_GETTER_SETTER {
 		if this.TryAddLine(line, LINE_TS_CLASS_FUNC_END) {
 			this.state = TS_CLASSOBJ_MEMBER_FIELD
@@ -293,29 +313,13 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 			return true
 		}
 		if this.TryAddLine(line, LINE_TS_CLASS_FUNC_END) {
-			this.state = TS_CLASSOBJ_FUNCTION_FIELD
+			this.state = TS_CLASSOBJ_MEMBER_FIELD
 			return true
 		}
 		if this.TryAddLine(line, LINE_ANY) {
 			return true
 		}
 		log.Panic("parse TsClassObject TS_CLASSOBJ_CONSTRUCTOR error")
-	} else if this.state == TS_CLASSOBJ_FUNCTION_FIELD {
-		if this.TryAddLine(line, LINE_EMPTY) {
-			return true
-		}
-		if this.TryAddLine(line, LINE_COMMENT) {
-			return true
-		}
-		if this.TryAddLine(line, LINE_CLOSURE_END) {
-			this.state = TS_CLASSOBJ_CLASS_END
-			return true
-		}
-		if this.TryAddLine(line, LINE_TS_CLASS_FUNC_HEADER) {
-			this.state = TS_CLASSOBJ_FUNCTION_FIELD
-			return true
-		}
-		return false
 	} else if this.state == TS_CLASSOBJ_FUNCTION {
 		if this.TryAddLine(line, LINE_EMPTY) {
 			return true
@@ -324,7 +328,7 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 			return true
 		}
 		if this.TryAddLine(line, LINE_TS_CLASS_FUNC_END) {
-			this.state = TS_CLASSOBJ_FUNCTION_FIELD
+			this.state = TS_CLASSOBJ_MEMBER_FIELD
 			return true
 		}
 		if this.TryAddLine(line, LINE_ANY) {

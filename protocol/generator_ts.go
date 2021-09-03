@@ -315,7 +315,7 @@ func (this *Generator) genTsClassOther(schema *ModelClassObject, tsClass *TsClas
 	tsClass.AddLine(&LineText{
 		Obj:      tsClass,
 		LineNum:  0,
-		Text:     schema.ToTsClassHeader(this),
+		Text:     schema.ToTsClassHeader(this,tsClass),
 		LineType: 0,
 	}, LINE_TS_CLASS_HEADER)
 	for _, field := range schema.Fields {

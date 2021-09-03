@@ -1383,10 +1383,13 @@ func (this *ModelClassObject) TsDefineSingleLine(g *Generator) string {
 	return ret
 }
 
-func (this *ModelClassObject) ToTsClassHeader(g *Generator)string{
+func (this *ModelClassObject) ToTsClassHeader(g *Generator,object *TsClassObject)string{
 	compStr:="ISerializable"
-	if this.Component {
+	if object.IsComponent {
 		compStr = "BaseComponent"
+	}
+	if object.IsRenderComponent {
+		compStr = "RenderComponent"
 	}
 	ret:="export class "+this.ClassName+" extends "+compStr+" {"
 	return ret

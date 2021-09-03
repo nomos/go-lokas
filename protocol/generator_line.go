@@ -54,11 +54,14 @@ const (
 	LINE_TS_IMPORT_OBJ
 	LINE_TS_ENUM_CLOSURE_START
 	LINE_TS_ENUM_OBJ
+	LINE_TS_CLASS_DECORATOR_COCOS
 	LINE_TS_CLASS_DECORATOR
 	LINE_TS_CLASS_HEADER
 	LINE_TS_CLASS_CONSTRUCTOR_HEADER
+	LINE_TS_CLASS_FIELD
 	LINE_TS_CLASS_FIELD_PUBLIC
 	LINE_TS_CLASS_FIELD_PRIVATE
+	LINE_TS_CLASS_FIELD_PROTECTED
 	LINE_TS_CLASS_GETTER_HEADER
 	LINE_TS_CLASS_SETTER_HEADER
 	LINE_TS_CLASS_FUNC_HEADER
@@ -200,10 +203,13 @@ func init() {
 	line_string[LINE_TS_ENUM_CLOSURE_START] = "LINE_TS_ENUM_CLOSURE_START"
 	line_string[LINE_TS_ENUM_OBJ] = "LINE_TS_ENUM_OBJ"
 	line_string[LINE_TS_CLASS_DECORATOR] = "LINE_TS_CLASS_DECORATOR"
+	line_string[LINE_TS_CLASS_DECORATOR_COCOS] = "LINE_TS_CLASS_DECORATOR_COCOS"
 	line_string[LINE_TS_CLASS_HEADER] = "LINE_TS_CLASS_HEADER"
 	line_string[LINE_TS_CLASS_CONSTRUCTOR_HEADER] = "LINE_TS_CLASS_CONSTRUCTOR_HEADER"
 	line_string[LINE_TS_CLASS_FIELD_PUBLIC] = "LINE_TS_CLASS_FIELD_PUBLIC"
 	line_string[LINE_TS_CLASS_FIELD_PRIVATE] = "LINE_TS_CLASS_FIELD_PRIVATE"
+	line_string[LINE_TS_CLASS_FIELD] = "LINE_TS_CLASS_FIELD"
+	line_string[LINE_TS_CLASS_FIELD_PROTECTED] = "LINE_TS_CLASS_FIELD_PROTECTED"
 	line_string[LINE_TS_CLASS_GETTER_HEADER] = "LINE_TS_CLASS_GETTER_HEADER"
 	line_string[LINE_TS_CLASS_SETTER_HEADER] = "LINE_TS_CLASS_SETTER_HEADER"
 	line_string[LINE_TS_CLASS_FUNC_HEADER] = "LINE_TS_CLASS_FUNC_HEADER"
@@ -325,7 +331,7 @@ func init() {
 	line_regexp_map[LINE_CONF_RECUR] = regexp.MustCompile(`(recursive)\s*[=]\s*(\w+)\s*`)
 	line_regexp_replace_value[LINE_CONF_RECUR] = "$2"
 
-	line_regexp_map[LINE_TS_IMPORT_SINGLELINE] = regexp.MustCompile(`\s*import\s+([*]\s*as\s*)?([{]?[,|\w|\s]+[}]?\s*from\s*)?"[\w+|.|/]+"[;|\s]*`)
+	line_regexp_map[LINE_TS_IMPORT_SINGLELINE] = regexp.MustCompile(`\s*import\s+([*]\s*as\s*)?([{]?[,|\w|\s]+[}]?\s*(from|[=])\s*)?\"?[\w+|.|/]+\"?[;|\s]*`)
 	line_regexp_map[LINE_TS_IMPORT_CLOSURE_START] = regexp.MustCompile(`\s*import\s+[{]\s*\s*`)
 	line_regexp_map[LINE_TS_IMPORT_OBJ] = regexp.MustCompile(`\s*[\w|\s]+[,]?\s*`)
 	line_regexp_map[LINE_TS_IMPORT_CLOSURE_END] = regexp.MustCompile(`[}]\s*from\s*"[\w+|.|/]+"[;|\s]*`)
@@ -334,12 +340,20 @@ func init() {
 	line_regexp_map[LINE_TS_ENUM_OBJ] = regexp.MustCompile(`\s*[\w+|_]+\s*([=]\s*[0-9]+)?\s*[,]?\s*`)
 
 	line_regexp_map[LINE_TS_CLASS_DECORATOR] = regexp.MustCompile(`\s*@\w+\s*`)
+	line_regexp_map[LINE_TS_CLASS_DECORATOR_COCOS] = regexp.MustCompile(`\s*[@]ccclass\s*`)
+
 	line_regexp_map[LINE_TS_CLASS_HEADER] = regexp.MustCompile(`(export)?\s*(default)?\s*(class)\s+([A-Z]\w*)\s+(extends\s+([A-Z]\w*)){0,1}\s*[{]\s*`)
 	line_regexp_replace_struct_name[LINE_TS_CLASS_HEADER] = "$4"
 	line_regexp_map[LINE_TS_CLASS_CONSTRUCTOR_HEADER] = regexp.MustCompile(`\s*constructor\s*\(.*\).*\{\s*`)
 	line_regexp_map[LINE_TS_CLASS_FIELD_PUBLIC] = regexp.MustCompile(`\s+(public)\s+(\w+)\s*[:]\s*((\w|[.]|\[|\]|<|>|[,])+)(\s*[=]\s*.+)?\s*`)
 	line_regexp_replace_name[LINE_TS_CLASS_FIELD_PUBLIC] = "$2"
 	line_regexp_replace_type[LINE_TS_CLASS_FIELD_PUBLIC] = "$3"
+	line_regexp_map[LINE_TS_CLASS_FIELD_PROTECTED] = regexp.MustCompile(`\s+(protected)\s+(\w+)\s*[:]\s*((\w|[.]|\[|\]|<|>|[,])+)(\s*[=]\s*.+)?\s*`)
+	line_regexp_replace_name[LINE_TS_CLASS_FIELD_PROTECTED] = "$2"
+	line_regexp_replace_type[LINE_TS_CLASS_FIELD_PROTECTED] = "$3"
+	line_regexp_map[LINE_TS_CLASS_FIELD] = regexp.MustCompile(`\s+(\w+)\s*[:]\s*((\w|[.]|\[|\]|<|>|[,])+)(\s*[=]\s*.+)?\s*`)
+	line_regexp_replace_name[LINE_TS_CLASS_FIELD] = "$1"
+	line_regexp_replace_type[LINE_TS_CLASS_FIELD] = "$2"
 	line_regexp_map[LINE_TS_CLASS_FIELD_PRIVATE] = regexp.MustCompile(`\s+(private)\s+(\w+)\s*[:]\s*((\w|[.]|\[|\]|<|>|[,])+)(\s*[=]\s*.+)?\s*`)
 	line_regexp_replace_name[LINE_TS_CLASS_FIELD_PRIVATE] = "$2"
 	line_regexp_replace_type[LINE_TS_CLASS_FIELD_PRIVATE] = "$3"
@@ -347,8 +361,8 @@ func init() {
 	line_regexp_replace_name[LINE_TS_CLASS_GETTER_HEADER] = "$1"
 	line_regexp_map[LINE_TS_CLASS_SETTER_HEADER] = regexp.MustCompile(`\s+set\s(\w+)\s*\(.*\).*\{\s*`)
 	line_regexp_replace_name[LINE_TS_CLASS_SETTER_HEADER] = "$1"
-	line_regexp_map[LINE_TS_CLASS_FUNC_HEADER] = regexp.MustCompile(`\s+(async\s+)?\w+\s*[(]\s*(\w+\s*([:]\s*\w+)?[,]?)*\s*[)]\s*[{]\s*`)
-	line_regexp_map[LINE_TS_CLASS_FUNC_END] = regexp.MustCompile(`\s+[}]\s*`)
+	line_regexp_map[LINE_TS_CLASS_FUNC_HEADER] = regexp.MustCompile(`\s*(static\s+)?((protected|private|public)\s+)?(async\s+)?\w+\s*[(]\s*(\w+\s*([?]?[:]\s*\w+)?[,]?\s*)*\s*[)]\s*([:]\w+\s*)?[{]\s*`)
+	line_regexp_map[LINE_TS_CLASS_FUNC_END] = regexp.MustCompile(`\s{4}[}]\s*`)
 
 	line_regexp_map[LINE_TS_FUNC_HEADER] = regexp.MustCompile(`(export)?\s*function\s+\w+\s*\(.*\).*\{\s*`)
 
