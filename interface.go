@@ -8,9 +8,9 @@ import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/network/redisclient"
+	"github.com/nomos/go-lokas/promise"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	"github.com/nomos/go-lokas/promise"
 	"github.com/nomos/qmgo"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"net"
@@ -217,6 +217,23 @@ type IContext interface {
 	GetProcessIdType(key string) util.ProcessId
 	GetString(key string) string
 	Set(key string, value interface{})
+}
+
+type ITaskPipeLine interface {
+	Name() string
+	SetName(s string)
+	Idx()int
+	SetIdx(int)
+	GetContext()IContext
+	GetParent() ITaskPipeLine
+	GetPrev() ITaskPipeLine
+	GetNext() ITaskPipeLine
+	GetSibling(idx int) ITaskPipeLine
+	GetChildren()[]ITaskPipeLine
+	GetChildById(idx int) ITaskPipeLine
+	GetChildByName(s string) ITaskPipeLine
+	Add(flow ITaskPipeLine)
+	Remove(flow ITaskPipeLine)
 }
 
 type IConfig interface {

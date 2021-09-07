@@ -99,67 +99,55 @@ func init() {
 }
 
 func (this *ModelPackageObject) CsString(g *Generator)string {
-	ret0:=`//this is a generated file,do not modify it!!!
-package {PackageName}
-
-import (
-	"github.com/nomos/go-lokas/protocol"{Imports}
-	"reflect"
-)
-
-const (
-{Ids}
-)
-{Errors}
-func init() {
-{IdRegister}
-}
-
-{Protocols}
-`
-
 	ret:=`//this is a generated file,do not modify it!!!
-package {PackageName}
+using System;
+using System.Threading.children;
+using Funnel.Client;
+using Funnel.Protocol;
+using Funnel.Protocol.Abstractions;
+#if UNITY_2017_1_OR_NEWER
+    using UnityEngine;
+#endif
+using static Funnel.FunnelGlobal;
 
-import ({Imports}
-	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas"
-	"github.com/nomos/go-lokas/protocol"
-	"github.com/nomos/go-lokas/util"
-	"reflect"
-)
-
-const (
-{Ids}
-)
-{Errors}
-func init() {
-{IdRegister}
-}
-
+namespace {CsPackageName}
+{
+    public static class {CsClassName}
+    {
 {Protocols}
-`
-	funcStr:=this.GetGoFuncString(g)
-	if funcStr == "" {
-		ret = ret0
-	}
-	deps:=[]string{}
-	for _,v:=range this.Ids {
-		for _,d:=range v.Deps(g) {
-			deps = append(deps, d)
-		}
-	}
-	if len(deps)>0 {
-		ret = strings.Replace(ret,`{Imports}`,g.getGoImportsString(deps),-1)
-	} else {
-		ret = strings.Replace(ret,`{Imports}`,"",-1)
-	}
-	ret = strings.Replace(ret,`{Errors}`,this.GoErrorString(g),-1)
-	ret = strings.Replace(ret,`{PackageName}`,this.PackageName,-1)
-	ret = strings.Replace(ret,`{Ids}`,this.GetGoIdAssignString(g),-1)
-	ret = strings.Replace(ret,`{IdRegister}`,this.GetGoIdRegString(g),-1)
-	ret = strings.Replace(ret,`{Protocols}`,this.GetGoFuncString(g),-1)
-	ret = strings.ReplaceAll(ret,"\r","")
+
+        private static Funnel.Client.Client _client = null;
+		//错误注册
+{Errors}
+        //方法注册
+        public static void Init(Funnel.Client.Client client)
+        {
+            setClient(client);
+            registerIds();
+            registerMessages();
+        }
+        private static void setClient(Funnel.Client.Client client)
+        {
+            _client = client;
+        }
+
+        private static void registerMessages()
+        {
+{HandlerRegister}
+        }
+
+        private static void registerIds()
+        {
+{IdRegister}
+        }
+    }
+}`
+	ret = strings.Replace(ret,`{Errors}`,this.CsErrorString(g),-1)
+	ret = strings.Replace(ret,`{CsPackageName}`,this.CsPackageName,-1)
+	ret = strings.Replace(ret,`{CsClassName}`,this.GetCsPackageName(),-1)
+	ret = strings.Replace(ret,`{Protocols}`,this.GetCsFuncString(g),-1)
+	ret = strings.Replace(ret,`{HandlerRegister}`,this.GetCsMessageRegString(g),-1)
+	ret = strings.Replace(ret,`{IdRegister}`,this.GetCsIdRegString(g),-1)
 	return ret
 }
 
@@ -213,7 +201,7 @@ func (this *ModelPackageObject) CsErrorString(g *Generator)string{
 func (this *ModelPackageObject) TsString(g *Generator)string {
 	ret:=`//this is a generated file,do not modify it!!!
 using System;
-using System.Threading.Tasks;
+using System.Threading.children;
 using Funnel.Client;
 using Funnel.Protocol;
 using Funnel.Protocol.Abstractions;
