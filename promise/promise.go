@@ -45,7 +45,7 @@ type Interval struct {
 	interval  time.Duration
 	ticker    *time.Ticker
 	closeChan chan struct{}
-	f         func()
+	f         func(interval *Interval)
 }
 
 func (this *Interval) IsClose() bool {
@@ -58,7 +58,7 @@ func (this *Interval) Close() {
 	}()
 }
 
-func (this *Timeout) execute(duration time.Duration, f func()) {
+func (this *Timeout) execute(duration time.Duration, f func(*Timeout)) {
 	this.closeChan = make(chan struct{})
 	go func() {
 		for {
@@ -66,7 +66,7 @@ func (this *Timeout) execute(duration time.Duration, f func()) {
 			case <-this.closeChan:
 				return
 			case <-time.After(duration):
-				f()
+				f(this)
 				this.isClose = true
 				close(this.closeChan)
 				this.closeChan = nil
@@ -76,7 +76,7 @@ func (this *Timeout) execute(duration time.Duration, f func()) {
 	}()
 }
 
-func SetTimeout(duration time.Duration, f func()) *Timeout {
+func SetTimeout(duration time.Duration, f func(*Timeout)) *Timeout {
 	ret := &Timeout{
 		isClose: true,
 	}
@@ -84,7 +84,7 @@ func SetTimeout(duration time.Duration, f func()) *Timeout {
 	return ret
 }
 
-func SetInterval(duration time.Duration, f func()) *Interval {
+func SetInterval(duration time.Duration, f func(*Interval)) *Interval {
 	ret := &Interval{
 		interval:  duration,
 		ticker:    time.NewTicker(duration),
@@ -95,7 +95,7 @@ func SetInterval(duration time.Duration, f func()) *Interval {
 		for {
 			select {
 			case <-ret.ticker.C:
-				f()
+				f(ret)
 			case <-ret.closeChan:
 				close(ret.closeChan)
 				return
