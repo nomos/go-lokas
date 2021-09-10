@@ -42,7 +42,7 @@ func Rng(val1,val2 float64,seed...uint64)float64{
 }
 
 func RngInt(val1,val2 int,seed...uint64)int {
-	return int(math.Floor(Rng(float64(val1),float64(val2+1),seed...)))
+	return int(math.Floor(Rng(float64(val1),float64(val2),seed...)))
 }
 
 func Porn(seed...uint64)float64{
