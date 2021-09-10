@@ -206,7 +206,7 @@ func (this *TcpClient) Request(req interface{}) *promise.Promise {
 
 func (this *TcpClient) OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-		timeout := promise.SetTimeout(time, func() {
+		timeout := promise.SetTimeout(time, func(t *promise.Timeout) {
 			reject(context.DeadlineExceeded)
 		})
 		this.Once(events.EventName("CmdId"+strconv.Itoa(int(cmdId))), func(i ...interface{}) {

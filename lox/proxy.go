@@ -206,7 +206,7 @@ func (this *Proxy) connect(id util.ProcessId,addr string) (*ProxySession,error) 
 	}
 	activeSession:=conn.Session.(*ProxySession)
 	_,err=promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-		timeout:=promise.SetTimeout(time.Second*14, func() {
+		timeout:=promise.SetTimeout(time.Second*14, func(timeout *promise.Timeout) {
 			reject("connect to server timeout:"+id.String())
 			activeSession.Conn.Close()
 			activeSession.closeSession()
