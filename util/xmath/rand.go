@@ -26,8 +26,7 @@ func SRandom(seed... uint64)float64{
 		s2%=JSMAXSAFE
 		y--
 	}
-	s2 %= 233173
-	return float64(s2) / 233173.0
+	return float64(s2) / float64(JSMAXSAFE)
 }
 
 func Rng(val1,val2 float64,seed...uint64)float64{

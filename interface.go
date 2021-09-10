@@ -224,7 +224,8 @@ type ITaskPipeLine interface {
 	SetName(s string)
 	Idx()int
 	SetIdx(int)
-	GetContext()IContext
+	GetContext() IContext
+	SetContext(context IContext)
 	GetParent() ITaskPipeLine
 	GetPrev() ITaskPipeLine
 	GetNext() ITaskPipeLine
@@ -232,8 +233,14 @@ type ITaskPipeLine interface {
 	GetChildren()[]ITaskPipeLine
 	GetChildById(idx int) ITaskPipeLine
 	GetChildByName(s string) ITaskPipeLine
-	Add(flow ITaskPipeLine)
-	Remove(flow ITaskPipeLine)
+	Add(flow ITaskPipeLine)ITaskPipeLine
+	Insert(flow ITaskPipeLine, idx int)ITaskPipeLine
+	Remove(flow ITaskPipeLine)ITaskPipeLine
+	RemoveAt(idx int)ITaskPipeLine
+	Execute()*promise.Promise
+	SetInput(context IContext)
+	GetInput()IContext
+	SetExecFunc(f func()(IContext,err error))
 }
 
 type IConfig interface {
