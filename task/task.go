@@ -6,10 +6,14 @@ import (
 	"github.com/nomos/go-lokas/util"
 )
 
-type Input struct {
-	Type  INPUT_TYPE
-	Name  string
-	Value interface{}
+type InputParam struct {
+	Type     INPUT_TYPE
+	Name     string
+	Optional bool
+}
+
+type InputConfig struct {
+	Inputs []InputParam
 }
 
 var _ lokas.ITaskPipeLine = (*PipeLine)(nil)
@@ -25,7 +29,7 @@ type PipeLine struct {
 	parent       lokas.ITaskPipeLine
 	Order        TASK_ORDER
 	FailedByPass bool
-	execFunc func()(IContext error, err error)
+	execFunc     func() (IContext error, err error)
 }
 
 func (this *PipeLine) SetExecFunc(f func() (IContext error, err error)) {
@@ -49,13 +53,13 @@ func (this *PipeLine) Name() string {
 }
 
 func (this *PipeLine) Execute() *promise.Promise {
-	all:=[]*promise.Promise{}
-	for _,c:=range this.children {
-		all= append(all, c.Execute())
+	all := []*promise.Promise{}
+	for _, c := range this.children {
+		all = append(all, c.Execute())
 	}
-	if this.Order==WATERFALL {
+	if this.Order == WATERFALL {
 		return promise.Each(all...)
-	} else if this.Order==PARALLEL {
+	} else if this.Order == PARALLEL {
 		return promise.All(all...)
 	}
 	return nil
