@@ -871,7 +871,7 @@ const (
 {ClassBody}
 )
 
-var ALL_{EnumName} = []protocol.IEnum{{EnumList}}
+var ALL_{EnumName} protocol.IEnumCollection = []protocol.IEnum{{EnumList}}
 
 func TO_{EnumName}(s string){EnumName}{
 	switch s {
