@@ -81,7 +81,7 @@ type WeightAble interface {
 	Weight()float64
 }
 
-func WeightSelect(weightList []WeightAble,seed...uint64)int {
+func WeightSelect(weightList []WeightAble,seed...uint64)(int,WeightAble) {
 	sum := 0.0
 	for i := 0; i < len(weightList); i++ {
 		sum += weightList[i].Weight()
@@ -96,7 +96,7 @@ func WeightSelect(weightList []WeightAble,seed...uint64)int {
 			r -= weight
 		}
 	}
-	return i
+	return i,weightList[i]
 }
 
 func Shuffle(arr []interface{},seed...uint64)[]interface{}{
