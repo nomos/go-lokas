@@ -412,7 +412,7 @@ func init() {
 	line_regexp_map[LINE_MODEL_CLASS_FIELD] = regexp.MustCompile(`\s*(\w+)\s+((\w|[{]|[]]|[}]|[[]|[:]|[,])+)\s*`)
 	line_regexp_replace_name[LINE_MODEL_CLASS_FIELD] = "$1"
 	line_regexp_replace_type[LINE_MODEL_CLASS_FIELD] = "$2"
-	line_regexp_map[LINE_MODEL_ENUM_FIELD] = regexp.MustCompile(`\s*(\w+)\s+([0-9]+)\s*`)
+	line_regexp_map[LINE_MODEL_ENUM_FIELD] = regexp.MustCompile(`\s*(\w+)\s+([-]?[0-9]+)\s*`)
 	line_regexp_replace_name[LINE_MODEL_ENUM_FIELD] = "$1"
 	line_regexp_replace_value[LINE_MODEL_ENUM_FIELD] = "$2"
 

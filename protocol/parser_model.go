@@ -101,7 +101,7 @@ func init() {
 func (this *ModelPackageObject) CsString(g *Generator)string {
 	ret:=`//this is a generated file,do not modify it!!!
 using System;
-using System.Threading.children;
+using System.Threading.Tasks;
 using Funnel.Client;
 using Funnel.Protocol;
 using Funnel.Protocol.Abstractions;
@@ -201,7 +201,7 @@ func (this *ModelPackageObject) CsErrorString(g *Generator)string{
 func (this *ModelPackageObject) TsString(g *Generator)string {
 	ret:=`//this is a generated file,do not modify it!!!
 using System;
-using System.Threading.children;
+using System.Threading.Tasks;
 using Funnel.Client;
 using Funnel.Protocol;
 using Funnel.Protocol.Abstractions;
