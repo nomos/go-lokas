@@ -60,7 +60,7 @@ func (this *Generator) processModelObjects() error{
 			for _, addedObj := range ret {
 				if addedObj.ClassName == toAddObj.ClassName {
 					foundSame = true
-					panic("duplicated class")
+					panic("duplicated class:"+addedObj.ClassName)
 					break
 				}
 			}
