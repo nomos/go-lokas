@@ -1,4 +1,4 @@
-package logfield
+package flog
 
 import (
 	"github.com/nomos/go-lokas"
@@ -17,7 +17,7 @@ func ActorId(actor lokas.IActorInfo)zap.Field{
 	return zap.Int64("actor_id",actor.GetId().Int64())
 }
 
-func ProcessId(actor lokas.IActorInfo)zap.Field{
+func ActorProcessId(actor lokas.IActorInfo)zap.Field{
 	return zap.Int32("pid",actor.PId().Int32())
 }
 
@@ -25,7 +25,7 @@ func ActorInfo(actor lokas.IActorInfo)log.ZapFields{
 	ret:=[]zap.Field{}
 	ret = append(ret, ActorType(actor))
 	ret = append(ret, ActorId(actor))
-	ret = append(ret, ProcessId(actor))
+	ret = append(ret, ActorProcessId(actor))
 	return ret
 }
 

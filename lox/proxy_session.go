@@ -3,7 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/log/logfield"
+	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"go.uber.org/zap"
@@ -365,7 +365,7 @@ func (this *ProxySession) startMessagePumpActive(){
 				}
 				this.handleMsg(msg)
 			case <-this.done:
-				log.Warn("closing",logfield.FuncInfo(this,"start")...)
+				log.Warn("closing",flog.FuncInfo(this,"start")...)
 				this.Conn.Close()
 				this.closeSession()
 				break LOOP

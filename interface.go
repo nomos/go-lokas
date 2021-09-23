@@ -348,6 +348,28 @@ type IModel interface {
 	Serialize(a IProcess) error
 }
 
+
+type IAvatar interface {
+	IActor
+	IAvatarSession
+	SendEvent(serializable protocol.ISerializable)error
+}
+
+type IAvatarSession interface {
+	GetGameId()string
+	GetServerId()int32
+	GetGateId()util.ID
+	GetUserName()string
+	GetId()util.ID
+}
+
+type IGameHandler interface {
+	GetSerializer() func(avatar IActor,process IProcess)error
+	GetDeserializer() func(avatar IActor,process IProcess)error
+	GetUpdater() func(avatar IActor,process IProcess)error
+	GetMsgDelegator() func(avatar IActor, actorId util.ID, transId uint32, msg protocol.ISerializable)(protocol.ISerializable, error)
+}
+
 // IConn interface for a connection, either a client connection or server accepted connection
 type IConn interface {
 	net.Conn

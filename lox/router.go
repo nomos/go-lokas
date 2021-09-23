@@ -3,7 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/log/logfield"
+	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 )
 
@@ -32,10 +32,10 @@ func (this *Router) SetProcess(process lokas.IProcess) {
 
 func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 	if msg.ToActor.IsValidProcessId() {
-		log.Info("Router:isProcessId",logfield.ActorRouterMsgInfo(msg.Body,msg.TransId,msg.FromActor,msg.ToActor)...)
+		log.Info("Router:isProcessId",flog.ActorRouterMsgInfo(msg.Body,msg.TransId,msg.FromActor,msg.ToActor)...)
 	} else if msg.ToActor!=0 {
 		a:=this.process.GetActor(msg.ToActor)
-		log.Info("Router:RouteMsg",logfield.ActorRouterMsgInfo(msg.Body,msg.TransId,msg.FromActor,msg.ToActor)...)
+		log.Info("Router:RouteMsg",flog.ActorRouterMsgInfo(msg.Body,msg.TransId,msg.FromActor,msg.ToActor)...)
 		if a!=nil {
 			a.ReceiveMessage(msg)
 			return

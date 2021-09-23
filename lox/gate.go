@@ -3,7 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/log/logfield"
+	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/network/tcp"
 	"github.com/nomos/go-lokas/network/ws"
@@ -163,7 +163,7 @@ func (this *Gate) Stop() error {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	this.ISessionManager.Clear()
-	log.Warn("stop",logfield.FuncInfo(this,"Stop")...)
+	log.Warn("stop",flog.FuncInfo(this,"Stop")...)
 	this.started = false
 	this.server.Stop()
 	return nil

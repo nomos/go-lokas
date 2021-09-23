@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/log/logfield"
+	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"go.etcd.io/etcd/api/v3/mvccpb"
@@ -185,8 +185,8 @@ func (this *Registry) checkOrCreateActorRegistry(kv *mvccpb.KeyValue) {
 	actorReg := NewActorRegistry(actorId)
 	json.Unmarshal(kv.Value, actorReg)
 	log.Warn("success",
-		logfield.FuncInfo(this, "checkOrCreateActorRegistry").
-			Append(logfield.Result(log.PrettyStruct(actorReg)))...
+		flog.FuncInfo(this, "checkOrCreateActorRegistry").
+			Append(flog.Result(log.PrettyStruct(actorReg)))...
 	)
 	this.GlobalRegistry.AddActor(actorReg)
 }
@@ -214,7 +214,7 @@ func (this *Registry) deleteProcessRegistry(kv *mvccpb.KeyValue) {
 
 //update actor registries via etcd
 func (this *Registry) startUpdateRemoteActorInfo() error {
-	log.Info("start", logfield.FuncInfo(this, "startUpdateRemoteActorInfo")...)
+	log.Info("start", flog.FuncInfo(this, "startUpdateRemoteActorInfo")...)
 	client := this.GetProcess().GetEtcd()
 	res, err := client.Get(context.TODO(), "/actor/", clientv3.WithPrefix())
 
@@ -235,14 +235,14 @@ func (this *Registry) startUpdateRemoteActorInfo() error {
 				for _, e := range resp.Events {
 					if e.Type == mvccpb.PUT {
 						log.Warn("PUT actor",
-							logfield.FuncInfo(this, "startUpdateRemoteActorInfo").
-								Concat(logfield.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
+							flog.FuncInfo(this, "startUpdateRemoteActorInfo").
+								Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
 						)
 						this.checkOrCreateActorRegistry(e.Kv)
 					} else if e.Type == mvccpb.DELETE {
 						log.Warn("DELETE actor",
-							logfield.FuncInfo(this, "startUpdateRemoteActorInfo").
-								Concat(logfield.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
+							flog.FuncInfo(this, "startUpdateRemoteActorInfo").
+								Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
 						)
 						this.deleteActorRegistry(e.Kv)
 					}
@@ -258,7 +258,7 @@ func (this *Registry) startUpdateRemoteActorInfo() error {
 
 //update process registries information via etcd
 func (this *Registry) startUpdateRemoteProcessInfo() error {
-	log.Info("start",logfield.FuncInfo(this,"startUpdateRemoteProcessInfo")...)
+	log.Info("start",flog.FuncInfo(this,"startUpdateRemoteProcessInfo")...)
 	client := this.GetProcess().GetEtcd()
 	res, err := client.Get(context.TODO(), "/processids/", clientv3.WithPrefix())
 	if err != nil {
@@ -278,14 +278,14 @@ func (this *Registry) startUpdateRemoteProcessInfo() error {
 				for _, e := range resp.Events {
 					if e.Type == mvccpb.PUT {
 						log.Warn("PUT Process Registry",
-							logfield.FuncInfo(this, "startUpdateRemoteProcessInfo").
-								Concat(logfield.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
+							flog.FuncInfo(this, "startUpdateRemoteProcessInfo").
+								Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
 						)
 						this.checkOrCreateProcessRegistry(e.Kv)
 					} else if e.Type == mvccpb.DELETE {
 						log.Warn("DELETE Process Registry",
-							logfield.FuncInfo(this, "startUpdateRemoteProcessInfo").
-								Concat(logfield.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
+							flog.FuncInfo(this, "startUpdateRemoteProcessInfo").
+								Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
 						)
 						this.deleteProcessRegistry(e.Kv)
 					}
@@ -363,7 +363,7 @@ func (this *Registry) RegisterActors() error {
 		log.Error(err.Error())
 		return err
 	}
-	log.Info("res", logfield.FuncInfo(this,"RegisterActors").Append(logfield.Result(res.Header.String()))...)
+	log.Info("res", flog.FuncInfo(this,"RegisterActors").Append(flog.Result(res.Header.String()))...)
 	return nil
 }
 
@@ -386,7 +386,7 @@ func (this *Registry) RegisterActorRemote(actor lokas.IActor) error {
 			log.Error(err.Error())
 			return err
 		}
-		log.Warn("res", logfield.FuncInfo(this,"RegisterActorRemote").Append(logfield.Result(res.Header.String()))...)
+		log.Warn("res", flog.FuncInfo(this,"RegisterActorRemote").Append(flog.Result(res.Header.String()))...)
 	}
 	return nil
 }
@@ -418,8 +418,8 @@ func (this *Registry) QueryRemoteActorsByServer(typ string, ServerId int32) []*A
 
 func (this *Registry) RegisterActorLocal(actor lokas.IActor) error {
 	log.Info("register",
-		logfield.FuncInfo(this,"RegisterActorLocal").
-		Concat(logfield.ActorInfo(actor))...
+		flog.FuncInfo(this,"RegisterActorLocal").
+		Concat(flog.ActorInfo(actor))...
 	)
 	re := &ActorRegistry{
 		Id:        actor.GetId(),

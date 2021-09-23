@@ -3,7 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/log/logfield"
+	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"go.uber.org/zap"
@@ -85,7 +85,7 @@ func (this *PassiveSession) GetConn() lokas.IConn {
 }
 
 func (this *PassiveSession) StartMessagePump() {
-	log.Info("PassiveSession:StartMessagePump", logfield.ActorInfo(this)...)
+	log.Info("PassiveSession:StartMessagePump", flog.ActorInfo(this)...)
 
 	this.msgChan = make(chan *protocol.RouteMessage, 100)
 	this.done = make(chan struct{})
@@ -238,7 +238,7 @@ func (this *PassiveSession) stop() {
 
 func (this *PassiveSession) OnOpen(conn lokas.IConn) {
 	this.StartMessagePump()
-	log.Info("PassiveSession:OnOpen", logfield.ActorInfo(this)...)
+	log.Info("PassiveSession:OnOpen", flog.ActorInfo(this)...)
 	if this.manager != nil {
 		this.manager.AddSession(this.GetId(), this)
 	}
@@ -251,7 +251,7 @@ func (this *PassiveSession) OnClose(conn lokas.IConn) {
 	if this.manager != nil {
 		this.manager.RemoveSession(this.GetId())
 	}
-	log.Info("PassiveSession:OnClose", logfield.ActorInfo(this)...)
+	log.Info("PassiveSession:OnClose", flog.ActorInfo(this)...)
 	if this.OnCloseFunc != nil {
 		this.OnCloseFunc(conn)
 	}

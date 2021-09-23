@@ -3,7 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/log/logfield"
+	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/util"
 	"go.uber.org/zap"
 	"sync"
@@ -70,11 +70,11 @@ func (this *ActorContainer) StartActor(actor lokas.IActor) error{
 	log.Info("starting",zap.String("module",actor.Type()))
 	err:=actor.Start()
 	if err != nil {
-		log.Error("ActorContainer:StartActor:error",logfield.ActorInfo(actor).Append(logfield.Error(err))...)
+		log.Error("ActorContainer:StartActor:error",flog.ActorInfo(actor).Append(flog.Error(err))...)
 		this.RemoveActor(actor)
 		return err
 	} else {
-		log.Info("ActorContainer:StartActor:success",logfield.ActorInfo(actor)...)
+		log.Info("ActorContainer:StartActor:success",flog.ActorInfo(actor)...)
 		err=actor.OnStart()
 		if err != nil {
 			log.Error(err.Error())

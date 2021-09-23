@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/log/logfield"
+	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/network/tcp"
 	"github.com/nomos/go-lokas/promise"
 	"github.com/nomos/go-lokas/protocol"
@@ -261,7 +261,7 @@ func (this *Proxy) SetPort(p string){
 }
 
 func (this *Proxy) Start() error {
-	log.Info("start",logfield.FuncInfo(this,"Start")...)
+	log.Info("start",flog.FuncInfo(this,"Start")...)
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	if this.started {
@@ -279,7 +279,7 @@ func (this *Proxy) Start() error {
 func (this *Proxy) Stop() error {
 	this.mu.Lock()
 	defer this.mu.Unlock()
-	log.Warn("stop",logfield.FuncInfo(this,"Stop")...)
+	log.Warn("stop",flog.FuncInfo(this,"Stop")...)
 	this.Sessions.Clear()
 	this.started = false
 	this.server.Stop()

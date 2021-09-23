@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
-	"github.com/nomos/go-lokas/log/logfield"
+	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/network/redisclient"
 	"github.com/nomos/go-lokas/util"
@@ -197,12 +197,12 @@ func (this *Process) LoadAllModule(conf lokas.IProcessConfig) error {
 
 func (this *Process) StartAllModule() error {
 	for _, mod := range this.modules {
-			log.Info("starting",logfield.FuncInfo(this,"StartAllModule").Append(logfield.Module(mod))...)
+			log.Info("starting",flog.FuncInfo(this,"StartAllModule").Append(flog.Module(mod))...)
 			err := mod.Start()
 			if err != nil {
 				return err
 			}
-			log.Info("success",logfield.FuncInfo(this,"StartAllModule").Append(logfield.Module(mod))...)
+			log.Info("success",flog.FuncInfo(this,"StartAllModule").Append(flog.Module(mod))...)
 	}
 	return nil
 }
@@ -210,14 +210,14 @@ func (this *Process) StartAllModule() error {
 func (this *Process) StopAllModule() error {
 	log.Warnf("StopAllModule", this.modules)
 	for _, mod := range this.modules {
-			log.Info("stop", logfield.FuncInfo(this,"StopAllModule").Append(logfield.Module(mod))...)
+			log.Info("stop", flog.FuncInfo(this,"StopAllModule").Append(flog.Module(mod))...)
 			err := mod.Stop()
 			if err != nil {
 				return err
 			}
 			log.Info("success",
-				logfield.FuncInfo(this, "StopAllModule").
-					Append(logfield.Module(mod))...
+				flog.FuncInfo(this, "StopAllModule").
+					Append(flog.Module(mod))...
 			)
 	}
 	return nil
@@ -244,11 +244,11 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 	this.IActorContainer = this.Add(NewActorContainer(this)).(lokas.IActorContainer)
 	this.IRouter = this.Add(NewRouter(this)).(lokas.IRouter)
 	if this.id == 0 {
-		log.Error("pid is not set",logfield.FuncInfo(this,"Load")...)
+		log.Error("pid is not set",flog.FuncInfo(this,"Load")...)
 		return errors.New("pid is not set")
 	}
 	log.Info("process config",
-		logfield.FuncInfo(this, "Load").
+		flog.FuncInfo(this, "Load").
 			Append(zap.Uint16("id", uint16(this.PId()))).
 			Append(zap.String("game", this.GameId())).
 			Append(zap.String("version", this.Version())).
@@ -292,17 +292,17 @@ func (this *Process) loadMongo(config MongoConfig) error {
 	})
 	if err != nil {
 		log.Error("Process:loadMongo:Error",
-			logfield.Error(err),
+			flog.Error(err),
 		)
 
 		return err
 	}
 	this.mongo = client.Database(config.Database)
 	log.Info("success",
-		logfield.FuncInfo(this, "loadMongo").
-			Concat(logfield.ActorInfo(this)).
-			Append(logfield.DataBase(config.Database)).
-			Append(logfield.Address(url))...
+		flog.FuncInfo(this, "loadMongo").
+			Concat(flog.ActorInfo(this)).
+			Append(flog.DataBase(config.Database)).
+			Append(flog.Address(url))...
 	)
 	return nil
 }
@@ -338,8 +338,8 @@ func (this *Process) Stop() error {
 		return err
 	}
 	log.Warn("success",
-		logfield.FuncInfo(this, "Stop").
-			Concat(logfield.ActorInfo(this))...
+		flog.FuncInfo(this, "Stop").
+			Concat(flog.ActorInfo(this))...
 	)
 	return nil
 }
