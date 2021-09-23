@@ -2,7 +2,6 @@ package lokas
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/nomos/go-lokas/events"
 	"github.com/nomos/go-lokas/log"
@@ -51,10 +50,6 @@ const (
 	ACTOR_STOPPED
 )
 
-var (
-	ErrDataNil = errors.New("data nil")
-)
-
 //IProcess the interface for application entry
 type IProcess interface {
 	IRegistry
@@ -91,6 +86,7 @@ type IProxy interface {
 	Send(id util.ProcessId,msg *protocol.RouteMessage)error
 }
 
+// IActorContainer container for IActor
 type IActorContainer interface {
 	AddActor(actor IActor)
 	RemoveActor(actor IActor)
@@ -120,6 +116,7 @@ type IActor interface {
 	Update(dt time.Duration, now time.Time)
 }
 
+// IEntity entity of ecs system,container of IComponent
 type IEntity interface {
 	Dirty()bool
 	SetDirty(bool)
@@ -133,6 +130,7 @@ type IEntity interface {
 	Components()map[protocol.BINARY_TAG]IComponent
 }
 
+// IComponentPool pool for IComponent
 type IComponentPool interface {
 	Recycle(comp IComponent)
 	Get() IComponent
@@ -140,6 +138,7 @@ type IComponentPool interface {
 	Destroy()
 }
 
+// IComponent base component of protocol
 type IComponent interface {
 	protocol.ISerializable
 	GetEntity()IEntity
@@ -155,6 +154,7 @@ type IComponent interface {
 	GetSibling(t protocol.BINARY_TAG) IComponent
 }
 
+// IRuntime interface for ecs runtime
 type IRuntime interface {
 	Init(updateTime int64,timeScale float32,server bool)
 	GetContext(name string)interface{}
@@ -195,6 +195,7 @@ type IModule interface {
 	OnStop() error
 }
 
+// IRegistry interface for global registration
 type IRegistry interface {
 	GetProcessIdByActor(actorId util.ID)(util.ProcessId,error)
 	RegisterActors() error

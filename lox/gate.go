@@ -77,17 +77,11 @@ func (this *Gate) OnStop() error{
 	return nil
 }
 
-func (this *Gate) Load(conf lokas.IConfig) error {
-	log.WithFields(log.Fields{
-		"host":     conf.Get("host"),
-		"port":     conf.Get("port"),
-		"protocol": conf.Get("protocol"),
-		"conn":     conf.Get("conn"),
-	}).Info("Gate:LoadConfig")
-	this.Host = conf.Get("host").(string)
-	this.Port = conf.Get("port").(string)
-	this.Protocol = protocol.String2Type(conf.Get("protocol").(string))
-	this.connType = String2ConnType(conf.Get("conn").(string))
+func (this *Gate) LoadCustom(host,port string,protocolType protocol.TYPE,connType ConnType)error{
+	this.Host = host
+	this.Port = port
+	this.Protocol = protocolType
+	this.connType = connType
 	sessionFunc := this.SessionCreator
 	if this.SessionCreatorFunc!= nil {
 		sessionFunc = this.SessionCreatorFunc
@@ -118,6 +112,21 @@ func (this *Gate) Load(conf lokas.IConfig) error {
 		this.server = tcp.NewServer(context)
 	}
 	return nil
+}
+
+func (this *Gate) Load(conf lokas.IConfig) error {
+	log.WithFields(log.Fields{
+		"host":     conf.Get("host"),
+		"port":     conf.Get("port"),
+		"protocol": conf.Get("protocol"),
+		"conn":     conf.Get("conn"),
+	}).Info("Gate:LoadConfig")
+	this.Host = conf.Get("host").(string)
+	this.Port = conf.Get("port").(string)
+	this.Protocol = protocol.String2Type(conf.Get("protocol").(string))
+	this.connType = String2ConnType(conf.Get("conn").(string))
+
+	return this.LoadCustom(conf.GetString("host"),conf.GetString("port"),protocol.String2Type(conf.GetString("protocol")),String2ConnType(conf.GetString("conn")))
 }
 
 func (this *Gate) SessionCreator(conn lokas.IConn) lokas.ISession {
