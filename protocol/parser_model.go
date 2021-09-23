@@ -1115,6 +1115,8 @@ func (this *ModelClassFields) csString(g *Generator,lower bool)string {
 			t = MatchModelProtoTag(s1)
 			if t!=0 {
 				ret = "List<"+t.CsTypeString()+"> "+name
+			} else if g.IsEnum(s1) {
+				ret = "List<"+stringutil.SplitCamelCaseUpperSnake(s1)+"> "+name
 			} else {
 				ret = "List<"+s1+"> "+name
 			}
@@ -1215,6 +1217,8 @@ func (this *ModelClassFields) GoString(g *Generator)string {
 			t = MatchModelProtoTag(s1)
 			if t!=0 {
 				ret = "\t"+this.Name+" []"+t.GoTypeString()
+			} else if g.IsEnum(s1) {
+				ret = "\t"+this.Name+" []"+stringutil.SplitCamelCaseUpperSnake(s1)
 			} else {
 				ret = "\t"+this.Name+" []*"+s1
 			}
@@ -1268,6 +1272,8 @@ func (this *ModelClassFields) TsPublicType(g *Generator)string{
 			t = MatchModelProtoTag(s1)
 			if t!=0 {
 				ret = t.TsTypeString()+"[]"
+			} else if g.IsEnum(s1) {
+				ret = stringutil.SplitCamelCaseUpperSnake(s1)+"[]"
 			} else {
 				ret = s1+"[]"
 			}
