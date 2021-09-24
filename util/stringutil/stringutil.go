@@ -18,6 +18,11 @@ func StartWithCapital(str string)bool {
 	return c1>64&&c1<91
 }
 
+func SplitStringArray(s string,split string)[]string{
+	arr:=strings.Split(s,split)
+	return arr
+}
+
 func SplitInt32Array(s string,split string)([]int32,error){
 	arr:=strings.Split(s,split)
 	ret:=make([]int32,0)

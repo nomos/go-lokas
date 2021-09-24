@@ -34,7 +34,7 @@ func (this avatarManagerCtor) Create()lokas.IModule {
 	ret.SetType(this.Type())
 	ret.OnUpdateFunc = ret.OnUpdate
 	ret.MsgHandler = ret.HandleMsg
-	ret.option = this.option
+	ret.Option = this.option
 	return ret
 }
 
@@ -43,8 +43,8 @@ var _ lokas.IActor = (*AvatarManager)(nil)
 type AvatarManager struct {
 	*Actor
 	Avatars map[util.ID]*Avatar
-	option lokas.IGameHandler
-	mu sync.Mutex
+	Option  lokas.IGameHandler
+	mu      sync.Mutex
 }
 
 func (this *AvatarManager) HandleMsg(actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error) {
@@ -91,7 +91,7 @@ func (this *AvatarManager) CreateAvatar(id util.ID)error{
 		log.Error(err.Error())
 		return err
 	}
-	avatar= NewAvatar(id,this.option)
+	avatar= NewAvatar(id,this.Option)
 	avatar.UserName = am.UserName
 	avatar.GameId = am.GameId
 	avatar.ServerId = am.ServerId
