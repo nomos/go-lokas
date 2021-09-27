@@ -233,7 +233,7 @@ func (this *PassiveSession) closeSession() {
 }
 
 func (this *PassiveSession) stop() {
-	close(this.done)
+	this.done<- struct{}{}
 }
 
 func (this *PassiveSession) OnOpen(conn lokas.IConn) {

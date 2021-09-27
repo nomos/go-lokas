@@ -86,6 +86,9 @@ func WeightSelect(weightList []WeightAble,seed...uint64)(int,WeightAble) {
 	if len(weightList) == 0 {
 		log.Panic("weight list must > 0")
 	}
+	//if len(weightList) == 1 {
+	//	return 0,weightList[0]
+	//}
 	sum := 0.0
 	for i := 0; i < len(weightList); i++ {
 		sum += weightList[i].Weight()
@@ -94,7 +97,7 @@ func WeightSelect(weightList []WeightAble,seed...uint64)(int,WeightAble) {
 	var i int
 	for i = 0; i < len(weightList); i++ {
 		weight := weightList[i].Weight()
-		if weight > r {
+		if weight >= r {
 			break
 		} else {
 			r -= weight
