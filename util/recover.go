@@ -6,7 +6,8 @@ import (
 	"runtime"
 )
 
-func Recover(r interface{},all bool)(err error){
+func Recover(r interface{},all bool)error{
+	var err error
 	if err,ok:=r.(error);ok {
 		log.Error(err.Error())
 	}
@@ -17,5 +18,5 @@ func Recover(r interface{},all bool)(err error){
 	buf := make([]byte, 1<<14)
 	runtime.Stack(buf, all)
 	log.Error(string(buf))
-	return
+	return err
 }

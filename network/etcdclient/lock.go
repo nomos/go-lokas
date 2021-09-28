@@ -153,9 +153,9 @@ func (this *Mutex) Unlock() (err error) {
 func (this *Mutex) RefreshLockTTL(ttl time.Duration) (err error) {
 	resp,err:=this.lease.KeepAliveOnce(context.TODO(),this.leaseId)
 	if err != nil {
-		log.Error("Refresh ttl",LogKey(this.key), LogOk(false), LogOk(false),LogResp(resp))
+		log.Error("refresh ttl",LogKey(this.key), LogOk(false), LogOk(false),LogResp(resp))
 	} else {
-		log.Error("Refresh ttl",LogKey(this.key), LogOk(true))
+		log.Error("refresh ttl",LogKey(this.key), LogOk(true))
 	}
 	return err
 }

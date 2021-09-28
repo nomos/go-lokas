@@ -206,8 +206,7 @@ func (this *PassiveSession) StartMessagePump() {
 		defer func() {
 			r := recover()
 			if r != nil {
-				if e, ok := r.(error); ok {
-					log.Errorf(e.Error())
+				if util.Recover(r,true)!=nil {
 					log.Error("服务端协议出错")
 					this.Conn.Close()
 				}
