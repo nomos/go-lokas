@@ -7,6 +7,7 @@ import (
 	"github.com/nomos/go-lokas/log"
 	"go.etcd.io/etcd/api/v3/v3rpc/rpctypes"
 	"go.etcd.io/etcd/client/v3"
+	"go.uber.org/zap"
 	"io"
 	"os"
 	"sync"
@@ -74,17 +75,16 @@ func (this *Mutex) Lock() (err error) {
 			return nil
 		}
 
-		log.Errorf("Lock node %v ERROR %v", this.key, err)
+		log.Error("lock node", LogKey(this.key), zap.Error(err))
 		if try < defaultTry {
-			log.Infof("Try to lock node %v again", this.key, err)
+			log.Info("try to lock node again", LogKey(this.key), zap.Error(err))
 		}
 	}
 	return err
 }
 
 func (this *Mutex) lock() (err error) {
-	log.Infof("Trying to create a node : key=%v", prefix+this.key)
-
+	log.Info("trying to create a node", LogKey(prefix+this.key))
 	for {
 		leaseResp,err:=this.lease.Grant(this.ctx,this.ttl)
 		if err != nil {
@@ -94,10 +94,10 @@ func (this *Mutex) lock() (err error) {
 		this.leaseId = leaseResp.ID
 		resp, err := this.kapi.Put(this.ctx, prefix+this.key, this.id, clientv3.WithPrevKV(),clientv3.WithLease(leaseResp.ID))
 		if err == nil&&resp.PrevKv==nil {
-			log.Infof("Create node %v OK [%q]", this.key, log.PrettyStruct(resp))
+			log.Error("create node",LogKey(this.key), LogOk(true),LogResp(resp))
 			return nil
 		}
-		log.Errorf("Create node %v failed [%v]", this.key, err)
+		log.Error("create node",LogKey(this.key), LogOk(false),zap.Error(err))
 		if err != nil {
 			log.Error(err.Error())
 			return err
@@ -107,9 +107,9 @@ func (this *Mutex) lock() (err error) {
 		if err != nil {
 			return err
 		}
-		log.Infof("Get node %v OK", this.key)
+		log.Error("get node",LogKey(this.key), LogOk(true))
 		watcher := this.watcher.Watch(this.ctx,prefix+this.key, clientv3.WithRev(gResp.Header.Revision))
-		log.Infof("Watching %v ...", this.key)
+		log.Error("watching start",LogKey(this.key))
 		for {
 			select {
 			case wResp:=<-watcher:
@@ -120,8 +120,7 @@ func (this *Mutex) lock() (err error) {
 					if e.Type  == clientv3.EventTypeDelete {
 						goto LoopEnd
 					}
-					log.Infof("Received an event : %q", resp)
-					log.Infof("Received an event : %q", e)
+					log.Info("received an event", zap.String("event",log.PrettyStruct(e)))
 				}
 			}
 		}
@@ -138,10 +137,10 @@ func (this *Mutex) Unlock() (err error) {
 		var resp *clientv3.DeleteResponse
 		resp, err = this.kapi.Delete(this.ctx, prefix+this.key)
 		if err == nil {
-			log.Infof("Delete %v OK", this.key)
+			log.Info("etcd lock",LogKey(this.key),LogAction(ETCD_DELETE), LogOk(true))
 			return nil
 		}
-		log.Errorf("Delete %v falied: %q", this.key, resp)
+		log.Info("etcd lock",LogKey(this.key),LogAction(ETCD_DELETE), LogOk(false),LogResp(resp))
 
 		if err == rpctypes.ErrEmptyKey {
 			return nil
@@ -154,9 +153,9 @@ func (this *Mutex) Unlock() (err error) {
 func (this *Mutex) RefreshLockTTL(ttl time.Duration) (err error) {
 	resp,err:=this.lease.KeepAliveOnce(context.TODO(),this.leaseId)
 	if err != nil {
-		log.Errorf("Refresh ttl of %v failed [%q]", this.key, resp)
+		log.Error("Refresh ttl",LogKey(this.key), LogOk(false), LogOk(false),LogResp(resp))
 	} else {
-		log.Infof("Refresh ttl of %v OK", this.key)
+		log.Error("Refresh ttl",LogKey(this.key), LogOk(true))
 	}
 	return err
 }
