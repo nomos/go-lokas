@@ -90,7 +90,7 @@ func (this *Generator) IsErrorName(s string)bool{
 }
 
 func (this *Generator) Clear() {
-	log.Warnf("Generator Clear")
+	log.Warn("Generator Clear")
 	this.Models = make(map[string]GeneratorFile)
 	this.GoModels = make(map[string]GeneratorFile)
 	this.Protos = make(map[string]GeneratorFile)

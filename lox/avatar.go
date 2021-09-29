@@ -3,6 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"runtime"
@@ -132,7 +133,7 @@ func (this *Avatar) Start() error {
 
 func (this *Avatar) Stop() error {
 	this.Dirty()
-	log.Warnf("保存玩家进度", this.GetId())
+	log.Warn("save player state", flog.AvatarId(this.GetId()))
 	this.Serialize(this.GetProcess())
 	this.GetProcess().UnregisterActorLocal(this)
 	this.GetProcess().UnregisterActorRemote(this)

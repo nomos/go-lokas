@@ -97,7 +97,7 @@ func (this *AvatarSession) StartAvatarSession() {
 }
 
 func (this *AvatarSession) StopAvatarSession() {
-	log.Warnf("AvatarSession StopAvatarSession")
+	log.Warn("AvatarSession StopAvatarSession")
 	if this.done !=nil {
 		this.done <- struct{}{}
 	}
@@ -129,7 +129,7 @@ func (this *AvatarSession) fetchUserName(a lokas.IProcess) error {
 	if err != nil || user.Id == 0 {
 		return err
 	}
-	log.Warnf("user", user)
+	log.Warn("fetch user", flog.UserName(user.UserName),flog.GameId(user.GameId),flog.ServerId(user.ServerId))
 	this.UserName = user.UserName
 	return nil
 }

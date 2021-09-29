@@ -40,13 +40,13 @@ func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 			a.ReceiveMessage(msg)
 			return
 		}
-		log.Infof("proxy msg",msg.FromActor,msg.ToActor)
+		log.Info("proxy msg",flog.ActorRouterMsgInfo(msg.Body,msg.TransId,msg.FromActor,msg.ToActor)...)
 		//TODO:proxy msg
 		pid,err:=this.process.GetProcessIdByActor(msg.ToActor)
-		log.Infof("processId",pid)
+		log.Info("processId",flog.ProcessId(pid.Snowflake()))
 
 		if err != nil {
-			log.Warnf("actor not found",msg.ToActor)
+			log.Warn("actor not found",flog.AvatarId(msg.ToActor))
 			return
 		}
 		err=this.process.Get("Proxy").(lokas.IProxy).Send(pid,msg)

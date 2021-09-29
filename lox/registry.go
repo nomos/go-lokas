@@ -10,6 +10,7 @@ import (
 	"github.com/nomos/go-lokas/util"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	"go.etcd.io/etcd/client/v3"
+	"go.uber.org/zap"
 	"regexp"
 	"strconv"
 	"time"
@@ -145,12 +146,12 @@ func (this *Registry) Stop() error {
 }
 
 func (this *Registry) OnStart() error {
-	log.Infof("Registry:OnStart")
+	log.Info("Registry:OnStart")
 	return nil
 }
 
 func (this *Registry) OnStop() error {
-	log.Infof("Registry:OnStop")
+	log.Info("Registry:OnStop")
 	return nil
 }
 
@@ -200,7 +201,7 @@ func (this *Registry) deleteActorRegistry(kv *mvccpb.KeyValue) {
 //check if process key exist,otherwise add it
 func (this *Registry) checkOrCreateProcessRegistry(kv *mvccpb.KeyValue) {
 	id, _ := strconv.Atoi(regexp.MustCompile(`[/]processids[/]([0-9]+)`).ReplaceAllString(string(kv.Key), "$1"))
-	log.Warnf("checkOrCreateProcessRegistry",id)
+	log.Warn("checkOrCreateProcessRegistry",zap.Int("id",id))
 	pid := util.ProcessId(id)
 	processReg := NewProcessRegistry(pid)
 	this.GlobalRegistry.AddProcess(processReg)

@@ -116,7 +116,7 @@ func (this *ProxySession) OnOpen(conn lokas.IConn) {
 	if this.OnOpenFunc != nil {
 		this.OnOpenFunc(conn)
 	}
-	log.Warnf("OnOpen")
+	log.Warn("OnOpen")
 	if this.manager != nil {
 		this.manager.AddSession(this.GetId(), this)
 	}
@@ -126,7 +126,7 @@ func (this *ProxySession) OnClose(conn lokas.IConn) {
 	if this.manager != nil {
 		this.manager.RemoveSession(this.GetId())
 	}
-	log.Warnf("OnClose")
+	log.Warn("OnClose")
 	if this.OnOpenFunc != nil {
 		this.OnCloseFunc(conn)
 	}

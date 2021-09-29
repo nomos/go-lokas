@@ -180,7 +180,7 @@ func (this *WsClient) Close() *promise.Promise {
 func (this *WsClient) OnOpen(conn *websocket.Conn) {
 	this.conn = this.ws.Conn
 	this.Opening = false
-	log.Warnf(this.addr + " connected")
+	log.Warn(this.addr + " connected")
 	this.isOpen = true
 	this.Emit("open")
 }
@@ -192,7 +192,7 @@ func (this *WsClient) OnClose(conn *websocket.Conn) {
 	this.conn = nil
 	this.ws = nil
 	this.Closing = false
-	log.Warnf(this.addr + " disconnected")
+	log.Warn(this.addr + " disconnected")
 	this.Emit("close")
 }
 

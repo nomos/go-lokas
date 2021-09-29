@@ -342,7 +342,7 @@ func (this *SshClient) readPump(session *ssh.Session, cmd string, pwd bool) {
 						this.WriteConsole(zapcore.Entry{},[]byte(text))
 					}
 				} else {
-					log.Infof("onSessionClose", session)
+					log.Info("onSessionClose",zap.Any("session",session))
 					return
 				}
 			}

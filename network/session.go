@@ -129,7 +129,7 @@ func (this *DefaultSession) OnOpen(conn lokas.IConn) {
 	if this.OnOpenFunc !=nil {
 		this.OnOpenFunc(conn)
 	}
-	log.Warnf("OnOpen")
+	log.Warn("OnOpen")
 	if this.manager!=nil {
 		this.manager.AddSession(this.ID, this)
 	}
@@ -139,7 +139,7 @@ func (this *DefaultSession) OnClose(conn lokas.IConn) {
 	if this.manager!=nil {
 		this.manager.RemoveSession(this.ID)
 	}
-	log.Warnf("OnClose")
+	log.Warn("OnClose")
 	if this.OnOpenFunc != nil {
 		this.OnCloseFunc(conn)
 	}

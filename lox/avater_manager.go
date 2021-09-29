@@ -83,7 +83,7 @@ func (this *AvatarManager) CreateAvatar(id util.ID)error{
 		this.logRetention(avatar)
 		return nil
 	}
-	log.Warnf("CreateAvatar",id)
+
 	a:=this.GetProcess()
 	var am AvatarMap
 	err := a.GetMongo().Collection("avatarmap").Find(context.TODO(),bson.M{"_id": id}).One(&am)
@@ -104,6 +104,7 @@ func (this *AvatarManager) CreateAvatar(id util.ID)error{
 		log.Error(err.Error())
 		return err
 	}
+	log.Info("CreateAvatar",flog.AvatarId(id),flog.UserName(avatar.UserName),flog.ServerId(avatar.ServerId))
 	this.Avatars[id] = avatar
 	this.logRetention(avatar)
 	if err != nil {
@@ -159,7 +160,7 @@ func (this *AvatarManager) OnUpdate(){
 }
 
 func (this *AvatarManager) OnStart() error {
-	log.Warnf("AvatarManager:OnStart")
+	log.Warn("AvatarManager:OnStart")
 	err:=this.GetProcess().RegisterActorLocal(this)
 	if err != nil {
 		log.Error(err.Error())

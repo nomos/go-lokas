@@ -1,11 +1,12 @@
 package lox
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
-	"github.com/nomos/go-lokas/rox"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/protocol"
+	"github.com/nomos/go-lokas/rox"
 	"github.com/nomos/jwt-go"
+	"go.uber.org/zap"
 	"net/http"
 	"strings"
 	"time"
@@ -60,7 +61,7 @@ func JwtAuth(rsa bool,creator JwtClaimCreator,userCreator UserCreator)func(w rox
 		if t=="" {
 			t = r.Form.Get("auth")
 		}
-		log.Warnf("token",t)
+		log.Warn("auth jwt token",zap.String("token",t))
 		if t == "" {
 			log.Error("令牌不能为空")
 			w.Failed(protocol.ERR_TOKEN_VALIDATE)
@@ -82,8 +83,7 @@ func JwtAuth(rsa bool,creator JwtClaimCreator,userCreator UserCreator)func(w rox
 		token, err := jwt.ParseWithClaims(split[1], creator(userCreator(),time.Hour*24), func(token *jwt.Token) (interface{}, error) { return []byte(key), nil })
 		if err != nil || token.Valid != true {
 			// 过期或者非正确处理
-			log.Errorf(token)
-			log.Error("令牌错误:"+err.Error())
+			log.Warn("token invalid",zap.String("token",t),zap.Error(err))
 
 			if protocol.ERR_TOKEN_EXPIRED.Is(err.(*jwt.ValidationError).Inner) {
 				w.Failed(protocol.ERR_TOKEN_EXPIRED)
@@ -113,7 +113,7 @@ func SignToken(creator JwtClaimCreator,user interface{},a lokas.IProcess,expire 
 
 	token,err:=claim.SignedString([]byte(key))
 	if err != nil {
-		log.Error("生成令牌出错:"+err.Error())
+		log.Error("sign token failed",zap.Error(err))
 		return "",err
 	}
 	return token,nil

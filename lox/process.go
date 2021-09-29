@@ -208,7 +208,7 @@ func (this *Process) StartAllModule() error {
 }
 
 func (this *Process) StopAllModule() error {
-	log.Warnf("StopAllModule", this.modules)
+	log.Warn("StopAllModule",zap.Any("modules",this.modules))
 	for _, mod := range this.modules {
 			log.Info("stop", flog.FuncInfo(this,"StopAllModule").Append(flog.Module(mod))...)
 			err := mod.Stop()
