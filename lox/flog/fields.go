@@ -12,7 +12,7 @@ func AvatarName(avatar lokas.IAvatarSession) zap.Field {
 	return zap.String("username", avatar.GetUserName())
 }
 
-func AvatarId(avatar lokas.IAvatarSession) zap.Field {
+func AvatarSessionId(avatar lokas.IAvatarSession) zap.Field {
 	return zap.Int64("avatarid", avatar.GetId().Int64())
 }
 
@@ -29,7 +29,7 @@ func AvatarInfo(avatar lokas.IAvatar) log.ZapFields {
 	ret = ret.Concat(ActorInfo(avatar))
 	ret = ret.Append(AvatarName(avatar))
 	ret = ret.Append(AvatarServer(avatar))
-	ret = ret.Append(AvatarId(avatar))
+	ret = ret.Append(AvatarSessionId(avatar))
 	return ret
 }
 
@@ -45,7 +45,7 @@ func UserName(name string)zap.Field{
 	return zap.String("username", name)
 }
 
-func UserId(id util.ID)zap.Field{
+func AvatarId(id util.ID)zap.Field{
 	return zap.Int64("avatarid", id.Int64())
 }
 
@@ -69,7 +69,7 @@ func AvatarSessionInfo(avatar lokas.IAvatarSession) log.ZapFields {
 	ret := log.ZapFields{}
 	ret = ret.Append(AvatarName(avatar))
 	ret = ret.Append(AvatarGate(avatar))
-	ret = ret.Append(AvatarId(avatar))
+	ret = ret.Append(AvatarSessionId(avatar))
 	ret = ret.Append(AvatarServer(avatar))
 	return ret
 }

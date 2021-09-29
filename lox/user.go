@@ -2,14 +2,37 @@ package lox
 
 import (
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
+	"go.uber.org/zap"
 	"strconv"
 	"strings"
 	"time"
 )
 
 var _ lokas.IModel = (*User)(nil)
+
+func UserId(user *User)zap.Field{
+	return zap.Int64("user_id",user.Id.Int64())
+}
+func UserRefreshToken(user *User)zap.Field{
+	return zap.String("refresh_token",user.RefreshToken)
+}
+
+func UserToken(user *User)zap.Field{
+	return zap.String("token",user.Token)
+}
+
+func LogUserInfo(user *User)log.ZapFields{
+	ret:=log.ZapFields{}
+	ret = ret.Append(UserId(user))
+	ret = ret.Append(flog.UserName(user.UserName))
+	ret = ret.Append(UserToken(user))
+	ret = ret.Append(UserRefreshToken(user))
+	return ret
+}
 
 type User struct {
 	Id      util.ID `bson:"_id"`
