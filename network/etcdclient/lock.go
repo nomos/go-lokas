@@ -94,7 +94,7 @@ func (this *Mutex) lock() (err error) {
 		this.leaseId = leaseResp.ID
 		resp, err := this.kapi.Put(this.ctx, prefix+this.key, this.id, clientv3.WithPrevKV(),clientv3.WithLease(leaseResp.ID))
 		if err == nil&&resp.PrevKv==nil {
-			log.Error("create node",LogKey(this.key), LogOk(true),LogResp(resp))
+			log.Info("create node",LogKey(this.key), LogOk(true),LogResp(resp))
 			return nil
 		}
 		log.Error("create node",LogKey(this.key), LogOk(false),zap.Error(err))
