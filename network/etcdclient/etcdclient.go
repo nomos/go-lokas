@@ -1,7 +1,6 @@
 package etcdclient
 
 import (
-	"github.com/nomos/go-lokas/log"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.uber.org/zap"
 	"time"
@@ -40,7 +39,7 @@ func LogOk(v bool) zap.Field {
 }
 
 func LogResp(resp interface{}) zap.Field{
-	return zap.String("resp",log.PrettyStruct(resp))
+	return zap.Any("resp",resp)
 }
 
 
