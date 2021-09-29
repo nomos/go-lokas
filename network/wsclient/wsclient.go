@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/events"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/network"
-	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/promise"
+	"github.com/nomos/go-lokas/protocol"
 	"go.uber.org/zap"
 	"strconv"
 	"sync"
@@ -129,7 +129,7 @@ func (this *WsClient) Open() *promise.Promise {
 	}
 	if this.openingPending == nil {
 		this.openingPending = promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-			timeout := promise.SetTimeout(TimeOut, func() {
+			timeout := promise.SetTimeout(TimeOut, func(timeout *promise.Timeout) {
 				reject("timeout")
 				this.openingPending = nil
 			})
@@ -329,7 +329,7 @@ func (this *WsClient) OnRecvMessage(cmdId protocol.BINARY_TAG, transId uint32, m
 
 func (this *WsClient) OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-		timeout := promise.SetTimeout(time, func() {
+		timeout := promise.SetTimeout(time, func(timeout *promise.Timeout) {
 			reject("timeout")
 		})
 		this.Once(events.EventName("CmdId"+strconv.Itoa(int(cmdId))), func(i ...interface{}) {
