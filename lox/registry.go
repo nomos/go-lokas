@@ -44,7 +44,7 @@ func NewRegistry(process lokas.IProcess) *Registry {
 
 func (this *Registry) GetActorIdsByTypeAndServerId(serverId int32, typ string) []util.ID {
 	if serverId == this.GetProcess().ServerId() {
-		log.Warnf("GetLocalServer",serverId,this.GetProcess().ServerId())
+		log.Warn("GetLocalServer",flog.ServerId(serverId),zap.Int32("self_server_id",this.GetProcess().ServerId()))
 		return this.LocalRegistry.GetActorIdsByTypeAndServerId(serverId, typ)
 	}
 	return this.GlobalRegistry.GetActorIdsByTypeAndServerId(serverId, typ)

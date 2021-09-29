@@ -1,8 +1,8 @@
 package rox
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log"
 	"net/http"
 )
 
@@ -12,7 +12,6 @@ var FormParser = CreateMiddleWare(func(w ResponseWriter, r *http.Request, a loka
 		log.Error(err.Error())
 		http.Error(w,err.Error(),http.StatusBadRequest)
 	}
-	log.Warnf(r.Form)
 	err=r.ParseMultipartForm(1024)
 	if err != nil && err!= http.ErrNotMultipart{
 		log.Error(err.Error())
