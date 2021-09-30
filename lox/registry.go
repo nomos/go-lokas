@@ -347,7 +347,7 @@ func (this *Registry) registerProcessInfo() error {
 		log.Error(err.Error())
 		return err
 	}
-	log.Warnf("res", res)
+	log.Warn("register process info complete",zap.Any("resp",res.Header))
 
 	return nil
 }
