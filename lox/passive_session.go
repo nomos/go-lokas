@@ -197,7 +197,6 @@ func (this *PassiveSession) StartMessagePump() {
 				break CLIENT_LOOP
 			}
 		}
-		close(this.msgChan)
 		close(this.done)
 		close(this.Messages)
 	}()
@@ -222,6 +221,7 @@ func (this *PassiveSession) StartMessagePump() {
 				break SERVER_LOOP
 			}
 		}
+		close(this.msgChan)
 	}()
 }
 

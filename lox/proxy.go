@@ -178,15 +178,10 @@ func (this *Proxy) connect(id util.ProcessId,addr string) (*ProxySession,error) 
 	mu.Lock()
 	defer mu.Unlock()
 	if this.checkIsConnected(id) {
+		//如果连上
 		log.Warnf("服务器已经连接",selfId.String(),id.String())
 		return this.getProxySession(id),nil
 	}
-	//如果连上
-	if err != nil {
-		log.Error(err.Error())
-		return nil,err
-	}
-
 	context := &lokas.Context{
 		SessionCreator:    activeSessionCreator(id.Snowflake(), this),
 		Splitter:          protocol.Split,
@@ -196,14 +191,17 @@ func (this *Proxy) connect(id util.ProcessId,addr string) (*ProxySession,error) 
 		LongPacketCreator: protocol.CreateLongPacket(protocol.BINARY),
 		MaxPacketWriteLen: protocol.DEFAULT_PACKET_LEN,
 	}
+	//如果没有连接,尝试连接
 	conn,err := tcp.Dial(addr, context)
 	if err != nil {
 		log.Error(err.Error())
 		return nil,err
 	}
 	if conn==nil {
+		log.Error("create session failed")
 		return nil,errors.New("create session failed")
 	}
+	//握手协议
 	activeSession:=conn.Session.(*ProxySession)
 	_,err=promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		timeout:=promise.SetTimeout(time.Second*14, func(timeout *promise.Timeout) {
@@ -225,7 +223,6 @@ func (this *Proxy) connect(id util.ProcessId,addr string) (*ProxySession,error) 
 		log.Error(err.Error())
 		return nil,err
 	}
-
 	return activeSession,nil
 }
 
@@ -243,7 +240,7 @@ func (this *Proxy) Send(id util.ProcessId,msg *protocol.RouteMessage)error{
 		//info:=this.GetProcess().GetProcessInfo
 		//sess,err:=this.connect(id,addr)
 		//if err != nil {
-		//	log.Error(err.Error())
+		//	log.Error(err.Error())ss
 		//	return err
 		//}
 	}
