@@ -2,6 +2,7 @@ package log
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -380,11 +381,12 @@ func Debug(msg string, fields ...zap.Field) {
 	_logger.Debug(msg, fields...)
 }
 
-func Error(msg string, fields ...zap.Field) {
+func Error(msg string, fields ...zap.Field)error {
 	if _logger == nil {
 		Init(true, DefaultConfig(""))
 	}
 	_logger.Error(msg, fields...)
+	return errors.New(msg)
 }
 
 func Panic(msg string, fields ...zap.Field) {
