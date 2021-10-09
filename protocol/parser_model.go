@@ -3,7 +3,7 @@ package protocol
 import (
 	"fmt"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/promise"
+	"github.com/nomos/go-lokas/util/promise"
 	"github.com/nomos/go-lokas/util/stringutil"
 	"regexp"
 	"sort"

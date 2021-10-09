@@ -3,8 +3,8 @@ package protocol
 import (
 	"errors"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/promise"
 	"github.com/nomos/go-lokas/util"
+	"github.com/nomos/go-lokas/util/promise"
 	"os"
 	"path"
 	"strconv"

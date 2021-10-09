@@ -3,13 +3,13 @@ package lokas
 import (
 	"context"
 	"fmt"
-	"github.com/nomos/go-lokas/events"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/network/redisclient"
-	"github.com/nomos/go-lokas/promise"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
+	"github.com/nomos/go-lokas/util/events"
+	"github.com/nomos/go-lokas/util/promise"
 	"github.com/nomos/qmgo"
 	clientv3 "go.etcd.io/etcd/client/v3"
 	"net"
@@ -118,6 +118,7 @@ type IActor interface {
 
 // IEntity entity of ecs system,container of IComponent
 type IEntity interface {
+	events.EventEmmiter
 	Dirty()bool
 	SetDirty(bool)
 	Get(t protocol.BINARY_TAG)IComponent

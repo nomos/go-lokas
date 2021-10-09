@@ -7,7 +7,7 @@ import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/network/tcp"
-	"github.com/nomos/go-lokas/promise"
+	"github.com/nomos/go-lokas/util/promise"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"sync"

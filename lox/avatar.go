@@ -134,7 +134,12 @@ func (this *Avatar) Start() error {
 func (this *Avatar) Stop() error {
 	this.Dirty()
 	log.Warn("save player state", flog.AvatarId(this.GetId()))
-	this.Serialize(this.GetProcess())
+	err:=this.Serialize(this.GetProcess())
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	this.RemoveAll()
 	this.GetProcess().UnregisterActorLocal(this)
 	this.GetProcess().UnregisterActorRemote(this)
 	return nil

@@ -1,20 +1,20 @@
 package ecs
 
 import (
-	"github.com/nomos/go-lokas/events"
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
+	"github.com/nomos/go-lokas/util/events"
 	"reflect"
 )
 
 type Entity struct {
+	events.EventEmmiter
 	id            util.ID
 	dirty         bool
 	onDestroy     bool
 	runtime       lokas.IRuntime
-	eventListener events.EventEmmiter
 	step          int64
 	removeMarks   []protocol.BINARY_TAG
 	modifyMarks   []protocol.BINARY_TAG
@@ -44,6 +44,7 @@ func (this *Entity) Init(){
 
 func CreateEntity() lokas.IEntity {
 	ret := &Entity{
+		EventEmmiter:events.New(),
 		removeMarks:[]protocol.BINARY_TAG{},
 		modifyMarks:[]protocol.BINARY_TAG{},
 		addMarks:[]protocol.BINARY_TAG{},

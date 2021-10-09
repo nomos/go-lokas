@@ -9,7 +9,7 @@ import (
 	"github.com/nomos/go-lokas/events"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network"
-	"github.com/nomos/go-lokas/promise"
+	"github.com/nomos/go-lokas/util/promise"
 	"github.com/nomos/go-lokas/protocol"
 	"go.uber.org/zap"
 	"strconv"

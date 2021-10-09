@@ -3,7 +3,7 @@ package wsclient
 import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/protocol"
-	"github.com/nomos/go-lokas/promise"
+	"github.com/nomos/go-lokas/util/promise"
 	"go.uber.org/zap"
 	"net/http"
 	"sync"

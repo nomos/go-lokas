@@ -38,8 +38,9 @@ type PassiveSession struct {
 	Messages         chan []byte
 	Conn             lokas.IConn
 	Protocol         protocol.TYPE
-	manager          lokas.ISessionManager
-	done             chan struct{}
+	manager    lokas.ISessionManager
+	doneClient chan struct{}
+	doneServer chan struct{}
 	OnCloseFunc      func(conn lokas.IConn)
 	OnOpenFunc       func(conn lokas.IConn)
 	ClientMsgHandler func(msg *protocol.BinaryMessage)
@@ -88,7 +89,8 @@ func (this *PassiveSession) StartMessagePump() {
 	log.Info("PassiveSession:StartMessagePump", flog.ActorInfo(this)...)
 
 	this.msgChan = make(chan *protocol.RouteMessage, 100)
-	this.done = make(chan struct{})
+	this.doneClient = make(chan struct{})
+	this.doneServer = make(chan struct{})
 	go func() {
 		defer func() {
 			r := recover()
@@ -105,6 +107,7 @@ func (this *PassiveSession) StartMessagePump() {
 		for {
 			select {
 			case <-this.ticker.C:
+				log.Warnf("TICKKKKKKKK")
 				if this.OnUpdateFunc != nil && this.Verified {
 					this.OnUpdateFunc()
 				}
@@ -191,13 +194,12 @@ func (this *PassiveSession) StartMessagePump() {
 				} else {
 					log.Error("no msg handler found")
 				}
-			case <-this.done:
+			case <-this.doneClient:
 				this.closeSession()
-				//log.Warnf("done")
 				break CLIENT_LOOP
 			}
 		}
-		close(this.done)
+		close(this.doneServer)
 		close(this.Messages)
 	}()
 
@@ -217,7 +219,7 @@ func (this *PassiveSession) StartMessagePump() {
 			//ServerSideMsgLoop
 			case rMsg := <-this.msgChan:
 				this.OnMessage(rMsg)
-			case <-this.done:
+			case <-this.doneServer:
 				break SERVER_LOOP
 			}
 		}
@@ -232,7 +234,8 @@ func (this *PassiveSession) closeSession() {
 }
 
 func (this *PassiveSession) stop() {
-	this.done<- struct{}{}
+	this.doneClient <- struct{}{}
+	this.doneServer<- struct{}{}
 }
 
 func (this *PassiveSession) OnOpen(conn lokas.IConn) {

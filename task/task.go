@@ -2,7 +2,7 @@ package task
 
 import (
 	"github.com/nomos/go-lokas"
-	"github.com/nomos/go-lokas/promise"
+	"github.com/nomos/go-lokas/util/promise"
 	"github.com/nomos/go-lokas/util"
 )
 
