@@ -1391,6 +1391,7 @@ func (this *ModelClassObject) ToTsClassHeader(g *Generator,object *TsClassObject
 
 func (this *ModelClassObject) CsString(g *Generator)string{
 	ret:=`//this is a generate file,do not modify it!
+using System;
 using System.Collections.Generic;
 using Funnel.Protocol.Abstractions;
 {Comment}
