@@ -25,17 +25,18 @@ func (this *Generator) LoadModelFolder(p string) *promise.Promise {
 func (this *Generator) LoadModels(p string) error {
 	log.Warnf("LoadModels")
 	var err error
+	var innerErr error
 	_,err=util.WalkDirFilesWithFunc(p, func(filePath string, file os.FileInfo) bool {
 		if path.Ext(filePath) == ".model" {
 			log.Warnf("filePath", filePath)
 			file := NewModelFile(this)
-			_, err = file.Load(filePath).Await()
-			if err != nil {
+			_, innerErr = file.Load(filePath).Await()
+			if innerErr != nil {
 				log.Error(err.Error())
 				return true
 			}
-			_, err = file.Parse().Await()
-			if err != nil {
+			_, innerErr = file.Parse().Await()
+			if innerErr != nil {
 				log.Error(err.Error())
 				return true
 			}
@@ -46,6 +47,10 @@ func (this *Generator) LoadModels(p string) error {
 	if err != nil {
 		log.Error(err.Error())
 		return err
+	}
+	if innerErr != nil {
+		log.Error(innerErr.Error())
+		return innerErr
 	}
 	log.Warnf("load "+strconv.Itoa(len(this.Models))+" models")
 	return nil

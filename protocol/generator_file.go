@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/promise"
 	"io"
 	"os"
@@ -344,7 +343,7 @@ func (this *DefaultGeneratorFile) parseMultiple(num int, lastObj GeneratorObject
 				return this.parseMultiple(num, lastObj, objs...)
 			}
 		}
-		log.Panicf("parse multiple error",line.Text)
+		log.Panicf("parse multiple error",line.Text,line.LineNum)
 	} else {
 		if lastObj.CheckLine(line) {
 			num++
@@ -393,12 +392,6 @@ func (this *DefaultGeneratorFile) parseOne(num int, lastObj GeneratorObject, obj
 }
 
 func (this *DefaultGeneratorFile) parse(num int, objs ...ObjectType) (int, bool) {
-	defer func() {
-		var r = recover()
-		if r != nil {
-			util.Recover(r,true)
-		}
-	}()
 
 	if len(objs) == 0 {
 		log.Panic("params error")

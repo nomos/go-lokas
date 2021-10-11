@@ -107,7 +107,6 @@ func (this *PassiveSession) StartMessagePump() {
 		for {
 			select {
 			case <-this.ticker.C:
-				log.Warnf("TICKKKKKKKK")
 				if this.OnUpdateFunc != nil && this.Verified {
 					this.OnUpdateFunc()
 				}

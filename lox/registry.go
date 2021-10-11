@@ -334,7 +334,7 @@ func (this *Registry) unregisterProcessInfo()error {
 }
 
 func (this *Registry) registerProcessInfo() error {
-	log.Warnf("registerProcessInfo")
+	log.Info("registerProcessInfo")
 	client := this.GetProcess().GetEtcd()
 	s, err := json.Marshal(CreateProcessRegistryInfo(this.GetProcess()))
 	if err != nil {
@@ -342,12 +342,12 @@ func (this *Registry) registerProcessInfo() error {
 		return err
 	}
 
-	res, err := client.Put(context.TODO(), "/process/"+this.process.PId().String()+"/info", string(s))
+	_, err = client.Put(context.TODO(), "/process/"+this.process.PId().String()+"/info", string(s))
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	log.Warn("register process info complete",zap.Any("resp",res.Header))
+	log.Info("register process info complete")
 
 	return nil
 }
