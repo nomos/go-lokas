@@ -1114,7 +1114,11 @@ func (this *ModelClassFields) csString(g *Generator,lower bool)string {
 		if t==TAG_List {
 			t = MatchModelProtoTag(s1)
 			if t!=0 {
-				ret = "List<"+t.CsTypeString()+"> "+name
+				if t==TAG_Byte {
+					ret = "byte[] "+name
+				} else {
+					ret = "List<"+t.CsTypeString()+"> "+name
+				}
 			} else if g.IsEnum(s1) {
 				ret = "List<"+stringutil.SplitCamelCaseUpperSnake(s1)+"> "+name
 			} else {

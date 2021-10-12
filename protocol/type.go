@@ -82,7 +82,7 @@ func init(){
 	system_cs_types[TAG_Double] = "double"
 	system_cs_types[TAG_String] = "string"
 	system_cs_types[TAG_BoolArray] = "List<bool>"
-	system_cs_types[TAG_ByteArray] = "List<byte>"
+	system_cs_types[TAG_ByteArray] = "byte[]"
 	system_cs_types[TAG_ShortArray] = "List<short>"
 	system_cs_types[TAG_UShortArray] = "List<ushort>"
 	system_cs_types[TAG_IntArray] = "List<int>"

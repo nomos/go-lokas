@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/promise"
+	"go.uber.org/zap"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -96,7 +98,7 @@ func (this *Command) Name()string{
 	return this.name
 }
 
-func (this *Command) Exec(params... string)*promise.Promise{
+func (this *Command) Exec(params... interface{})*promise.Promise{
 	param:=&ParamsValue{
 		cmd:    "",
 		value: params,
@@ -105,7 +107,7 @@ func (this *Command) Exec(params... string)*promise.Promise{
 	return this.ConsoleExec(param,this.console)
 }
 
-func (this *Command) ExecWithConsole(console IConsole,params... string)*promise.Promise{
+func (this *Command) ExecWithConsole(console IConsole,params... interface{})*promise.Promise{
 	param:=&ParamsValue{
 		cmd:    "",
 		value: params,
@@ -195,16 +197,20 @@ func NewCommandNoConsole(name string,tips string,f func(value *ParamsValue,conso
 
 type ParamsValue struct {
 	cmd string
-	value []string
+	value []interface{}
 	offset int
 }
 
-func NewParamsValue(cmd string,value ...string)*ParamsValue{
+func NewParamsValue(cmd string,value ...interface{})*ParamsValue{
 	return &ParamsValue{
 		cmd:   cmd,
 		value:  value,
 		offset: 0,
 	}
+}
+
+func (this *ParamsValue) Len()int {
+	return len(this.value)
 }
 
 func (this *ParamsValue) IsHelp()bool{
@@ -257,7 +263,7 @@ func (this *ParamsValue) StringOpt()string {
 	}
 	ret:=this.value[this.offset]
 	this.offset++
-	return ret
+	return ret.(string)
 }
 
 func (this *ParamsValue) String()string {
@@ -266,16 +272,106 @@ func (this *ParamsValue) String()string {
 	}
 	ret:=this.value[this.offset]
 	this.offset++
-	return ret
+	return ret.(string)
+}
+
+func (this *ParamsValue) Int32()int32 {
+	return int32(this.Int())
+}
+
+func (this *ParamsValue) Int64()int64 {
+	return int64(this.Int())
+}
+
+func (this *ParamsValue) Int32Opt()int32 {
+	return int32(this.IntOpt())
+}
+
+func (this *ParamsValue) Int64Opt()int64 {
+	return int64(this.IntOpt())
 }
 
 func (this *ParamsValue) Int()int {
 	if len(this.value)-1<this.offset {
 		panic(NewCmdError(CMD_ERROR_PARAM_LEN,this.cmd,this.offset,"int"))
 	}
-	ret,err:=strconv.Atoi(this.value[this.offset])
-	if err != nil {
-		panic(NewCmdError(CMD_ERROR_PARAM_TYPE,this.cmd,this.offset,"int"))
+	return this.int()
+}
+
+func (this *ParamsValue) int()int{
+	raw:=this.value[this.offset]
+	var ret int
+	var err error
+	switch reflect.TypeOf(raw).Kind() {
+	case reflect.String:
+		ret,err=strconv.Atoi(raw.(string))
+		if err != nil {
+			panic(NewCmdError(CMD_ERROR_PARAM_TYPE,this.cmd,this.offset,"int"))
+		}
+	case reflect.Uint:
+		ret=int(raw.(uint))
+	case reflect.Int:
+		ret=int(raw.(int))
+	case reflect.Uint8:
+		ret=int(raw.(uint8))
+	case reflect.Int8:
+		ret=int(raw.(int8))
+	case reflect.Uint16:
+		ret=int(raw.(uint16))
+	case reflect.Int16:
+		ret=int(raw.(int16))
+	case reflect.Uint32:
+		ret=int(raw.(uint32))
+	case reflect.Int32:
+		ret=int(raw.(int32))
+	case reflect.Uint64:
+		ret=int(raw.(uint64))
+	case reflect.Int64:
+		ret=int(raw.(int64))
+	default:
+		log.Panic("type not supported",zap.Any("raw",raw))
+	}
+	this.offset++
+	return ret
+}
+
+func (this *ParamsValue) float32()float32{
+	raw:=this.value[this.offset]
+	var ret float32
+	switch reflect.TypeOf(raw).Kind() {
+	case reflect.String:
+		v,err:=strconv.ParseFloat(raw.(string),3)
+		ret = float32(v)
+		if err != nil {
+			panic(NewCmdError(CMD_ERROR_PARAM_TYPE,this.cmd,this.offset,"float"))
+		}
+	case reflect.Float64:
+		ret=float32(raw.(float64))
+	case reflect.Float32:
+		ret=raw.(float32)
+	default:
+		log.Panic("type not supported",zap.Any("raw",raw))
+	}
+	this.offset++
+	return ret
+}
+
+func (this *ParamsValue) float64()float64{
+	raw:=this.value[this.offset]
+	var ret float64
+	var err error
+	switch reflect.TypeOf(raw).Kind() {
+	case reflect.String:
+		ret,err=strconv.ParseFloat(raw.(string),3)
+		if err != nil {
+			panic(NewCmdError(CMD_ERROR_PARAM_TYPE,this.cmd,this.offset,"float"))
+		}
+	case reflect.Float64:
+		ret=raw.(float64)
+	case reflect.Float32:
+		ret=float64(raw.(float32))
+	default:
+		log.Panic("type not supported",zap.Any("raw",raw))
 	}
 	this.offset++
 	return ret
@@ -285,12 +381,7 @@ func (this *ParamsValue) IntOpt()int {
 	if len(this.value)-1<this.offset {
 		return 0
 	}
-	ret,err:=strconv.Atoi(this.value[this.offset])
-	if err != nil {
-		panic(NewCmdError(CMD_ERROR_PARAM_TYPE,this.cmd,this.offset,"int"))
-	}
-	this.offset++
-	return ret
+	return this.int()
 }
 
 func (this *ParamsValue) Bool()bool {
@@ -331,22 +422,12 @@ func (this *ParamsValue) Float()float64 {
 	if len(this.value)-1<this.offset {
 		panic(NewCmdError(CMD_ERROR_PARAM_LEN,this.cmd,this.offset,"float"))
 	}
-	ret,err:=strconv.ParseFloat(this.value[this.offset],3)
-	if err != nil {
-		panic(NewCmdError(CMD_ERROR_PARAM_TYPE,this.cmd,this.offset,"float"))
-	}
-	this.offset++
-	return ret
+	return this.float64()
 }
 
 func (this *ParamsValue) FloatOpt()float64 {
 	if len(this.value)-1<this.offset {
 		return 0
 	}
-	ret,err:=strconv.ParseFloat(this.value[this.offset],3)
-	if err != nil {
-		panic(NewCmdError(CMD_ERROR_PARAM_TYPE,this.cmd,this.offset,"float"))
-	}
-	this.offset++
-	return ret
+	return this.float64()
 }

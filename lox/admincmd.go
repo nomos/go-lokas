@@ -80,5 +80,9 @@ func (this *AdminCommandResult) Serializable()protocol.ISerializable {
 }
 
 func (this *AdminCommand) ParamsValue()*cmds.ParamsValue{
-	return cmds.NewParamsValue(this.Command,this.Params...)
+	params:=[]interface{}{}
+	for _,v:=range this.Params {
+		params = append(params, v)
+	}
+	return cmds.NewParamsValue(this.Command,params...)
 }

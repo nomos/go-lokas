@@ -22,7 +22,7 @@ type ICommand interface {
 	Name()string
 	SetConsole(IConsole)
 	ConsoleExec(param *ParamsValue,console IConsole)*promise.Promise
-	ExecWithConsole(console IConsole,params... string)*promise.Promise
-	Exec(params... string)*promise.Promise
+	ExecWithConsole(console IConsole,params... interface{})*promise.Promise
+	Exec(params... interface{})*promise.Promise
 	Tips()string
 }
