@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util/promise"
 	"go.uber.org/zap"
 	"reflect"
@@ -209,6 +210,11 @@ func NewParamsValue(cmd string,value ...interface{})*ParamsValue{
 	}
 }
 
+func (this *ParamsValue) Clone()*ParamsValue {
+	ret:=NewParamsValue(this.cmd,this.value...)
+	return ret
+}
+
 func (this *ParamsValue) Len()int {
 	return len(this.value)
 }
@@ -264,6 +270,50 @@ func (this *ParamsValue) StringOpt()string {
 	ret:=this.value[this.offset]
 	this.offset++
 	return ret.(string)
+}
+
+func (this *ParamsValue) ForceString()string {
+	if len(this.value)-1<this.offset {
+		panic(NewCmdError(CMD_ERROR_PARAM_LEN,this.cmd,this.offset,"string"))
+	}
+	ret:=this.value[this.offset]
+	this.offset++
+	switch reflect.TypeOf(ret).Kind() {
+	case reflect.String:
+		return ret.(string)
+	case reflect.Uint:
+		return strconv.Itoa(int(ret.(uint)))
+	case reflect.Int:
+		return strconv.Itoa(int(ret.(int)))
+	case reflect.Uint8:
+		return strconv.Itoa(int(ret.(uint8)))
+	case reflect.Int8:
+		return strconv.Itoa(int(ret.(int8)))
+	case reflect.Uint16:
+		return strconv.Itoa(int(ret.(uint16)))
+	case reflect.Int16:
+		return strconv.Itoa(int(ret.(int16)))
+	case reflect.Uint32:
+		return strconv.Itoa(int(ret.(uint32)))
+	case reflect.Int32:
+
+		if v1,ok:=ret.(int32);ok {
+			return strconv.Itoa(int(v1))
+		} else {
+			v2:=int32(ret.(protocol.IEnum).Enum())
+			return strconv.Itoa(int(v2))
+		}
+	case reflect.Uint64:
+		return strconv.Itoa(int(ret.(uint64)))
+	case reflect.Int64:
+		return strconv.Itoa(int(ret.(int64)))
+	case reflect.Float64:
+		return strconv.FormatFloat(ret.(float64),'f',10,64)
+	case reflect.Float32:
+		return strconv.FormatFloat(float64(ret.(float32)),'f',10,64)
+	}
+	panic(NewCmdError(CMD_ERROR_PARAM_TYPE,this.cmd,this.offset,"force string"))
+	return ""
 }
 
 func (this *ParamsValue) String()string {
@@ -323,7 +373,12 @@ func (this *ParamsValue) int()int{
 	case reflect.Uint32:
 		ret=int(raw.(uint32))
 	case reflect.Int32:
-		ret=int(raw.(int32))
+		if v1,ok:=raw.(int32);ok {
+			ret=int(v1)
+		} else {
+			v2:=int32(raw.(protocol.IEnum).Enum())
+			ret=int(v2)
+		}
 	case reflect.Uint64:
 		ret=int(raw.(uint64))
 	case reflect.Int64:

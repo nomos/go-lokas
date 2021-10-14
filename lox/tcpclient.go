@@ -62,6 +62,7 @@ func NewTcpClient() *TcpClient {
 		reqContexts:   make(map[uint32]lokas.IReqContext),
 		timeout:       TimeOut,
 	}
+	ret.MsgHandler = ret.MessageHandler
 	return ret
 }
 
@@ -154,7 +155,6 @@ func (this *TcpClient) Connected() bool {
 
 func (this *TcpClient) OnOpen(conn lokas.IConn) {
 	log.Warn("connected",flog.FuncInfo(this,"OnOpen").Append(flog.Address(this.addr))...)
-	this.MsgHandler = this.MessageHandler
 	this.Opening = false
 	this.isOpen = true
 	this.Emit("open")
@@ -220,7 +220,7 @@ func (this *TcpClient) OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) 
 
 func (this *TcpClient) MessageHandler(msg *protocol.BinaryMessage){
 	id,_:=msg.GetId()
-	log.Warnf("MessageHandler",msg.TransId,id)
+	log.Warnf("MessageHandler",id.String(),msg.TransId,id)
 	if msg.TransId!=0 {
 		ctx:=this.GetContext(msg.TransId)
 		ctx.SetResp(msg.Body)
