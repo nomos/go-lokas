@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/stringutil"
 	"io"
 	"os"
@@ -272,7 +273,12 @@ func (this *ShellCommand) Parse() error {
 		if this.isExpect {
 			cmdprefix = "/usr/bin/expect"
 		}
-		this.cmd = exec.Command(cmdprefix, "-c",this.String())
+		if util.IsDarwin() {
+			this.cmd = exec.Command(cmdprefix, "-c",this.String())
+		} else if util.IsWindows() {
+			cmdprefix = "cmd.exe"
+			this.cmd = exec.Command(cmdprefix, "/C",this.String())
+		}
 		//this.cmd = exec.Command(this.Commands[0].String())
 		//if len(this.Commands)>1 {
 		//	log.Warnf(">1")
