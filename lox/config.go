@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/util"
 	"github.com/spf13/viper"
@@ -148,7 +148,7 @@ func (this *AppConfig) Save() error {
 func (this *AppConfig) Load() error {
 	this.mu.Lock()
 	defer this.mu.Unlock()
-	file, err := os.OpenFile(path.Join(this.folder, this.name+".toml"), os.O_RDWR, 0666)
+	file, err := os.OpenFile(path.Join(this.folder, this.name+".toml"), os.O_CREATE, 0664)
 	if err != nil {
 		log.Warn(err.Error())
 		return err
