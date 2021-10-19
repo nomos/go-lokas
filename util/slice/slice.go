@@ -67,6 +67,45 @@ func HasInt(arr []int,item int)bool{
 	return false
 }
 
+func AppendOnceInt(arr []int,item int)[]int{
+	if !HasInt(arr,item) {
+		arr = append(arr, item)
+	}
+	return arr
+}
+
+func HasInt32(arr []int32,item int32)bool{
+	for _,v:=range arr {
+		if v == item {
+			return true
+		}
+	}
+	return false
+}
+
+func AppendOnceInt32(arr []int32,item int32)[]int32{
+	if !HasInt32(arr,item) {
+		arr = append(arr, item)
+	}
+	return arr
+}
+
+func HasInt64(arr []int64,item int64)bool{
+	for _,v:=range arr {
+		if v == item {
+			return true
+		}
+	}
+	return false
+}
+
+func AppendOnceInt64(arr []int64,item int64)[]int64{
+	if !HasInt64(arr,item) {
+		arr = append(arr, item)
+	}
+	return arr
+}
+
 func HasString(arr []string,item string)bool{
 	for _,v:=range arr {
 		if v == item {
@@ -76,6 +115,13 @@ func HasString(arr []string,item string)bool{
 	return false
 }
 
+func AppendOnceString(arr []string,item string)[]string{
+	if !HasString(arr,item) {
+		arr = append(arr, item)
+	}
+	return arr
+}
+
 func HasFloat64(arr []float64,item float64)bool{
 	for _,v:=range arr {
 		if v == item {
@@ -83,4 +129,60 @@ func HasFloat64(arr []float64,item float64)bool{
 		}
 	}
 	return false
+}
+
+func RemoveInt (arr []int,id int)[]int{
+	idx:=-1
+	for i,v:=range arr {
+		if v==id {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		return arr
+	}
+	return append(arr[:idx], arr[idx+1:]...)
+}
+
+func RemoveInt32 (arr []int32,id int32)[]int32{
+	idx:=-1
+	for i,v:=range arr {
+		if v==id {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		return arr
+	}
+	return append(arr[:idx], arr[idx+1:]...)
+}
+
+func RemoveInt64 (arr []int64,id int64)[]int64{
+	idx:=-1
+	for i,v:=range arr {
+		if v==id {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		return arr
+	}
+	return append(arr[:idx], arr[idx+1:]...)
+}
+
+func RemoveString (arr []string,id string)[]string{
+	idx:=-1
+	for i,v:=range arr {
+		if v==id {
+			idx = i
+			break
+		}
+	}
+	if idx == -1 {
+		return arr
+	}
+	return append(arr[:idx], arr[idx+1:]...)
 }
