@@ -3,12 +3,10 @@ module github.com/nomos/go-lokas
 go 1.16
 
 require (
-	github.com/LyricTian/queue v1.2.0
 	github.com/gomodule/redigo v1.8.4
 	github.com/gorilla/securecookie v1.1.1
 	github.com/gorilla/sessions v1.2.1
 	github.com/gorilla/websocket v1.4.2
-	github.com/iancoleman/orderedmap v0.2.0
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/mitchellh/go-ps v1.0.0
