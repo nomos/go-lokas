@@ -375,8 +375,12 @@ func (f ID) TimeUnix() int64 {
 	return (int64(f) >> timeShift) + Epoch
 }
 
-func (f ID) Time() time.Time {
+func (f ID) TimeSecond() time.Time {
 	return time.Unix(f.TimeUnix()/1000,0)
+}
+
+func (f ID) Time() time.Time {
+	return time.Unix(0,f.TimeUnix()*1000000)
 }
 
 // Snowflake returns an int64 of the snowflake ID node number
