@@ -1,6 +1,7 @@
 package log
 
 import (
+	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -259,13 +260,15 @@ func (this *ComposeLogger) Warn(msg string, fields ...zap.Field) {
 	this.recycle()
 }
 
-func (this *ComposeLogger) Error(msg string, fields ...zap.Field) {
+func (this *ComposeLogger) Error(msg string, fields ...zap.Field) error {
 	logFields := this.cloneFields()
 	for _, field := range fields {
 		logFields = append(logFields, field)
 	}
 	this.logger.Error(msg, logFields...)
 	this.recycle()
+
+	return errors.New(msg)
 }
 
 func (this *ComposeLogger) Panic(msg string, fields ...zap.Field) {

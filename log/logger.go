@@ -2,7 +2,6 @@ package log
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -267,7 +266,7 @@ type ILogger interface {
 	Info(msg string, fields ...zap.Field)
 	Debug(msg string, fields ...zap.Field)
 	Warn(msg string, fields ...zap.Field)
-	Error(msg string, fields ...zap.Field)
+	Error(msg string, fields ...zap.Field) error
 	Panic(msg string, fields ...zap.Field)
 	Fatal(msg string, fields ...zap.Field)
 	WriteString(s string)
@@ -385,8 +384,7 @@ func Error(msg string, fields ...zap.Field)error {
 	if _logger == nil {
 		Init(true, DefaultConfig(""))
 	}
-	_logger.Error(msg, fields...)
-	return errors.New(msg)
+	return _logger.Error(msg, fields...)
 }
 
 func Panic(msg string, fields ...zap.Field) {
