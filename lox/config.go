@@ -76,7 +76,9 @@ func NewSubAppConfig(name string, parent *AppConfig, conf *viper.Viper) *AppConf
 	ret.name = name
 	ret.root = name
 	ret.parent = parent
-	ret.Viper = conf.Sub(name)
+	if conf!=nil {
+		ret.Viper = conf.Sub(name)
+	}
 	return ret
 }
 func (this *AppConfig) GetFolder() string {

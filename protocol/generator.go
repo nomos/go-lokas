@@ -45,7 +45,6 @@ type Generator struct {
 	//Schemas []*ModelClassObject
 
 	Individual   bool
-	TsDependPath string
 	GoPath       string
 	TsPath       string
 	ProtoPath    string

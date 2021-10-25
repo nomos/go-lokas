@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"path/filepath"
 	"sort"
 	"strconv"
 )
@@ -157,11 +156,6 @@ func (this *Generator) generateModel2TsIds() error {
 		obj.RemoveLineType(LINE_EMPTY)
 		strs += obj.String()
 	}
-	relative, _ := filepath.Rel(path.Dir(this.TsIds.FilePath), this.TsDependPath)
-	if len(importObjs) == 0 && relative != "" {
-		strs += "\n"
-		strs += "import {TypeRegistry} from \"" + relative + "/protocol/types\"\n"
-	}
 	strs += "\n"
 	strs += "(function () {\n"
 	strs += "\tif (CC_EDITOR) {\n"
@@ -206,17 +200,17 @@ func (this *Generator) generateModel2TsClasses() error {
 	for i := len(this.ModelClassObjects) - 1; i >= 0; i-- {
 		schema := this.ModelClassObjects[i]
 		tsFile := this.getTsModelFileByModel(schema)
-		tsFile.Package = schema.TsPackage
-		tsClass := this.getTsClassByName(schema.ClassName)
-		if tsClass == nil {
-			this.genTsClass(tsFile, schema)
+		if tsFile!=nil {
+			tsFile.Package = schema.TsPackage
+			tsClass := this.getTsClassByName(schema.ClassName)
+			if tsClass != nil {
+				this.regenTsClass(schema, tsClass)
+			} else {
+				this.genTsClass(tsFile, schema)
+			}
 		} else {
-			//for _, body := range schema.lines {
-			//	if tsClass.CheckLongString(body.Name) {
-			//		body.IsLongString = true
-			//	}
-			//}
-			this.regenTsClass(schema, tsClass)
+			tsFile.Package = schema.TsPackage
+			this.genTsClass(tsFile, schema)
 		}
 	}
 	for _, modelFile := range this.TsModels {
@@ -228,25 +222,14 @@ func (this *Generator) generateModel2TsClasses() error {
 		for _, impo := range imports {
 			impo.RemoveLineType(LINE_EMPTY)
 		}
-		relative, _ := filepath.Rel(path.Dir(modelFile.FilePath), this.TsDependPath)
-		if len(imports) == 0 && relative != "" {
+		if len(imports) == 0  {
 			imports := NewTsImportObject(modelFile)
-			imports.AddLine(&LineText{
-				Obj:     imports,
-				LineNum: 0,
-				Text:    "import {define,Tag} from \"" + relative + "/protocol/types\"",
-			}, LINE_TS_IMPORT_SINGLELINE)
-			imports.AddLine(&LineText{
-				Obj:     imports,
-				LineNum: 0,
-				Text:    "import {BaseComponent} from \"" + relative + "/ecs/default_component\"",
-			}, LINE_TS_IMPORT_SINGLELINE)
 			modelFile.InsertObject(0, imports)
 		}
 		for _, obj := range modelFile.Objects {
 			strs += obj.String()
 		}
-		p := path.Join(this.TsPath, modelFile.Package, "model_"+stringutil.SplitCamelCaseLowerSnake(modelFile.ClassName))
+		p := path.Join(this.TsPath, modelFile.Package+"_"+stringutil.SplitCamelCaseLowerSnake(modelFile.ClassName))
 		p += ".ts"
 		ioutil.WriteFile(p, []byte(strs), 0644)
 	}
@@ -386,11 +369,13 @@ func (this *Generator) genTsClassDefine(schema *ModelClassObject, tsClass *TsCla
 }
 
 func (this *Generator) getTsClassByName(s string) *TsClassObject {
+	log.Infof("DSADASDASD",log.PrettyStruct(this.TsClassObjects))
 	for _, class := range this.TsClassObjects {
 		if class.ClassName == s {
 			return class
 		}
 	}
+	log.Info("NIL")
 	return nil
 }
 
