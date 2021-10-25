@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strconv"
 )
@@ -78,6 +79,21 @@ func (this *Generator) LoadTsEnums(p string) error {
 		return err
 	}
 	return nil
+}
+
+
+func isTsEnumFile(p string)bool{
+	if path.Ext(p)!="ts" {
+		return false
+	}
+	return regexp.MustCompile(`^enum[_]]`).MatchString(p)
+}
+
+func isTsModelFile(p string)bool{
+	if path.Ext(p)!="ts" {
+		return false
+	}
+	return regexp.MustCompile(`^model[_]]`).MatchString(p)
 }
 
 func (this *Generator) LoadGo2TsIds(p string) error {
@@ -229,7 +245,7 @@ func (this *Generator) generateModel2TsClasses() error {
 		for _, obj := range modelFile.Objects {
 			strs += obj.String()
 		}
-		p := path.Join(this.TsPath, modelFile.Package+"_"+stringutil.SplitCamelCaseLowerSnake(modelFile.ClassName))
+		p := path.Join(this.TsPath, "model_"+stringutil.SplitCamelCaseLowerSnake(modelFile.ClassName))
 		p += ".ts"
 		ioutil.WriteFile(p, []byte(strs), 0644)
 	}
