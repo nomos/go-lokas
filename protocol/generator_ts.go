@@ -8,9 +8,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"regexp"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 func (this *Generator) GenerateModel2Ts() error {
@@ -40,12 +40,7 @@ func (this *Generator) GenerateModel2Ts() error {
 
 func (this *Generator) LoadTsFolder(p string) *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-		err := this.LoadGo2TsIds(p)
-		if err != nil {
-			reject(err)
-			return
-		}
-		err = this.LoadTsEnums(p)
+		err := this.LoadTsIds(p)
 		if err != nil {
 			reject(err)
 			return
@@ -59,44 +54,7 @@ func (this *Generator) LoadTsFolder(p string) *promise.Promise {
 	})
 }
 
-func (this *Generator) LoadTsEnums(p string) error {
-	baseName := path.Base(p)
-	enumsPath := util.FindFile(p, baseName+"_enums.ts", false)
-	if enumsPath == "" {
-		enumsPath = path.Join(p, baseName+"_enums.ts")
-		util.CreateFile(enumsPath)
-	}
-	this.TsEnums = NewTsEnumFile(this)
-	log.Warnf("ts enumsPath", enumsPath)
-	_, err := this.TsEnums.Load(enumsPath).Await()
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
-	_, err = this.TsEnums.Parse().Await()
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
-	return nil
-}
-
-
-func isTsEnumFile(p string)bool{
-	if path.Ext(p)!="ts" {
-		return false
-	}
-	return regexp.MustCompile(`^enum[_]]`).MatchString(p)
-}
-
-func isTsModelFile(p string)bool{
-	if path.Ext(p)!="ts" {
-		return false
-	}
-	return regexp.MustCompile(`^model[_]]`).MatchString(p)
-}
-
-func (this *Generator) LoadGo2TsIds(p string) error {
+func (this *Generator) LoadTsIds(p string) error {
 	baseName := path.Base(p)
 	this.TsPath = p
 	idsPath := util.FindFile(p, baseName+"_ids.ts", false)
@@ -127,17 +85,15 @@ func (this *Generator) LoadGo2TsModels(p string) error {
 			return false
 		}
 		fileName := path.Base(filePath)
-		switch fileName {
-		case baseName + "_ids.ts", baseName + "_models.ts", baseName + "_enums.ts":
-			return false
-		default:
-			_, err := this.LoadAndParseTsFile(filePath)
-			if err != nil {
-				log.Error(err.Error())
-				return true
-			}
+		if fileName==baseName + "_ids.ts"||strings.HasPrefix(fileName,"enum_") {
 			return false
 		}
+		_, err = this.LoadAndParseTsFile(filePath)
+		if err != nil {
+			log.Error(err.Error())
+			return true
+		}
+		return false
 	}, true)
 	return err
 }
@@ -184,7 +140,6 @@ func (this *Generator) generateModel2TsIds() error {
 		}
 		for _, id := range p.Ids {
 			ids = append(ids, id)
-			strs += "\tTypeRegistry.getInstance().RegisterCustomTag(\"" + id.Name + "\"," + strconv.Itoa(id.Id) + ")\n"
 		}
 	}
 	sort.Slice(ids, func(i, j int) bool {
@@ -198,7 +153,7 @@ func (this *Generator) generateModel2TsIds() error {
 	if err != nil {
 		log.Errorf(err.Error())
 	}
-	this.LoadGo2TsIds(this.TsPath)
+	this.LoadTsIds(this.TsPath)
 	return nil
 }
 
@@ -245,7 +200,7 @@ func (this *Generator) generateModel2TsClasses() error {
 		for _, obj := range modelFile.Objects {
 			strs += obj.String()
 		}
-		p := path.Join(this.TsPath, "model_"+stringutil.SplitCamelCaseLowerSnake(modelFile.ClassName))
+		p := path.Join(this.TsPath, modelFile.Package+"_"+stringutil.SplitCamelCaseLowerSnake(modelFile.ClassName))
 		p += ".ts"
 		ioutil.WriteFile(p, []byte(strs), 0644)
 	}
@@ -385,7 +340,6 @@ func (this *Generator) genTsClassDefine(schema *ModelClassObject, tsClass *TsCla
 }
 
 func (this *Generator) getTsClassByName(s string) *TsClassObject {
-	log.Infof("DSADASDASD",log.PrettyStruct(this.TsClassObjects))
 	for _, class := range this.TsClassObjects {
 		if class.ClassName == s {
 			return class
@@ -396,7 +350,7 @@ func (this *Generator) getTsClassByName(s string) *TsClassObject {
 }
 
 func (this *Generator) getTsModelFileByModel(schema *ModelClassObject) *TsModelFile {
-	tsPath := path.Join(this.TsPath, schema.TsPackage, "model_"+stringutil.SplitCamelCaseLowerSnake(schema.ClassName)) + ".ts"
+	tsPath := path.Join(this.TsPath, schema.TsPackage+"_"+stringutil.SplitCamelCaseLowerSnake(schema.ClassName)) + ".ts"
 
 	for _, file := range this.TsModels {
 		if file.FilePath == tsPath {
@@ -440,20 +394,19 @@ func (this *Generator) processTsClassObjects(){
 }
 
 func (this *Generator) generateModel2TsEnums() error {
-	strs := auto_gen_header
-	importObjs := this.TsEnums.GetObj(OBJ_TS_IMPORTS)
-	for _, obj := range importObjs {
-		strs += obj.String()
-	}
-	strs += "\n"
+	//strs := auto_gen_header
+	//importObjs := this.TsEnums.GetObj(OBJ_TS_IMPORTS)
+	//for _, obj := range importObjs {
+	//	strs += obj.String()
+	//}
+	//strs += "\n"
 	for _, enum := range this.ModelEnumObjects {
-		strs += enum.TsString(this)
-	}
-
-	err := ioutil.WriteFile(this.TsEnums.FilePath, []byte(strs), 0)
-	if err != nil {
-		log.Error(err.Error())
-		return err
+		name:=stringutil.SplitCamelCaseLowerSnake(enum.EnumName)
+		err := ioutil.WriteFile(path.Join(this.TsPath,"enum_"+name+".ts"), []byte(enum.TsString(this)), 0644)
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
 	}
 	return nil
 }
