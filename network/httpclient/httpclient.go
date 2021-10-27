@@ -198,7 +198,7 @@ func DoPostEx(urlStr string, params url.Values, p interface{}) error {
 	return err
 }
 
-func DoMultiPartPost(urlStr string, params url.Values, files url.Values) ([]byte, error) {
+func DoMultiPartPost(urlStr string, headers map[string]string, params url.Values, files url.Values) ([]byte, error) {
 	var err error
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -240,6 +240,9 @@ func DoMultiPartPost(urlStr string, params url.Values, files url.Values) ([]byte
 	if err != nil {
 		return nil, err
 	}
+	for key, values := range headers {
+		req.Header.Add(key,values)
+	}
 	req.Header.Add("Content-LineType", writer.FormDataContentType())
 	resp, err := DefaultClient.Do(req)
 	if err != nil {
@@ -253,8 +256,8 @@ func DoMultiPartPost(urlStr string, params url.Values, files url.Values) ([]byte
 	return body2, nil
 }
 
-func DoMultiPartPostEx(urlStr string, params url.Values, files url.Values, p interface{}) error {
-	rb, err := DoMultiPartPost(urlStr, params, files)
+func DoMultiPartPostEx(urlStr string,headers map[string]string, params url.Values, files url.Values, p interface{}) error {
+	rb, err := DoMultiPartPost(urlStr,headers, params, files)
 	if err != nil {
 		return err
 	}
