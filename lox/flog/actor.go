@@ -80,7 +80,7 @@ func MsgInfo(serializable protocol.ISerializable)log.ZapFields{
 	ret:=[]zap.Field{}
 	ret = append(ret, MsgName(serializable))
 	ret = append(ret, MsgId(serializable))
-	ret = append(ret, MsgBody(serializable))
+	//ret = append(ret, MsgBody(serializable))
 	return ret
 }
 

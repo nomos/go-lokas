@@ -24,12 +24,13 @@ func AvatarGate(avatar lokas.IAvatarSession) zap.Field {
 	return zap.Int64("gateid", avatar.GetGateId().Int64())
 }
 
-func AvatarInfo(avatar lokas.IAvatar) log.ZapFields {
+func AvatarInfo(avatar lokas.IActor) log.ZapFields {
+	a:=avatar.(lokas.IAvatar)
 	ret := log.ZapFields{}
-	ret = ret.Concat(ActorInfo(avatar))
-	ret = ret.Append(AvatarName(avatar))
-	ret = ret.Append(AvatarServer(avatar))
-	ret = ret.Append(AvatarSessionId(avatar))
+	ret = ret.Concat(ActorInfo(a))
+	ret = ret.Append(AvatarName(a))
+	ret = ret.Append(AvatarServer(a))
+	ret = ret.Append(AvatarSessionId(a))
 	return ret
 }
 
