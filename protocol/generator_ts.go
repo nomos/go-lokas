@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/promise"
 	"github.com/nomos/go-lokas/util/stringutil"
@@ -16,25 +15,25 @@ import (
 func (this *Generator) GenerateModel2Ts() error {
 	err := this.processModelPackages()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	err = this.generateModel2TsEnums()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	err = this.generateModel2TsIds()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	err = this.generateModel2TsClasses()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
-	log.Warnf("GenerateModel2Ts Finish")
+	this.GetLogger().Warnf("GenerateModel2Ts Finish")
 	return nil
 }
 
@@ -63,15 +62,15 @@ func (this *Generator) LoadTsIds(p string) error {
 		util.CreateFile(idsPath)
 	}
 	this.TsIds = NewTsIdsFile(this)
-	log.Warnf("ts idsPath", idsPath)
+	this.GetLogger().Warnf("ts idsPath", idsPath)
 	_, err := this.TsIds.Load(idsPath).Await()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	_, err = this.TsIds.Parse().Await()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	return nil
@@ -90,7 +89,7 @@ func (this *Generator) LoadGo2TsModels(p string) error {
 		}
 		_, err = this.LoadAndParseTsFile(filePath)
 		if err != nil {
-			log.Error(err.Error())
+			this.GetLogger().Error(err.Error())
 			return true
 		}
 		return false
@@ -99,16 +98,16 @@ func (this *Generator) LoadGo2TsModels(p string) error {
 }
 
 func (this *Generator) LoadAndParseTsFile(modelsPath string) (*TsModelFile, error) {
-	log.Warnf("ts modelsPath", modelsPath)
+	this.GetLogger().Warnf("ts modelsPath", modelsPath)
 	file := NewTsModelFile(this)
 	_, err := file.Load(modelsPath).Await()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return nil, err
 	}
 	_, err = file.Parse().Await()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return nil, err
 	}
 	for _, tsClass := range file.ProcessClasses() {
@@ -122,7 +121,8 @@ func (this *Generator) LoadAndParseTsFile(modelsPath string) (*TsModelFile, erro
 }
 
 func (this *Generator) generateModel2TsIds() error {
-	log.Error("generateModel2TsIds")
+	this.GetLogger().Error("generateModel2TsIds")
+	this.LoadTsIds(this.TsPath)
 	strs := auto_gen_header
 	importObjs := this.TsIds.GetObj(OBJ_TS_IMPORTS)
 	for _, obj := range importObjs {
@@ -152,19 +152,18 @@ func (this *Generator) generateModel2TsIds() error {
 	strs += "})()\n"
 	err := ioutil.WriteFile(this.TsIds.FilePath, []byte(strs), 0644)
 	if err != nil {
-		log.Errorf(err.Error())
+		this.GetLogger().Errorf(err.Error())
 	}
-	this.LoadTsIds(this.TsPath)
 	return nil
 }
 
 func (this *Generator) generateModel2TsClasses() error {
-	//log.Warnf("models", this.GoStructObjects)
-	//log.Warnf("GoPath",this.GoPath)
+	//this.GetLogger().Warnf("models", this.GoStructObjects)
+	//this.GetLogger().Warnf("GoPath",this.GoPath)
 	//for _,m:=range this.ModelClassObjects {
 	//	err:=this.generateModel2TsClass(m)
 	//	if err != nil {
-	//		log.Error(err.Error())
+	//		this.GetLogger().Error(err.Error())
 	//		return err
 	//	}
 	//}
@@ -186,7 +185,7 @@ func (this *Generator) generateModel2TsClasses() error {
 		}
 	}
 	for _, modelFile := range this.TsModels {
-		log.Infof("modelFile.FileName", modelFile.FileName)
+		this.GetLogger().Infof("modelFile.FileName", modelFile.FileName)
 		strs := auto_gen_header
 		modelFile.RemoveAutoGenHeader()
 		modelFile.RemoveObjType(OBJ_EMPTY)
@@ -216,8 +215,8 @@ func (this *Generator) genTsClass(tsFile *TsModelFile, schema *ModelClassObject)
 	for _, impor := range imports {
 		impor.RemoveLineType(LINE_EMPTY)
 	}
-	log.Warnf("tsFile", tsFile.Objects)
-	log.Warnf("tsFile", len(imports))
+	this.GetLogger().Warnf("tsFile", tsFile.Objects)
+	this.GetLogger().Warnf("tsFile", len(imports))
 	if len(imports) == 0 {
 		tsFile.InsertObject(0, tsClass)
 	} else {
@@ -229,16 +228,16 @@ func (this *Generator) genTsClass(tsFile *TsModelFile, schema *ModelClassObject)
 
 func (this *Generator) regenTsClass(schema *ModelClassObject, tsClass *TsClassObject) {
 	if schema == nil {
-		log.Panic("schema is nil")
+		this.GetLogger().Panic("schema is nil")
 	}
-	log.Info(tsClass.String())
+	this.GetLogger().Info(tsClass.String())
 	tsClass.RemoveLineType(LINE_TS_DEFINE_SINGLELINE)
 	tsClass.RemoveLineType(LINE_TS_DEFINE_START)
 	tsClass.RemoveLineType(LINE_TS_DEFINE_OBJ)
 	tsClass.RemoveLineType(LINE_TS_DEFINE_END)
 	this.genTsClassDefine(schema, tsClass)
 	this.regenTsClassField(schema, tsClass)
-	log.Info(tsClass.String())
+	this.GetLogger().Info(tsClass.String())
 }
 
 func (this *Generator) regenTsClassField(schema *ModelClassObject, tsClass *TsClassObject) {
@@ -247,7 +246,7 @@ func (this *Generator) regenTsClassField(schema *ModelClassObject, tsClass *TsCl
 		if member != nil {
 			if member.IsPublic {
 				if member.Type != body.TsPublicType(this) {
-					log.Warnf(member.Type, body.TsPublicType(this), member.Name)
+					this.GetLogger().Warnf(member.Type, body.TsPublicType(this), member.Name)
 
 				}
 				if member.Type == body.TsPublicType(this) {
@@ -346,7 +345,7 @@ func (this *Generator) getTsClassByName(s string) *TsClassObject {
 			return class
 		}
 	}
-	log.Info("NIL")
+	this.GetLogger().Info("NIL")
 	return nil
 }
 
@@ -360,12 +359,12 @@ func (this *Generator) getTsModelFileByModel(schema *ModelClassObject) *TsModelF
 	}
 	err := util.CreateFile(tsPath)
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return nil
 	}
 	file, err := this.LoadAndParseTsFile(tsPath)
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return nil
 	}
 	file.ClassName = schema.ClassName
@@ -405,7 +404,7 @@ func (this *Generator) generateModel2TsEnums() error {
 		name:=stringutil.SplitCamelCaseLowerSnake(enum.EnumName)
 		err := ioutil.WriteFile(path.Join(this.TsPath,"enum_"+name+".ts"), []byte(enum.TsString(this)), 0644)
 		if err != nil {
-			log.Error(err.Error())
+			this.GetLogger().Error(err.Error())
 			return err
 		}
 	}

@@ -48,6 +48,7 @@ func (this FileType) String() string {
 }
 
 type GeneratorFile interface {
+	GetLogger()log.ILogger
 	Parse() *promise.Promise
 	Load(string) *promise.Promise
 	GetFilePath() string
@@ -116,29 +117,33 @@ func (this *DefaultGeneratorFile) reset() {
 	this.Objects = make([]GeneratorObject, 0)
 }
 
+func (this *DefaultGeneratorFile) GetLogger()log.ILogger{
+	return this.Generator.GetLogger()
+}
+
 func (this *DefaultGeneratorFile) load(path string) error {
-	log.Warnf("DefaultGeneratorFile load ", path)
+	this.GetLogger().Warnf("DefaultGeneratorFile load ", path)
 	this.reset()
 	this.FilePath = path
 	file, err := os.OpenFile(path, os.O_CREATE, 0666)
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	this.file = file
 	stat, err := file.Stat()
 	if stat.IsDir() {
-		log.Panic("path is dir")
+		this.GetLogger().Panic("path is dir")
 	} else {
 		this.IsDir = false
 		this.DirPath = path2.Dir(path)
 		this.FileName = path2.Base(path)
 	}
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
-	log.Infof("size", stat.Size())
+	this.GetLogger().Infof("size", stat.Size())
 	buf := bufio.NewReader(file)
 	lineNo := 0
 	for {
@@ -152,10 +157,10 @@ func (this *DefaultGeneratorFile) load(path string) error {
 		})
 		if err != nil {
 			if err == io.EOF {
-				log.Info("read file ok")
+				this.GetLogger().Info("read file ok")
 				break
 			} else {
-				log.Error("read file error")
+				this.GetLogger().Error("read file error")
 				return errors.New("read file error")
 			}
 		}
@@ -167,7 +172,7 @@ func (this *DefaultGeneratorFile) load(path string) error {
 
 func (this *DefaultGeneratorFile) parseEmpty(num int, lastObj GeneratorObject) (int, bool) {
 	if num > len(this.Lines)-1 {
-		log.Warn("reach end of file")
+		this.GetLogger().Warn("reach end of file")
 		if lastObj!=nil&&len(lastObj.Lines()) > 0 {
 			this.AddObject(lastObj)
 		}
@@ -193,7 +198,7 @@ func (this *DefaultGeneratorFile) parseEmpty(num int, lastObj GeneratorObject) (
 
 func (this *DefaultGeneratorFile) parseComment(num int, lastObj GeneratorObject) (int, bool) {
 	if num > len(this.Lines)-1 {
-		log.Warn("reach end of file")
+		this.GetLogger().Warn("reach end of file")
 		if lastObj!=nil&&len(lastObj.Lines()) > 0 {
 			this.AddObject(lastObj)
 		}
@@ -222,7 +227,7 @@ func (this *DefaultGeneratorFile) Load(path string) *promise.Promise {
 		go func() {
 			err := this.load(path)
 			if err != nil {
-				log.Error(err.Error())
+				this.GetLogger().Error(err.Error())
 				reject(err)
 				return
 			}
@@ -291,7 +296,7 @@ func (this *DefaultGeneratorFile) InsertAfter(obj GeneratorObject, after Generat
 			return
 		}
 	}
-	log.Panic("cant found obj")
+	this.GetLogger().Panic("cant found obj")
 }
 
 func (this *DefaultGeneratorFile) RemoveAutoGenHeader(){
@@ -319,7 +324,7 @@ func (this *DefaultGeneratorFile) MarshalToFile(path string) *promise.Promise {
 
 func (this *DefaultGeneratorFile) parseMultiple(num int, lastObj GeneratorObject, objs ... ObjectType) (int, bool) {
 	if num > len(this.Lines)-1 {
-		log.Warn("reach end of file")
+		this.GetLogger().Warn("reach end of file")
 		if lastObj != nil && len(lastObj.Lines()) > 0 {
 			this.AddObject(lastObj)
 		}
@@ -343,7 +348,7 @@ func (this *DefaultGeneratorFile) parseMultiple(num int, lastObj GeneratorObject
 				return this.parseMultiple(num, lastObj, objs...)
 			}
 		}
-		log.Panicf("parse multiple error",line.Text,line.LineNum)
+		this.GetLogger().Panicf("parse multiple error",line.Text,line.LineNum)
 	} else {
 		if lastObj.CheckLine(line) {
 			num++
@@ -360,7 +365,7 @@ func (this *DefaultGeneratorFile) parseMultiple(num int, lastObj GeneratorObject
 
 func (this *DefaultGeneratorFile) parseOne(num int, lastObj GeneratorObject, objType ObjectType) (int, bool) {
 	if num > len(this.Lines)-1 {
-		log.Warn("reach end of file")
+		this.GetLogger().Warn("reach end of file")
 		if lastObj != nil && len(lastObj.Lines()) > 0 {
 			this.AddObject(lastObj)
 		}
@@ -394,7 +399,7 @@ func (this *DefaultGeneratorFile) parseOne(num int, lastObj GeneratorObject, obj
 func (this *DefaultGeneratorFile) parse(num int, objs ...ObjectType) (int, bool) {
 
 	if len(objs) == 0 {
-		log.Panic("params error")
+		this.GetLogger().Panic("params error")
 		return 0, false
 	} else if len(objs) == 1 {
 		return this.parseOne(num, nil, objs[0])

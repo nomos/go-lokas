@@ -149,22 +149,22 @@ func NewGoIdsFile(generator *Generator) *GoIdsFile {
 	ret := &GoIdsFile{DefaultGeneratorFile: NewGeneratorFile(generator),AssignedIds: []*GoAssignedId{},AssignedTypes:[]*GoAssignedId{}}
 	ret.GeneratorFile = ret
 	ret.FileType = FILE_GO_IDS
-	log.Warnf("GoIdsFile",ret.FileType.String())
+	ret.GetLogger().Warnf("GoIdsFile",ret.FileType.String())
 	return ret
 }
 
 func (this *GoIdsFile) Parse() *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_GO_PACKAGE)
-		log.Infof("parseGoModelPackage", offset, success)
+		this.GetLogger().Infof("parseGoModelPackage", offset, success)
 		offset, success = this.parse(offset, OBJ_GO_IMPORTS)
-		log.Infof("parseGoImports", offset, success)
+		this.GetLogger().Infof("parseGoImports", offset, success)
 		offset, success = this.parse(offset, OBJ_GO_ID)
-		log.Infof("parseGoTagId", offset, success)
+		this.GetLogger().Infof("parseGoTagId", offset, success)
 		offset, success = this.parse(offset, OBJ_GO_ID_REG)
-		log.Infof("parseGoTagReg", offset, success)
+		this.GetLogger().Infof("parseGoTagReg", offset, success)
 		offset, success = this.parseEmpty(offset, nil)
-		log.Infof("parseEmpty", offset, success)
+		this.GetLogger().Infof("parseEmpty", offset, success)
 		resolve(nil)
 	})
 }

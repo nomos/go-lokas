@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/promise"
 )
 
@@ -45,11 +44,11 @@ func (this *TsEnumObject) CheckLine(line *LineText) bool {
 			this.state = 2
 			return true
 		}
-		log.Panic("parse TsEnumObject error")
+		this.GetLogger().Panic("parse TsEnumObject error")
 	} else if this.state == 2 {
 		return false
 	}
-	log.Panic("parse TsEnumObject error")
+	this.GetLogger().Panic("parse TsEnumObject error")
 	return false
 }
 
@@ -73,9 +72,9 @@ func (this *TsEnumFile) Generate() *promise.Promise {
 func (this *TsEnumFile) Parse() *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_TS_IMPORTS)
-		log.Warnf("parseTsImports", offset, success)
+		this.GetLogger().Warnf("parseTsImports", offset, success)
 		offset, success = this.parse(offset, OBJ_TS_ENUM, OBJ_EMPTY)
-		log.Warnf("parseTsEnum", offset, success)
+		this.GetLogger().Warnf("parseTsEnum", offset, success)
 		//offset, success = this.parseGoMain(offset, nil)
 		//log.Warnf("parseGoMain finish", offset, success)
 		resolve(nil)

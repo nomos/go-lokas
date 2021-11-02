@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/promise"
 )
 
@@ -52,11 +51,11 @@ func (this *TsIdsObject) CheckLine(line *LineText) bool {
 			this.state = 2
 			return true
 		}
-		log.Panic("parse TsIdsObject error")
+		this.GetLogger().Panic("parse TsIdsObject error")
 	} else if this.state == 2 {
 		return false
 	}
-	log.Panic("parse TsIdsObject error")
+	this.GetLogger().Panic("parse TsIdsObject error")
 	return false
 }
 
@@ -80,11 +79,11 @@ func (this *TsIdsFile) Generate() *promise.Promise {
 func (this *TsIdsFile) Parse() *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_TS_IMPORTS)
-		log.Infof("parseTsImports", offset, success)
+		this.GetLogger().Infof("parseTsImports", offset, success)
 		offset, success = this.parse(offset, OBJ_TS_IDS, OBJ_EMPTY)
-		log.Infof("parseTsIds", offset, success)
+		this.GetLogger().Infof("parseTsIds", offset, success)
 		//offset, success = this.parseGoMain(offset, nil)
-		//log.Warnf("parseGoMain finish", offset, success)
+		//this.GetLogger().Warnf("parseGoMain finish", offset, success)
 		resolve(nil)
 	})
 }

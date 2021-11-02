@@ -123,6 +123,10 @@ func (this *DefaultGeneratorObj) GetFile()GeneratorFile {
 	return this.file
 }
 
+func (this *DefaultGeneratorObj) GetLogger()log.ILogger {
+	return this.GetFile().GetLogger()
+}
+
 func (this *DefaultGeneratorObj) init(typ ObjectType,file GeneratorFile) {
 	this.objectType = typ
 	if file.GetFile()!=nil {
@@ -218,7 +222,7 @@ func (this *DefaultGeneratorObj) InsertAfter(line *LineText, after *LineText)*Li
 			return line
 		}
 	}
-	log.Panic("cant found line")
+	this.GetLogger().Panic("cant found line")
 	return nil
 }
 
@@ -303,11 +307,11 @@ func (this *CommentObject) CheckLine(line *LineText) bool {
 		if this.TryAddLineStrict(line, LINE_ANY) {
 			return true
 		}
-		log.Panic("parse CommentObject Body error")
+		this.GetLogger().Panic("parse CommentObject Body error")
 	} else if this.state == 2 {
 		return false
 	}
-	log.Panic("parse CommentObject error")
+	this.GetLogger().Panic("parse CommentObject error")
 	return false
 }
 

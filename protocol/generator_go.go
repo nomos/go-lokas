@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/slice"
 	"github.com/nomos/go-lokas/util/stringutil"
@@ -19,25 +18,25 @@ func (this *Generator) GenerateModel2Go()error{
 	}()
 	err:=this.processModelPackages()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	err = this.generateModel2GoClasses()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	err = this.generateModel2GoEnums()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	err = this.generateModel2GoIds()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
-	log.Warnf("GenerateModel2Go Finish")
+	this.GetLogger().Warnf("GenerateModel2Go Finish")
 	return nil
 }
 
@@ -55,7 +54,7 @@ func (this *Generator) getGoImportsString(deps []string) string{
 	for _,v:=range deps {
 		pack,ok:=this.ModelPackages[v]
 		if !ok {
-			log.Panic("cant found imports name:"+v)
+			this.GetLogger().Panic("cant found imports name:"+v)
 			return ""
 		}
 		ret+="\t"
@@ -67,11 +66,11 @@ func (this *Generator) getGoImportsString(deps []string) string{
 }
 
 func (this *Generator) generateModel2GoClasses()error{
-	log.Warnf("GoPath",this.GoPath)
+	this.GetLogger().Warnf("GoPath",this.GoPath)
 	for _,m:=range this.ModelClassObjects {
 		err:=this.generateModel2GoClass(m)
 		if err != nil {
-			log.Error(err.Error())
+			this.GetLogger().Error(err.Error())
 			return err
 		}
 	}
@@ -83,7 +82,7 @@ func (this *Generator) generateModel2GoClass(m *ModelClassObject)error{
 	p+=".go"
 	err:=ioutil.WriteFile(p, []byte(m.GoString(this)), 0644)
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	p=path.Join(this.GoPath,m.Package,"model_"+stringutil.SplitCamelCaseLowerSnake(m.ClassName))
@@ -91,7 +90,7 @@ func (this *Generator) generateModel2GoClass(m *ModelClassObject)error{
 	if !util.IsFileExist(p) {
 		err=ioutil.WriteFile(p, []byte(m.GoImplString(this)), 0644)
 		if err != nil {
-			log.Error(err.Error())
+			this.GetLogger().Error(err.Error())
 			return err
 		}
 	}
@@ -99,11 +98,11 @@ func (this *Generator) generateModel2GoClass(m *ModelClassObject)error{
 }
 
 func (this *Generator) generateModel2GoEnums()error{
-	log.Warnf("GoPath",this.GoPath)
+	this.GetLogger().Warnf("GoPath",this.GoPath)
 	for _,m:=range this.ModelEnumObjects {
 		err:=this.generateModel2GoEnum(m)
 		if err != nil {
-			log.Error(err.Error())
+			this.GetLogger().Error(err.Error())
 			return err
 		}
 	}
@@ -115,20 +114,20 @@ func (this *Generator) generateModel2GoEnum(m *ModelEnumObject)error{
 	p+=".go"
 	err:=ioutil.WriteFile(p, []byte(m.GoString(this)), 0644)
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	return nil
 }
 
 func (this *Generator) generateModel2GoIds()error{
-	log.Warnf("generateModel2GoIds")
+	this.GetLogger().Warnf("generateModel2GoIds")
 
 	for _,p:=range this.ModelPackages {
 		err:=this.generateModel2GoPackage(p)
 
 		if err != nil {
-			log.Error(err.Error())
+			this.GetLogger().Error(err.Error())
 			return err
 		}
 	}
@@ -138,10 +137,10 @@ func (this *Generator) generateModel2GoIds()error{
 func (this *Generator) generateModel2GoPackage(pack *ModelPackageObject)error{
 	p:=path.Join(this.GoPath,pack.PackageName,"ids")
 	p+=".go"
-	log.Warnf("generateModel2GoPackage",p)
+	this.GetLogger().Warnf("generateModel2GoPackage",p)
 	err:=ioutil.WriteFile(p, []byte(pack.GoString(this)), 0644)
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	return nil

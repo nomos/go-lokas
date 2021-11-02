@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/promise"
 	"strconv"
 )
@@ -34,7 +33,7 @@ func (this *ProtoSyntaxObj) CheckLine(line *LineText) bool {
 	} else if this.state == 1 {
 		return false
 	}
-	log.Panic("parse ProtoSyntaxObj error")
+	this.GetLogger().Panic("parse ProtoSyntaxObj error")
 	return false
 }
 
@@ -66,7 +65,7 @@ func (this *ProtoPackageObj) CheckLine(line *LineText) bool {
 	} else if this.state == 1 {
 		return false
 	}
-	log.Panic("parse ProtoPackageObj error")
+	this.GetLogger().Panic("parse ProtoPackageObj error")
 	return false
 }
 
@@ -125,11 +124,11 @@ func (this *ProtoMsgObject) CheckLine(line *LineText) bool {
 			this.state = 2
 			return true
 		}
-		log.Panic("parse ProtoMsgObject error")
+		this.GetLogger().Panic("parse ProtoMsgObject error")
 	} else if this.state == 2 {
 		return false
 	}
-	log.Panic("parse ProtoMsgObject error")
+	this.GetLogger().Panic("parse ProtoMsgObject error")
 	return false
 }
 
@@ -210,12 +209,12 @@ func (this *ProtoEnumObject) CheckLine(line *LineText) bool {
 			this.state = 2
 			return true
 		}
-		log.Panic("parse ProtoEnumObject error")
+		this.GetLogger().Panic("parse ProtoEnumObject error")
 	} else if this.state == 2 {
-		log.Warnf("field",this.Fields)
+		this.GetLogger().Warnf("field",this.Fields)
 		return false
 	}
-	log.Panic("parse ProtoEnumObject error")
+	this.GetLogger().Panic("parse ProtoEnumObject error")
 	return false
 }
 
@@ -255,9 +254,9 @@ func (this *ProtoFile) Generate() *promise.Promise {
 func (this *ProtoFile) Parse() *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0,OBJ_PROTO_SYNTAX)
-		log.Warnf("parseProtoSyntax", offset, success)
+		this.GetLogger().Warnf("parseProtoSyntax", offset, success)
 		offset, success = this.parse(offset, OBJ_PROTO_PACKAGE)
-		log.Warnf("parseProtoPackage", offset, success)
+		this.GetLogger().Warnf("parseProtoPackage", offset, success)
 		offset, success = this.parse(offset, OBJ_COMMENT,OBJ_PROTO_ENUM, OBJ_PROTO_MSG)
 		//offset, success = this.parseGoImports(offset, nil)
 		//log.Warnf("parseGoImports", offset, success)

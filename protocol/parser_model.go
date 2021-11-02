@@ -1744,12 +1744,12 @@ func (this *ModelFile) ProcessPackages() *ModelPackageObject {
 	defer func() {
 		r:=recover()
 		if r!=nil {
-			log.Errorf(r)
+			this.GetLogger().Errorf(r)
 		}
 	}()
 	for _, obj := range this.Objects {
 		if obj.ObjectType() == OBJ_MODEL_PACKAGE {
-			log.Warnf("this.Package",this.Package)
+			this.GetLogger().Warnf("this.Package",this.Package)
 			obj.(*ModelPackageObject).PackageName = this.Package
 			ret =  obj.(*ModelPackageObject)
 		}
@@ -1764,6 +1764,6 @@ func (this *ModelFile) ProcessPackages() *ModelPackageObject {
 			}
 		}
 	}
-	log.Warnf("ProcessPackages")
+	this.GetLogger().Warnf("ProcessPackages")
 	return ret
 }

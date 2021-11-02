@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/util"
 )
 
 type GenType int
@@ -20,7 +21,7 @@ type GeneratorOption struct {
 }
 
 type Generator struct {
-	GenType           GenType
+	logger log.ILogger
 	Models            map[string]GeneratorFile
 	GoModels          map[string]GeneratorFile
 	Protos            map[string]GeneratorFile
@@ -55,12 +56,22 @@ type Generator struct {
 	Proto2TsCmdLinExec func(pack, protoPath, GoPath string) error
 }
 
-func NewGenerator(typ GenType) *Generator {
+func NewGenerator() *Generator {
 	ret := &Generator{
-		GenType: typ,
 	}
 	ret.Clear()
 	return ret
+}
+
+func (this *Generator) SetLogger(logger log.ILogger){
+	this.logger = logger
+}
+
+func (this *Generator) GetLogger()log.ILogger {
+	if util.IsNil(this.logger) {
+		return log.DefaultLogger()
+	}
+	return this.logger
 }
 
 func (this *Generator) SetProto2GoCmdLine(f func(pack, protoPath, GoPath string) error) {
@@ -89,7 +100,7 @@ func (this *Generator) IsErrorName(s string)bool{
 }
 
 func (this *Generator) Clear() {
-	log.Warn("Generator Clear")
+	this.GetLogger().Warn("Generator Clear")
 	this.Models = make(map[string]GeneratorFile)
 	this.GoModels = make(map[string]GeneratorFile)
 	this.Protos = make(map[string]GeneratorFile)

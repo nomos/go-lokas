@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/promise"
 )
 
@@ -39,7 +38,7 @@ func (this *ConfObject) CheckLine(line *LineText)bool {
 		this.file.(*ConfFile).Recursive = recurStr>0
 		return true
 	}
-	log.Panic("parse ConfObject error")
+	this.GetLogger().Panic("parse ConfObject error")
 	return false
 }
 
@@ -63,14 +62,14 @@ func NewConfFile(generator *Generator)*ConfFile {
 func (this *ConfFile) Parse()*promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset,success:=this.parseConfObject(0,nil)
-		log.Infof("parseConf",offset,success)
+		this.GetLogger().Infof("parseConf",offset,success)
 		resolve(nil)
 	})
 }
 
 func (this *ConfFile) parseConfObject(num int,lastObj GeneratorObject) (int,bool) {
 	if num > len(this.Lines)-1 {
-		log.Warn("reach end of file")
+		this.GetLogger().Warn("reach end of file")
 		return num, lastObj != nil
 	}
 	line := this.Lines[num]

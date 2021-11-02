@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/promise"
 	"strings"
 )
@@ -68,9 +67,9 @@ func (this *GoImportObject) CheckLine(line *LineText) bool {
 			this.state = 0
 			return true
 		}
-		log.Panic("parse GoImportObject error")
+		this.GetLogger().Panic("parse GoImportObject error")
 	}
-	log.Panic("parse GoPackageObject error")
+	this.GetLogger().Panic("parse GoPackageObject error")
 	return false
 }
 
@@ -114,7 +113,7 @@ func (this *GoInterfaceObject) CheckLine(line *LineText) bool {
 	} else if this.state == 2 {
 		return false
 	}
-	log.Panicf("parse GoInterfaceObject Error", this.state)
+	this.GetLogger().Panicf("parse GoInterfaceObject Error", this.state)
 	return false
 }
 
@@ -206,7 +205,7 @@ func (this *GoStructObject) CheckLine(line *LineText) bool {
 	} else if this.state == 2 {
 		return false
 	}
-	log.Panicf("parse GoStructObject Error", this.state)
+	this.GetLogger().Panicf("parse GoStructObject Error", this.state)
 	return false
 }
 
@@ -242,11 +241,11 @@ func (this *GoFuncObject) CheckLine(line *LineText) bool {
 		if this.TryAddLine(line, LINE_ANY) {
 			return true
 		}
-		log.Panic("parse GoFuncObject Body error")
+		this.GetLogger().Panic("parse GoFuncObject Body error")
 	} else if this.state == 2 {
 		return false
 	}
-	log.Panic("parse GoFuncObject error")
+	this.GetLogger().Panic("parse GoFuncObject error")
 	return false
 }
 
@@ -282,11 +281,11 @@ func (this *GoStructFuncObject) CheckLine(line *LineText) bool {
 		if this.TryAddLine(line, LINE_ANY) {
 			return true
 		}
-		log.Panic("parse GoStructFuncObject Body error")
+		this.GetLogger().Panic("parse GoStructFuncObject Body error")
 	} else if this.state == 2 {
 		return false
 	}
-	log.Panic("parse GoStructFuncObject error")
+	this.GetLogger().Panic("parse GoStructFuncObject error")
 	return false
 }
 
@@ -357,11 +356,11 @@ func (this *GoVarObject) CheckLine(line *LineText) bool {
 		if this.TryAddLine(line, LINE_GO_ENUM_VARIABLE) {
 			return true
 		}
-		log.Panic("parse GoEnumObject Body error")
+		this.GetLogger().Panic("parse GoEnumObject Body error")
 	} else if this.state == 2 {
 		return false
 	}
-	log.Panic("parse GoVarObject error")
+	this.GetLogger().Panic("parse GoVarObject error")
 	return false
 }
 
@@ -429,11 +428,11 @@ func (this *GoEnumObject) CheckLine(line *LineText) bool {
 			line.Type = this.lastType
 			return true
 		}
-		log.Panic("parse GoEnumObject Body error")
+		this.GetLogger().Panic("parse GoEnumObject Body error")
 	} else if this.state == 3 {
 		return false
 	}
-	log.Panic("parse GoEnumObject error")
+	this.GetLogger().Panic("parse GoEnumObject error")
 	return false
 }
 
@@ -457,9 +456,9 @@ func (this *GoModelFile) Generate() *promise.Promise {
 func (this *GoModelFile) Parse() *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_GO_PACKAGE)
-		log.Infof("parseGoModelPackage", offset, success)
+		this.GetLogger().Infof("parseGoModelPackage", offset, success)
 		offset, success = this.parse(offset, OBJ_GO_IMPORTS)
-		log.Infof("parseGoImports", offset, success)
+		this.GetLogger().Infof("parseGoImports", offset, success)
 		offset, success = this.parse(offset,
 			OBJ_GO_STRUCT,
 			OBJ_GO_INTERFACE,
@@ -469,7 +468,7 @@ func (this *GoModelFile) Parse() *promise.Promise {
 			OBJ_GO_VAR,
 			OBJ_GO_DEFINE,
 		)
-		log.Infof("parseGoMain finish", offset, success)
+		this.GetLogger().Infof("parseGoMain finish", offset, success)
 		resolve(nil)
 	})
 }

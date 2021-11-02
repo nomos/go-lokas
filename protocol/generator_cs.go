@@ -2,7 +2,6 @@ package protocol
 
 import (
 	"errors"
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/promise"
 	"io/ioutil"
 	"os"
@@ -13,7 +12,7 @@ func (this *Generator) LoadCsFolder(p string) *promise.Promise {
 	this.CsPath = p
 	err:=os.MkdirAll(this.CsPath, os.ModePerm)
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return promise.Reject(nil)
 	}
 	return promise.Resolve(nil)
@@ -22,36 +21,36 @@ func (this *Generator) LoadCsFolder(p string) *promise.Promise {
 func (this *Generator) GenerateModel2Cs()error{
 	err:=this.processModelPackages()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	err = this.generateModel2CsClasses()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	err = this.generateModel2CsEnums()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	err = this.generateModel2CsIds()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	return nil
 }
 
 func (this *Generator) generateModel2CsClasses()error{
-	log.Warnf("CsPath",this.CsPath)
+	this.GetLogger().Warnf("CsPath",this.CsPath)
 	for _,m:=range this.ModelClassObjects {
 		if m.CsPackage=="" {
 			continue
 		}
 		err:=this.generateModel2CsClass(m)
 		if err != nil {
-			log.Error(err.Error())
+			this.GetLogger().Error(err.Error())
 			return err
 		}
 	}
@@ -63,21 +62,21 @@ func (this *Generator) generateModel2CsClass(m *ModelClassObject)error{
 	p+=".cs"
 	err:=ioutil.WriteFile(p, []byte(m.CsString(this)), 0644)
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	return nil
 }
 
 func (this *Generator) generateModel2CsEnums()error{
-	log.Warnf("CsPath",this.CsPath)
+	this.GetLogger().Warnf("CsPath",this.CsPath)
 	for _,m:=range this.ModelEnumObjects {
 		if m.CsPackage=="" {
 			continue
 		}
 		err:=this.generateModel2CsEnum(m)
 		if err != nil {
-			log.Error(err.Error())
+			this.GetLogger().Error(err.Error())
 			return err
 		}
 	}
@@ -89,7 +88,7 @@ func (this *Generator) generateModel2CsEnum(m *ModelEnumObject)error{
 	p+=".cs"
 	err:=ioutil.WriteFile(p, []byte(m.CsString(this)), 0644)
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	return nil
@@ -137,7 +136,7 @@ func (this *Generator) generateModel2CsIds()error{
 		}
 		err:=this.generateModel2CsPackage(p)
 		if err != nil {
-			log.Error(err.Error())
+			this.GetLogger().Error(err.Error())
 			return err
 		}
 	}
@@ -150,7 +149,7 @@ func (this *Generator) generateModel2CsPackage(pack *ModelPackageObject)error{
 	p+=".cs"
 	err:=ioutil.WriteFile(p, []byte(pack.CsString(this)), 0644)
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	return nil

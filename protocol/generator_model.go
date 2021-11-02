@@ -2,7 +2,6 @@ package protocol
 
 import (
 	"errors"
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/promise"
 	"os"
@@ -23,21 +22,21 @@ func (this *Generator) LoadModelFolder(p string) *promise.Promise {
 }
 
 func (this *Generator) LoadModels(p string) error {
-	log.Warnf("LoadModels")
+	this.GetLogger().Warnf("LoadModels")
 	var err error
 	var innerErr error
 	_,err=util.WalkDirFilesWithFunc(p, func(filePath string, file os.FileInfo) bool {
 		if path.Ext(filePath) == ".model" {
-			log.Warnf("filePath", filePath)
+			this.GetLogger().Warnf("filePath", filePath)
 			file := NewModelFile(this)
 			_, innerErr = file.Load(filePath).Await()
 			if innerErr != nil {
-				log.Error(err.Error())
+				this.GetLogger().Error(err.Error())
 				return true
 			}
 			_, innerErr = file.Parse().Await()
 			if innerErr != nil {
-				log.Error(err.Error())
+				this.GetLogger().Error(err.Error())
 				return true
 			}
 			this.Models[filePath] = file
@@ -45,14 +44,14 @@ func (this *Generator) LoadModels(p string) error {
 		return false
 	}, true)
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	if innerErr != nil {
-		log.Error(innerErr.Error())
+		this.GetLogger().Error(innerErr.Error())
 		return innerErr
 	}
-	log.Warnf("load "+strconv.Itoa(len(this.Models))+" models")
+	this.GetLogger().Warnf("load "+strconv.Itoa(len(this.Models))+" models")
 	return nil
 }
 
@@ -79,7 +78,7 @@ func (this *Generator) processModelObjects() error{
 	defer func() {
 		r:=recover()
 		if err,ok:=r.(error);ok {
-			log.Error(err.Error())
+			this.GetLogger().Error(err.Error())
 		}
 	}()
 	ret2 := make(map[uint16]*ModelId)
@@ -115,7 +114,7 @@ func (this *Generator) processModelObjects() error{
 	this.ModelEnumObjects = ret3
 	for idx,ids:=range this.ModelIdsObjects {
 		for _,v:=range this.ModelClassObjects {
-			log.Warnf(ids.Name,v.ClassName)
+			this.GetLogger().Warnf(ids.Name,v.ClassName)
 			if ids.Name==v.ClassName {
 				v.TagId = BINARY_TAG(idx)
 				ids.ClassObj = v
@@ -125,16 +124,16 @@ func (this *Generator) processModelObjects() error{
 			}
 		}
 	}
-	log.Warnf("ModelIdsObjects", this.ModelIdsObjects)
-	log.Warnf("ModelClassObjects", this.ModelClassObjects)
-	log.Warnf("ModelEnumObjects", this.ModelEnumObjects)
+	this.GetLogger().Warnf("ModelIdsObjects", this.ModelIdsObjects)
+	this.GetLogger().Warnf("ModelClassObjects", this.ModelClassObjects)
+	this.GetLogger().Warnf("ModelEnumObjects", this.ModelEnumObjects)
 	return nil
 }
 
 func (this *Generator) processModelPackages()error{
 	err:=this.processModelObjects()
 	if err != nil {
-		log.Error(err.Error())
+		this.GetLogger().Error(err.Error())
 		return err
 	}
 	for _,m:=range this.Models {
@@ -163,7 +162,7 @@ func (this *Generator) processModelPackages()error{
 		for _,p:=range imports {
 			pa,ok:=this.ModelPackages[p]
 			if !ok {
-				log.Error(err.Error())
+				this.GetLogger().Error(err.Error())
 				return errors.New("cant found pack name:"+p)
 			}
 			importPacks = append(importPacks, pa)

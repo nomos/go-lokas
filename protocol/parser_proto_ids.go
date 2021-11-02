@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/promise"
 	"strconv"
 )
@@ -39,7 +38,7 @@ func (this *ProtoIdsObj) CheckLine(line *LineText) bool {
 	} else if this.state == 1 {
 		return false
 	}
-	log.Panic("parse ProtoIdsObj error")
+	this.GetLogger().Panic("parse ProtoIdsObj error")
 	return false
 }
 
@@ -77,12 +76,12 @@ func (this *ProtoIdsFile) AddId(s string,id int) {
 func (this *ProtoIdsFile) Parse() *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0,OBJ_PROTO_PACKAGE)
-		log.Warnf("parseProtoPackage", offset, success)
+		this.GetLogger().Warnf("parseProtoPackage", offset, success)
 		offset, success = this.parse(offset, OBJ_COMMENT,OBJ_PROTO_IDS)
 		//offset, success = this.parseGoImports(offset, nil)
-		//log.Warnf("parseGoImports", offset, success)
+		//this.GetLogger().Warnf("parseGoImports", offset, success)
 		//offset, success = this.parseGoMain(offset, nil)
-		//log.Warnf("parseGoMain finish", offset, success)
+		//this.GetLogger().Warnf("parseGoMain finish", offset, success)
 		resolve(nil)
 	})
 }

@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/promise"
 )
 
@@ -62,7 +61,7 @@ func (this *TsVarObject) CheckLine(line *LineText) bool {
 		if this.TryAddLine(line, LINE_ANY) {
 			return true
 		}
-		log.Panic("parse TsVarObject error")
+		this.GetLogger().Panic("parse TsVarObject error")
 	} else if this.state == 2 {
 		if this.TryAddLine(line, LINE_EMPTY) {
 			return true
@@ -77,11 +76,11 @@ func (this *TsVarObject) CheckLine(line *LineText) bool {
 		if this.TryAddLine(line, LINE_ANY) {
 			return true
 		}
-		log.Panic("parse TsVarObject error")
+		this.GetLogger().Panic("parse TsVarObject error")
 	} else if this.state == 3 {
 		return false
 	}
-	log.Panic("parse TsVarObject error")
+	this.GetLogger().Panic("parse TsVarObject error")
 	return false
 }
 
@@ -118,11 +117,11 @@ func (this *TsFuncObject) CheckLine(line *LineText) bool {
 		if this.TryAddLine(line, LINE_ANY) {
 			return true
 		}
-		log.Panic("parse TsFuncObject error")
+		this.GetLogger().Panic("parse TsFuncObject error")
 	} else if this.state == 2 {
 		return false
 	}
-	log.Panic("parse TsFuncObject error")
+	this.GetLogger().Panic("parse TsFuncObject error")
 	return false
 }
 
@@ -234,7 +233,7 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 			this.state = TS_CLASSOBJ_HEADER
 			return true
 		}
-		log.Panicf("parse TsClassObject error")
+		this.GetLogger().Panicf("parse TsClassObject error")
 	} else if this.state == TS_CLASSOBJ_MEMBER_FIELD {
 		if this.TryAddLine(line, LINE_EMPTY) {
 			return true
@@ -319,7 +318,7 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 		if this.TryAddLine(line, LINE_ANY) {
 			return true
 		}
-		log.Panic("parse TsClassObject TS_CLASSOBJ_CONSTRUCTOR error")
+		this.GetLogger().Panic("parse TsClassObject TS_CLASSOBJ_CONSTRUCTOR error")
 	} else if this.state == TS_CLASSOBJ_FUNCTION {
 		if this.TryAddLine(line, LINE_EMPTY) {
 			return true
@@ -338,7 +337,7 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 	} else if this.state == TS_CLASSOBJ_CLASS_END {
 		return true
 	}
-	log.Panic("parse TsClassObject error")
+	this.GetLogger().Panic("parse TsClassObject error")
 	return false
 }
 
@@ -385,9 +384,9 @@ func (this *TsImportObject) CheckLine(line *LineText) bool {
 			this.state = 0
 			return true
 		}
-		log.Panic("parse TsImportObject error")
+		this.GetLogger().Panic("parse TsImportObject error")
 	}
-	log.Panic("parse TsImportObject error")
+	this.GetLogger().Panic("parse TsImportObject error")
 	return false
 }
 
@@ -413,9 +412,9 @@ func (this *TsModelFile) Generate() *promise.Promise {
 func (this *TsModelFile) Parse() *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_TS_IMPORTS)
-		log.Warnf("parseTsImports", offset, success)
+		this.GetLogger().Warnf("parseTsImports", offset, success)
 		offset, success = this.parse(offset, OBJ_COMMENT, OBJ_TS_CLASS, OBJ_TS_FUNC, OBJ_TS_ENUM, OBJ_TS_VAR)
-		log.Warnf("parse TsModelFile Finish")
+		this.GetLogger().Warnf("parse TsModelFile Finish")
 		resolve(nil)
 	})
 }
