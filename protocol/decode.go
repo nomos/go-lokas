@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/util/stringutil"
 	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 	"io"
@@ -462,15 +461,6 @@ func (this *decodeState) readComplex(tag BINARY_TAG, v reflect.Value, t reflect.
 		}
 	}()
 	for index, field := range fields {
-		if t.Field(index).Tag.Get("bt") == "-" {
-			continue
-		}
-		if t.Field(index).Tag.Get("json") == "-" {
-			continue
-		}
-		if !stringutil.StartWithCapital(t.Field(index).Name) {
-			continue
-		}
 		var tag BINARY_TAG
 		if index == 0 {
 			tag = tag0

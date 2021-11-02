@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/util/stringutil"
 	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 	"io"
@@ -477,19 +476,10 @@ func writeComplex(out io.Writer, tag BINARY_TAG, v reflect.Value, t reflect.Type
 	}
 	fields := parseStruct(v, t)
 	w(out, uint8(len(fields)))
-	for index, value := range fields {
-		if t.Field(index).Tag.Get("bt") == "-" {
-			continue
-		}
-		if t.Field(index).Tag.Get("json") == "-" {
-			continue
-		}
-		if !stringutil.StartWithCapital(t.Field(index).Name) {
-			continue
-		}
-		tag, v1, t1 := getTagId(value, t.Field(index).Type)
-		writeTag(out, tag)
-		writeValue(out, tag, v1, t1)
+	for _, value := range fields {
+		tag1, v1, t1 := getTagId(value, value.Type())
+		writeTag(out, tag1)
+		writeValue(out, tag1, v1, t1)
 	}
 	w(out, TAG_End)
 }
@@ -506,6 +496,13 @@ func parseStruct(v reflect.Value, t reflect.Type) []reflect.Value {
 			log.Panic("cannot have anonymous field")
 		}
 		name := f.Name
+
+		if tag := f.Tag.Get("json"); tag =="-" {
+			continue
+		}
+		if tag := f.Tag.Get("bson"); tag =="-" {
+			continue
+		}
 		if tag := f.Tag.Get("bt"); tag != "" {
 			name = tag
 		}

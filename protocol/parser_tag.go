@@ -49,16 +49,16 @@ func init(){
 	tag_model_regexp_map[TAG_String] = regexp.MustCompile(`string`)
 
 	tag_model_regexp_map[TAG_Double] = regexp.MustCompile(`(float64|double)`)
-	tag_model_regexp_map[TAG_BoolArray] = regexp.MustCompile(`(\[\]bool)`)
-	tag_model_regexp_map[TAG_ByteArray] = regexp.MustCompile(`(\[\]uint8|\[\]byte)`)
-	tag_model_regexp_map[TAG_ShortArray] = regexp.MustCompile(`(\[\]int16|\[\]short)`)
-	tag_model_regexp_map[TAG_UShortArray] = regexp.MustCompile(`(\[\]uint16|\[\]ushort)`)
-	tag_model_regexp_map[TAG_IntArray] = regexp.MustCompile(`(\[\]int32|\[\]int)`)
-	tag_model_regexp_map[TAG_UIntArray] = regexp.MustCompile(`(\[\]uint32|\[\]uint)`)
-	tag_model_regexp_map[TAG_LongArray] = regexp.MustCompile(`(\[\]int64|\[\]long)`)
-	tag_model_regexp_map[TAG_ULongArray] = regexp.MustCompile(`(\[\]uint64|\[\]ulong)`)
-	tag_model_regexp_map[TAG_FloatArray] = regexp.MustCompile(`(\[\]float32|\[\]float)`)
-	tag_model_regexp_map[TAG_DoubleArray] = regexp.MustCompile(`(\[\]float64|\[\]double)`)
+	tag_model_regexp_map[TAG_BoolArray] = regexp.MustCompile(`(\[bool\])`)
+	tag_model_regexp_map[TAG_ByteArray] = regexp.MustCompile(`(\[uint8\]|\[byte\])`)
+	tag_model_regexp_map[TAG_ShortArray] = regexp.MustCompile(`(\[int16\]|\[short\])`)
+	tag_model_regexp_map[TAG_UShortArray] = regexp.MustCompile(`(\[uint16\]|\[ushort\])`)
+	tag_model_regexp_map[TAG_IntArray] = regexp.MustCompile(`(\[int32\]|\[int\])`)
+	tag_model_regexp_map[TAG_UIntArray] = regexp.MustCompile(`(\[uint32\]|\[uint\])`)
+	tag_model_regexp_map[TAG_LongArray] = regexp.MustCompile(`(\[int64\]|\[long\])`)
+	tag_model_regexp_map[TAG_ULongArray] = regexp.MustCompile(`(\[uint64\]|\[ulong\])`)
+	tag_model_regexp_map[TAG_FloatArray] = regexp.MustCompile(`(\[float32\]|\[float\])`)
+	tag_model_regexp_map[TAG_DoubleArray] = regexp.MustCompile(`(\[float64\]|\[double\])`)
 	tag_model_regexp_map[TAG_List] = regexp.MustCompile(`\[\s*(\w+)\s*\]`)
 	tag_model_regexp_map[TAG_Map] = regexp.MustCompile(`\{\s*(\w+)\s*[\:|\,]\s*(\w+)\s*\}`)
 	tag_model_regexp_map[TAG_Buffer] = regexp.MustCompile(`(bytes)`)
@@ -104,7 +104,7 @@ func MatchGoSystemTag(s string)(BINARY_TAG,string,string) {
 }
 
 func MatchModelProtoTag(s string)BINARY_TAG {
-	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time}
+	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time,TAG_BoolArray,TAG_ByteArray,TAG_UShortArray,TAG_ShortArray,TAG_UIntArray,TAG_IntArray,TAG_ULongArray,TAG_LongArray}
 	for _,tag:=range protoTagArr {
 		if tag_model_regexp_map[tag].FindString(s) == s {
 			return tag
@@ -114,7 +114,7 @@ func MatchModelProtoTag(s string)BINARY_TAG {
 }
 
 func GetModelProtoTag(s string)BINARY_TAG {
-	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time}
+	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time,TAG_BoolArray,TAG_ByteArray,TAG_UShortArray,TAG_ShortArray,TAG_UIntArray,TAG_IntArray,TAG_ULongArray,TAG_LongArray}
 	for _,tag:=range protoTagArr {
 		if tag_model_regexp_map[tag].FindString(s) == s {
 			return tag

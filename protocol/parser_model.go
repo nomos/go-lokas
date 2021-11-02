@@ -1160,6 +1160,7 @@ func (this *ModelClassFields) TsDefineTags(g *Generator)string{
 	str := "\t[" + `"`
 	str += this.Name + `",`
 	name:=this.Name
+	log.Infof("this.Type",this.Type,this.Name)
 	t:= MatchModelProtoTag(this.Type)
 	if t!=0 {
 		t:=GetModelProtoTag(this.Type)
