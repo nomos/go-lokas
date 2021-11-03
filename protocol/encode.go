@@ -246,10 +246,16 @@ func getListTypeByType(t reflect.Type) BINARY_TAG {
 	case reflect.Map:
 		return TAG_Map
 	case reflect.Struct:
+		if id,err:=GetTypeRegistry().GetTagByType(t.Elem());err==nil {
+			return id
+		}
 		return TAG_Proto
 	case reflect.Interface:
 		switch t.Elem().Elem().Kind() {
 		case reflect.Struct:
+			if id,err:=GetTypeRegistry().GetTagByType(t.Elem().Elem());err==nil {
+				return id
+			}
 			return TAG_Proto
 		default:
 			log.Panic("non struct interface")
@@ -257,6 +263,9 @@ func getListTypeByType(t reflect.Type) BINARY_TAG {
 	case reflect.Ptr:
 		switch t.Elem().Elem().Kind() {
 		case reflect.Struct:
+			if id,err:=GetTypeRegistry().GetTagByType(t.Elem().Elem());err==nil {
+				return id
+			}
 			return TAG_Proto
 		default:
 			log.Panic("non struct ptr2")
@@ -471,7 +480,7 @@ func writeMap(out io.Writer, v reflect.Value, t reflect.Type) {
 
 func writeComplex(out io.Writer, tag BINARY_TAG, v reflect.Value, t reflect.Type) {
 	if v.Kind() == reflect.Invalid {
-		w(out, uint16(0))
+		w(out, uint8(0))
 		w(out, TAG_End)
 		return
 	}
