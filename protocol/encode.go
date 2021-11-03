@@ -59,7 +59,6 @@ func MarshalBinaryMessage(transId uint32, data interface{}) (ret []byte, err err
 		}
 	}()
 	writeBinaryMessage(&out, transId, data)
-	log.Infof("LLLLLLL",out.Len())
 	if out.Len() > 65536 {
 		ret = out.Bytes()
 		binary.LittleEndian.PutUint16(ret[0:2], uint16(0))
