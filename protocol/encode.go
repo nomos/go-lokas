@@ -59,6 +59,7 @@ func MarshalBinaryMessage(transId uint32, data interface{}) (ret []byte, err err
 		}
 	}()
 	writeBinaryMessage(&out, transId, data)
+	log.Infof("LLLLLLL",out.Len())
 	if out.Len() > 65536 {
 		ret = out.Bytes()
 		binary.LittleEndian.PutUint16(ret[0:2], uint16(0))
@@ -429,8 +430,8 @@ func writeList(out io.Writer, v reflect.Value, t reflect.Type) {
 	w(out, uint32(v.Len()))
 
 	for i := 0; i < v.Len(); i++ {
-		tag, v1, t1 := getTagId(v.Index(i), t.Elem())
-		writeValue(out, tag, v1, t1)
+		t0, v1, t1 := getTagId(v.Index(i), t.Elem())
+		writeValue(out, t0, v1, t1)
 	}
 }
 
