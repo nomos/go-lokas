@@ -57,6 +57,7 @@ func EtcdFile(etcdPath string, addr string) ConfigOption {
 func NewAppConfig(name string, opts ...ConfigOption) *AppConfig {
 	ret := &AppConfig{}
 	ret.name = name
+	ret.fromFile = true
 	ret.root = ""
 	for _, opt := range opts {
 		ret = opt(ret)
