@@ -16,6 +16,7 @@ const (
 	TAG_CREATE_AVATAR = 137
 	TAG_KICK_AVATAR = 138
 	TAG_RESPONSE = 140
+	TAG_CONSOLE_EVENT = 221
 )
 
 func init() {
@@ -30,5 +31,6 @@ func init() {
 	protocol.GetTypeRegistry().RegistryType(TAG_Avatar,reflect.TypeOf((*Avatar)(nil)).Elem())
 	protocol.GetTypeRegistry().RegistryType(TAG_AdminCmd,reflect.TypeOf((*AdminCommand)(nil)).Elem())
 	protocol.GetTypeRegistry().RegistryType(TAG_AdminCmdResult,reflect.TypeOf((*AdminCommandResult)(nil)).Elem())
+	protocol.GetTypeRegistry().RegistryType(TAG_CONSOLE_EVENT,reflect.TypeOf((*ConsoleEvent)(nil)).Elem())
 }
 
