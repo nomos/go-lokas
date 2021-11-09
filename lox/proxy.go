@@ -7,9 +7,9 @@ import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/network/tcp"
-	"github.com/nomos/go-lokas/util/promise"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
+	"github.com/nomos/go-lokas/util/promise"
 	"sync"
 	"time"
 )
@@ -243,6 +243,8 @@ func (this *Proxy) Send(id util.ProcessId,msg *protocol.RouteMessage)error{
 		//	log.Error(err.Error())ss
 		//	return err
 		//}
+		//TODO
+		return nil
 	}
 	data,_:=msg.Marshal()
 	_,err := sess.Conn.Write(data)
