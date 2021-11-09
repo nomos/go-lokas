@@ -15,7 +15,7 @@ type AdminCommand struct {
 }
 
 func (this *AdminCommand) GetId()(protocol.BINARY_TAG,error){
-	return TAG_AdminCmd,nil
+	return TAG_ADMIN_CMD,nil
 }
 
 func (this *AdminCommand) Serializable()protocol.ISerializable {
