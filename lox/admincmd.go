@@ -72,7 +72,7 @@ func NewAdminCommandResult(cmd *AdminCommand,success bool,data []byte)*AdminComm
 }
 
 func (this *AdminCommandResult) GetId()(protocol.BINARY_TAG,error){
-	return TAG_AdminCmdResult,nil
+	return TAG_ADMIN_CMD_RESULT,nil
 }
 
 func (this *AdminCommandResult) Serializable()protocol.ISerializable {
