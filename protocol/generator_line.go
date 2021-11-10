@@ -511,6 +511,11 @@ func (this *LineText) IsLongStringTag() bool {
 	return regexp.MustCompile(`Tag[.]LongString`).MatchString(removeComment)
 }
 
+func (this *LineText) IsBufferTag() bool {
+	removeComment := COMMENT_REGEXP.ReplaceAllString(this.Text, "$1")
+	return regexp.MustCompile(`Tag[.]Buffer`).MatchString(removeComment)
+}
+
 func (this *LineText) Parse() string {
 	this.Text = this.Text
 	switch this.LineType {

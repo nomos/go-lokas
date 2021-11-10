@@ -269,11 +269,15 @@ func (this *Generator) regenTsClass(schema *ModelClassObject, tsClass *TsClassOb
 	this.GetLogger().Info(tsClass.String())
 }
 
+
 func (this *Generator) regenTsClassField(schema *ModelClassObject, tsClass *TsClassObject) {
 	for _, body := range schema.Fields {
 		member := tsClass.GetClassMember(body.Name)
 		if member != nil {
 			if member.IsPublic {
+				if member.Type=="ByteBuffer" &&body.TsPublicType(this)=="number[]" {
+					continue
+				}
 				if member.Type != body.TsPublicType(this) {
 					this.GetLogger().Warnf(member.Type, body.TsPublicType(this), member.Name)
 
@@ -350,7 +354,7 @@ func (this *Generator) genTsClassDefine(schema *ModelClassObject, tsClass *TsCla
 			Text:     schema.TsDefineStart(this),
 			LineType: LINE_TS_DEFINE_START,
 		})
-		bodyTexts := schema.TsDefineLines(this)
+		bodyTexts := schema.TsDefineLines(this,tsClass)
 		for _, bodyText := range bodyTexts {
 			line = tsClass.InsertAfter(&LineText{
 				Obj:      tsClass,

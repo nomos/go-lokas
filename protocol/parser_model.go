@@ -1187,7 +1187,7 @@ func (this *ModelClassFields) CsString(g *Generator)string {
 	return "\t\tpublic "+this.csString(g,false)+"{ get;set; }"+" "+this.Comment
 }
 
-func (this *ModelClassFields) TsDefineTags(g *Generator)string{
+func (this *ModelClassFields) TsDefineTags(g *Generator, tsClass *TsClassObject)string{
 	str := "\t[" + `"`
 	str += this.Name + `",`
 	name:=this.Name
@@ -1229,6 +1229,12 @@ func (this *ModelClassFields) TsDefineTags(g *Generator)string{
 		str+=TAG_Int.TsTagString()
 	} else {
 		str+=name
+	}
+	if tsClass.CheckBuffer(this.Name) {
+		str+=`,Tag.Buffer`
+	}
+	if tsClass.CheckLongString(this.Name) {
+		str+=`,Tag.LongString`
 	}
 	str+="],"
 	return str
@@ -1376,10 +1382,10 @@ func NewModelClassObject(file GeneratorFile) *ModelClassObject {
 	return ret
 }
 
-func (this *ModelClassObject) TsDefineLines(g *Generator) []string {
+func (this *ModelClassObject) TsDefineLines(g *Generator, tsClass *TsClassObject) []string {
 	ret := make([]string, 0)
 	for _, field := range this.Fields {
-		str:=field.TsDefineTags(g)
+		str:=field.TsDefineTags(g,tsClass)
 		ret = append(ret,str)
 	}
 	return ret

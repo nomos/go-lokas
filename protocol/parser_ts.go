@@ -143,6 +143,7 @@ type TsClassObject struct {
 	IsSerializable bool
 	members        []*TsClassMember
 	LongStringTag  map[string]bool
+	BufferTag  map[string]bool
 
 }
 
@@ -151,6 +152,7 @@ func NewTsClassObject(file GeneratorFile) *TsClassObject {
 		DefaultGeneratorObj: DefaultGeneratorObj{},
 		members: []*TsClassMember{},
 		LongStringTag: map[string]bool{},
+		BufferTag: map[string]bool{},
 	}
 	ret.DefaultGeneratorObj.init(OBJ_TS_CLASS, file)
 	return ret
@@ -179,6 +181,11 @@ func (this *TsClassObject) IsModel() bool {
 
 func (this *TsClassObject) CheckLongString(mName string)bool{
 	_,ok:=this.LongStringTag[mName]
+	return ok
+}
+
+func (this *TsClassObject) CheckBuffer(mName string)bool{
+	_,ok:=this.BufferTag[mName]
 	return ok
 }
 
@@ -224,6 +231,9 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 			return true
 		}
 		if this.TryAddLine(line, LINE_TS_DEFINE_OBJ) {
+			if line.IsBufferTag() {
+				this.BufferTag[line.GetName()] = true
+			}
 			if line.IsLongStringTag() {
 				this.LongStringTag[line.GetName()] = true
 			}
