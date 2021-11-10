@@ -151,6 +151,30 @@ namespace {CsPackageName}
 	return ret
 }
 
+func (this *ModelPackageObject) TsErrorString(g *Generator)string{
+	if len(this.Errors)==0 {
+		return ""
+	}
+	ret:=`
+var (
+`
+	ids:=make([]*ModelError,0)
+	for _,v:=range this.Errors {
+		ids = append(ids, v)
+	}
+	sort.Slice(ids, func(i, j int) bool {
+		return ids[i].ErrorId<ids[j].ErrorId
+	})
+	for _,id:=range ids {
+		ret+="\t"
+		ret+=id.GoString(g)
+		ret+="\n"
+	}
+	ret+=`)
+`
+	return ret
+}
+
 func (this *ModelPackageObject) GoErrorString(g *Generator)string{
 	if len(this.Errors)==0 {
 		return ""
@@ -414,6 +438,13 @@ type ModelError struct {
 	ErrorText string
 	PackageName string
 }
+
+
+func (this *ModelError) TsString(g *Generator)string{
+	ret := "\texport const "+"ERR_"+stringutil.SplitCamelCaseUpperSnake(this.ErrorName)+` = new ErrMsg(`+strconv.Itoa(this.ErrorId)+`,"`+this.ErrorText+`")`
+	return ret
+}
+
 
 func (this *ModelError) GoString(g *Generator)string{
 	ret := `{ErrorName}     = protocol.CreateError({Id}, "{Text}")`

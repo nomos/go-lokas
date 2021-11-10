@@ -79,6 +79,9 @@ const (
 	LINE_TS_DEFINE_OBJ
 	LINE_TS_DEFINE_END
 
+	LINE_TS_ERRORS_HEADER
+	LINE_TS_ERRORS_FIELD
+
 	LINE_TS_INIT_FUNC_HEADER
 	LINE_TS_INIT_FUNC_COCOS
 	LINE_TS_INIT_FUNC_END
@@ -226,6 +229,8 @@ func init() {
 	line_string[LINE_TS_DEFINE_START] = "LINE_TS_DEFINE_START"
 	line_string[LINE_TS_DEFINE_OBJ] = "LINE_TS_DEFINE_OBJ"
 	line_string[LINE_TS_DEFINE_END] = "LINE_TS_DEFINE_END"
+	line_string[LINE_TS_ERRORS_HEADER] = "LINE_TS_ERRORS_HEADER"
+	line_string[LINE_TS_ERRORS_FIELD] = "LINE_TS_ERRORS_FIELD"
 	line_string[LINE_TS_INIT_FUNC_HEADER] = "LINE_TS_INIT_FUNC_HEADER"
 	line_string[LINE_TS_INIT_FUNC_COCOS] = "LINE_TS_INIT_FUNC_COCOS"
 	line_string[LINE_TS_INIT_FUNC_END] = "LINE_TS_INIT_FUNC_END"
@@ -376,6 +381,15 @@ func init() {
 	line_regexp_map[LINE_TS_DEFINE_OBJ] = regexp.MustCompile(`\s*\[\s*"\s*(\w+)\s*"\s*(,(\w|[.])+)+\]\s*[,]\s*`)
 	line_regexp_replace_name[LINE_TS_DEFINE_OBJ] = "$1"
 	line_regexp_map[LINE_TS_DEFINE_END] = regexp.MustCompile(`\]\s*([,]["]\s*\w+\s*["])*\s*\)\s*`)
+
+
+	line_regexp_map[LINE_TS_ERRORS_HEADER] = regexp.MustCompile(`export\s+namespace\s+(\w+)\s+\{\s*`)
+	line_regexp_replace_pkg[LINE_MODEL_PACKAGE] = "$1"
+	line_regexp_map[LINE_TS_ERRORS_FIELD] = regexp.MustCompile(`\s+export\s+const\s+(\w+)\s+\=\s+new\s+ErrMsg\s*\(\s*(([0-9]|[-])+)\,\"(.+)\"\s*\)\s*`)
+	line_regexp_replace_name[LINE_MODEL_PACKAGE] = "$1"
+	line_regexp_replace_value[LINE_MODEL_PACKAGE] = "$2"
+	line_regexp_replace_tag_name[LINE_MODEL_PACKAGE] = "$4"
+
 	line_regexp_map[LINE_TS_INIT_FUNC_HEADER] = regexp.MustCompile(`\(\s*function\s*(reg)*\s*\(\s*\)\s*\{\s*`)
 	line_regexp_map[LINE_TS_INIT_FUNC_COCOS] = regexp.MustCompile(`(\s*if\s*\(CC_EDITOR\)\s*[{]\s*)|(\s*return[;]?\s*)|(\s*[}]\s*)`)
 	line_regexp_map[LINE_TS_INIT_FUNC_END] = regexp.MustCompile(`\}\)\(\)\s*`)

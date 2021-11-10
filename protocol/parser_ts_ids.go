@@ -59,6 +59,56 @@ func (this *TsIdsObject) CheckLine(line *LineText) bool {
 	return false
 }
 
+
+type TsErrorsObject struct {
+	DefaultGeneratorObj
+}
+
+func NewTsErrorsObject(file GeneratorFile) *TsErrorsObject {
+	ret := &TsErrorsObject{
+		DefaultGeneratorObj: DefaultGeneratorObj{},
+	}
+	ret.DefaultGeneratorObj.init(OBJ_TS_ERRORS, file)
+	return ret
+}
+
+func (this *TsErrorsObject) CheckLine(line *LineText) bool {
+
+	if this.state == 0 {
+		if this.TryAddLine(line, LINE_EMPTY) {
+			return true
+		}
+		if this.TryAddLine(line, LINE_COMMENT) {
+			return true
+		}
+		if this.TryAddLine(line, LINE_TS_ERRORS_HEADER) {
+			this.state = 1
+			return true
+		}
+		return false
+	} else if this.state == 1 {
+		if this.TryAddLine(line, LINE_EMPTY) {
+			return true
+		}
+		if this.TryAddLine(line, LINE_COMMENT) {
+			return true
+		}
+
+		if this.TryAddLine(line, LINE_TS_ERRORS_FIELD) {
+			return true
+		}
+		if this.TryAddLine(line, LINE_CLOSURE_END) {
+			this.state = 2
+			return true
+		}
+		this.GetLogger().Panic("parse TsErrorsObject error")
+	} else if this.state == 2 {
+		return false
+	}
+	this.GetLogger().Panic("parse TsErrorsObject error")
+	return false
+}
+
 type TsIdsFile struct {
 	*DefaultGeneratorFile
 }
@@ -80,7 +130,7 @@ func (this *TsIdsFile) Parse() *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_TS_IMPORTS)
 		this.GetLogger().Infof("parseTsImports", offset, success)
-		offset, success = this.parse(offset, OBJ_TS_IDS, OBJ_EMPTY)
+		offset, success = this.parse(offset, OBJ_TS_ERRORS,OBJ_TS_IDS, OBJ_EMPTY)
 		this.GetLogger().Infof("parseTsIds", offset, success)
 		//offset, success = this.parseGoMain(offset, nil)
 		//this.GetLogger().Warnf("parseGoMain finish", offset, success)

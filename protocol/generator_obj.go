@@ -28,6 +28,7 @@ const (
 	OBJ_TS_FUNC
 	OBJ_TS_ENUM
 	OBJ_TS_IDS
+	OBJ_TS_ERRORS
 
 	OBJ_MODEL_PACKAGE
 	OBJ_MODEL_IMPORTS
@@ -71,6 +72,7 @@ func init(){
 	obj_string_map[OBJ_TS_FUNC] = "OBJ_TS_FUNC"
 	obj_string_map[OBJ_TS_ENUM] = "OBJ_TS_ENUM"
 	obj_string_map[OBJ_TS_IDS] = "OBJ_TS_IDS"
+	obj_string_map[OBJ_TS_ERRORS] = "OBJ_TS_ERRORS"
 
 	obj_string_map[OBJ_MODEL_PACKAGE] = "OBJ_MODEL_PACKAGE"
 	obj_string_map[OBJ_MODEL_IMPORTS] = "OBJ_MODEL_IMPORTS"
@@ -362,6 +364,8 @@ func (this ObjectType) Create(file GeneratorFile)GeneratorObject  {
 		return NewTsEnumObject(file)
 	case OBJ_TS_IDS:
 		return NewTsIdsObject(file)
+	case OBJ_TS_ERRORS:
+		return NewTsErrorsObject(file)
 
 	case OBJ_MODEL_PACKAGE:
 		return NewModelPackageObject(file)

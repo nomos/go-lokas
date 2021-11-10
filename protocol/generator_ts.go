@@ -129,7 +129,36 @@ func (this *Generator) generateModel2TsIds() error {
 		obj.RemoveLineType(LINE_EMPTY)
 		strs += obj.String()
 	}
+
+	packName:=""
+	for _, p := range this.ModelPackages {
+		if p.TsPackageName == "" {
+			continue
+		}
+		packName = p.TsPackageName
+	}
+
+	errIds := []*ModelError{}
+	for _, p := range this.ModelPackages {
+		if p.TsPackageName == "" {
+			continue
+		}
+		for _, id := range p.Errors {
+			errIds = append(errIds, id)
+		}
+	}
+	sort.Slice(errIds, func(i, j int) bool {
+		return errIds[i].ErrorId < errIds[j].ErrorId
+	})
 	strs += "\n"
+	strs += "export namespace "+packName+" {"
+
+	for _, id := range errIds {
+		strs+="\n"
+		strs += id.TsString(this)
+	}
+	strs+="\n"
+	strs+="}\n\n"
 	strs += "(function () {\n"
 	strs += "\tif (CC_EDITOR) {\n"
 	strs += "\t\treturn;\n"
