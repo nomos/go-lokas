@@ -449,8 +449,12 @@ func writeMap(out io.Writer, v reflect.Value, t reflect.Type) {
 	switch keyKind {
 	case reflect.String:
 		writeTag(out, TAG_String)
-	case reflect.Int:
+	case reflect.Int32:
 		writeTag(out, TAG_Int)
+	case reflect.Uint32:
+		writeTag(out, TAG_UInt)
+	case reflect.Int:
+		writeTag(out, TAG_Long)
 	case reflect.Int64:
 		writeTag(out, TAG_Long)
 	default:
