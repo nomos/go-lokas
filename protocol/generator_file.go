@@ -148,6 +148,7 @@ func (this *DefaultGeneratorFile) load(path string) error {
 	lineNo := 0
 	for {
 		line, err := buf.ReadString('\n')
+		line = strings.ReplaceAll(line,"\r","")
 		line = strings.TrimRight(line, "\n")
 		//line = strings.TrimSpace(line)
 		this.Lines = append(this.Lines, &LineText{
