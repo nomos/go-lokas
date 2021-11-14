@@ -404,6 +404,7 @@ func (this *decodeState) readValue(tag BINARY_TAG, v reflect.Value, t reflect.Ty
 				case TAG_String:
 					keyValue = reflect.ValueOf(this.readString())
 				case TAG_Int, TAG_Long:
+					keyValue = reflect.New(v.Type().Key()).Elem()
 					this.readBaseValue(keyTag, keyValue)
 				}
 				t1 := v.Type().Elem()

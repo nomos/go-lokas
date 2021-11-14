@@ -453,8 +453,6 @@ func writeMap(out io.Writer, v reflect.Value, t reflect.Type) {
 		writeTag(out, TAG_Int)
 	case reflect.Uint32:
 		writeTag(out, TAG_UInt)
-	case reflect.Int:
-		writeTag(out, TAG_Long)
 	case reflect.Int64:
 		writeTag(out, TAG_Long)
 	default:
@@ -471,7 +469,7 @@ func writeMap(out io.Writer, v reflect.Value, t reflect.Type) {
 		switch keyKind {
 		case reflect.String:
 			writeString(out, key.String())
-		case reflect.Int, reflect.Int64:
+		case reflect.Uint32,reflect.Int32, reflect.Int64:
 			writeBaseValue(out, key, keyKind)
 		default:
 			log.Panic(fmt.Sprintf("illegal key type %v", keyKind))
