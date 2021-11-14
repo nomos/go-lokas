@@ -278,11 +278,11 @@ func (this *Generator) regenTsClassField(schema *ModelClassObject, tsClass *TsCl
 				if member.Type=="ByteBuffer" &&body.TsPublicType(this)=="number[]" {
 					continue
 				}
-				if member.Type != body.TsPublicType(this) {
+				if member.Type != strings.TrimRight(body.TsPublicType(this)," ") {
 					this.GetLogger().Warnf(member.Type, body.TsPublicType(this), member.Name)
 
 				}
-				if member.Type == body.TsPublicType(this) {
+				if member.Type == strings.TrimRight(body.TsPublicType(this)," ") {
 					continue
 				}
 				member.Line.Text = body.TsPublicString(this)
