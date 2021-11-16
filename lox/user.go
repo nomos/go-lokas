@@ -38,6 +38,7 @@ type User struct {
 	Id      util.ID `bson:"_id"`
 	Role    uint32
 	Avatars map[string]util.ID
+	AgentsParams map[string]string
 	Token string
 	RefreshToken string
 	UserName string
