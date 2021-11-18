@@ -65,7 +65,7 @@ func init(){
 	system_ts_types[TAG_ULongArray] = "number[]"
 	system_ts_types[TAG_FloatArray] = "number[]"
 	system_ts_types[TAG_DoubleArray] = "number[]"
-	system_ts_types[TAG_Buffer] = "ByteBuffer"
+	system_ts_types[TAG_Buffer] = "Uint8Array"
 	system_ts_types[TAG_Time] = "Date"
 	system_ts_types[TAG_Decimal] = "bigDecimal"
 

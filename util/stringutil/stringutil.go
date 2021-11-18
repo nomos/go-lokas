@@ -204,6 +204,11 @@ func CopyString(str string)string {
 	return string(data1)
 }
 
+
+func TrimEnd(str string)string {
+	return regexp.MustCompile(`[\s*|\r|\n]*$`).ReplaceAllString(str,"")
+}
+
 func SplitCamelCase(src string) []string {
 	// don't split invalid utf8
 	if !utf8.ValidString(src) {

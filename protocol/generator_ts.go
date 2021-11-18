@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/promise"
 	"github.com/nomos/go-lokas/util/stringutil"
@@ -229,6 +230,8 @@ func (this *Generator) generateModel2TsClasses() error {
 		for _, obj := range modelFile.Objects {
 			strs += obj.String()
 		}
+
+		strs = stringutil.TrimEnd(strs)
 		p := path.Join(this.TsPath, modelFile.Package+"_"+stringutil.SplitCamelCaseLowerSnake(modelFile.ClassName))
 		p += ".ts"
 		ioutil.WriteFile(p, []byte(strs), 0644)
@@ -275,7 +278,7 @@ func (this *Generator) regenTsClassField(schema *ModelClassObject, tsClass *TsCl
 		member := tsClass.GetClassMember(body.Name)
 		if member != nil {
 			if member.IsPublic {
-				if member.Type=="ByteBuffer" &&body.TsPublicType(this)=="number[]" {
+				if member.Type=="Uint8Array" &&body.TsPublicType(this)=="number[]" {
 					continue
 				}
 				if member.Type != strings.TrimRight(body.TsPublicType(this)," ") {
@@ -435,7 +438,7 @@ func (this *Generator) generateModel2TsEnums() error {
 	//strs += "\n"
 	for _, enum := range this.ModelEnumObjects {
 		name:=stringutil.SplitCamelCaseLowerSnake(enum.EnumName)
-		err := ioutil.WriteFile(path.Join(this.TsPath,"enum_"+name+".ts"), []byte(enum.TsString(this)), 0644)
+		err := ioutil.WriteFile(path.Join(this.TsPath,"enum_"+name+".ts"), []byte(stringutil.TrimEnd(enum.TsString(this))), 0644)
 		if err != nil {
 			this.GetLogger().Error(err.Error())
 			return err
