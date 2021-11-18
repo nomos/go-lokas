@@ -121,7 +121,7 @@ func (this *Generator) LoadAndParseTsFile(modelsPath string) (*TsModelFile, erro
 }
 
 func (this *Generator) generateModel2TsIds() error {
-	this.GetLogger().Error("generateModel2TsIds")
+	this.GetLogger().Info("generateModel2TsIds")
 	this.LoadTsIds(this.TsPath)
 	strs := auto_gen_header
 	importObjs := this.TsIds.GetObj(OBJ_TS_IMPORTS)

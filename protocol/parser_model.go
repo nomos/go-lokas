@@ -401,7 +401,7 @@ func (this *ModelPackageObject) GetGoPackageName()string {
 }
 
 func (this *ModelPackageObject) CheckLine(line *LineText) bool {
-	log.Warnf(line.Text)
+	log.Info(line.Text)
 	if this.TryAddLine(line, LINE_COMMENT) {
 		return true
 	}
@@ -485,7 +485,7 @@ func (this *ModelErrorsObject) CheckLine(line *LineText) bool {
 			this.state = 1
 			return true
 		}
-		log.Warnf("parse ModelErrorsObject Error", this.state,line.Text,line.LineNum)
+		log.Infof("parse ModelErrorsObject Error", this.state,line.Text,line.LineNum)
 		return false
 	} else if this.state == 1 {
 		if this.TryAddLine(line, LINE_MODEL_ERROR) {
@@ -654,7 +654,7 @@ func (this *ModelId) GetCsProtocolFuncString(g *Generator)string{
 					ret+=`		/// <exception cref="Exception">`+codeName+`</exception>`+"\n"
 				}
 			} else {
-				log.Warnf("IsErrorName",v,g.IsErrorName(v))
+				log.Infof("IsErrorName",v,g.IsErrorName(v))
 				if g.IsErrorName(v) {
 					ret+=`		/// <exception cref="Exception">`+v+`</exception>`+"\n"
 				}
@@ -758,7 +758,7 @@ func (this *ModelIdsObject) CheckLine(line *LineText) bool {
 			this.state = 1
 			return true
 		}
-		log.Warnf("parse ModelIdsObject Error", this.state,line.Text,line.LineNum)
+		log.Infof("parse ModelIdsObject Error", this.state,line.Text,line.LineNum)
 		return false
 	} else if this.state == 1 {
 		if this.TryAddLine(line, LINE_MODEL_ID) {
@@ -1688,7 +1688,7 @@ func (this *ModelFile) Parse() *promise.Promise {
 		offset, success = this.parse(offset, OBJ_MODEL_IMPORTS)
 		log.Infof("parseModelImports", offset, success)
 		offset, success = this.parse(offset, OBJ_MODEL_IDS,OBJ_MODEL_ERRORS,OBJ_MODEL_CLASS, OBJ_MODEL_ENUM)
-		log.Warnf("isFinish", len(this.Lines), offset)
+		log.Infof("isFinish", len(this.Lines), offset)
 		if !this.CheckFinish(offset) {
 			reject(fmt.Sprintf("file not finish %d", offset))
 			return
@@ -1785,7 +1785,7 @@ func (this *ModelFile) ProcessPackages() *ModelPackageObject {
 	}()
 	for _, obj := range this.Objects {
 		if obj.ObjectType() == OBJ_MODEL_PACKAGE {
-			this.GetLogger().Warnf("this.Package",this.Package)
+			this.GetLogger().Infof("this.Package",this.Package)
 			obj.(*ModelPackageObject).PackageName = this.Package
 			ret =  obj.(*ModelPackageObject)
 		}
@@ -1800,6 +1800,6 @@ func (this *ModelFile) ProcessPackages() *ModelPackageObject {
 			}
 		}
 	}
-	this.GetLogger().Warnf("ProcessPackages")
+	this.GetLogger().Info("ProcessPackages")
 	return ret
 }

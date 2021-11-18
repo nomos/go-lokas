@@ -22,12 +22,12 @@ func (this *Generator) LoadModelFolder(p string) *promise.Promise {
 }
 
 func (this *Generator) LoadModels(p string) error {
-	this.GetLogger().Warnf("LoadModels")
+	this.GetLogger().Info("LoadModels")
 	var err error
 	var innerErr error
 	_,err=util.WalkDirFilesWithFunc(p, func(filePath string, file os.FileInfo) bool {
 		if path.Ext(filePath) == ".model" {
-			this.GetLogger().Warnf("filePath", filePath)
+			this.GetLogger().Infof("filePath", filePath)
 			file := NewModelFile(this)
 			_, innerErr = file.Load(filePath).Await()
 			if innerErr != nil {
@@ -51,7 +51,7 @@ func (this *Generator) LoadModels(p string) error {
 		this.GetLogger().Error(innerErr.Error())
 		return innerErr
 	}
-	this.GetLogger().Warnf("load "+strconv.Itoa(len(this.Models))+" models")
+	this.GetLogger().Infof("load "+strconv.Itoa(len(this.Models))+" models")
 	return nil
 }
 
@@ -114,7 +114,7 @@ func (this *Generator) processModelObjects() error{
 	this.ModelEnumObjects = ret3
 	for idx,ids:=range this.ModelIdsObjects {
 		for _,v:=range this.ModelClassObjects {
-			this.GetLogger().Warnf(ids.Name,v.ClassName)
+			this.GetLogger().Infof(ids.Name,v.ClassName)
 			if ids.Name==v.ClassName {
 				v.TagId = BINARY_TAG(idx)
 				ids.ClassObj = v
@@ -124,9 +124,9 @@ func (this *Generator) processModelObjects() error{
 			}
 		}
 	}
-	this.GetLogger().Warnf("ModelIdsObjects", this.ModelIdsObjects)
-	this.GetLogger().Warnf("ModelClassObjects", this.ModelClassObjects)
-	this.GetLogger().Warnf("ModelEnumObjects", this.ModelEnumObjects)
+	this.GetLogger().Infof("ModelIdsObjects", this.ModelIdsObjects)
+	this.GetLogger().Infof("ModelClassObjects", this.ModelClassObjects)
+	this.GetLogger().Infof("ModelEnumObjects", this.ModelEnumObjects)
 	return nil
 }
 
