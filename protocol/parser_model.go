@@ -1190,7 +1190,6 @@ func (this *ModelClassFields) CsString(g *Generator)string {
 func (this *ModelClassFields) TsDefineTags(g *Generator, tsClass *TsClassObject)string{
 	str := "\t[" + `"`
 	str += this.Name + `",`
-	name:=this.Name
 	log.Infof("this.Type",this.Type,this.Name)
 	t:= MatchModelProtoTag(this.Type)
 	if t!=0 {
@@ -1228,7 +1227,7 @@ func (this *ModelClassFields) TsDefineTags(g *Generator, tsClass *TsClassObject)
 	} else if g.IsEnum(this.Type) {
 		str+=TAG_Int.TsTagString()
 	} else {
-		str+=name
+		str+=this.Type
 	}
 	if tsClass.CheckBuffer(this.Name) {
 		str+=`,Tag.Buffer`
