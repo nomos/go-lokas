@@ -366,7 +366,7 @@ func init() {
 	line_regexp_replace_name[LINE_TS_CLASS_GETTER_HEADER] = "$1"
 	line_regexp_map[LINE_TS_CLASS_SETTER_HEADER] = regexp.MustCompile(`\s+set\s(\w+)\s*\(.*\).*\{\s*`)
 	line_regexp_replace_name[LINE_TS_CLASS_SETTER_HEADER] = "$1"
-	line_regexp_map[LINE_TS_CLASS_FUNC_HEADER] = regexp.MustCompile(`\s*(static\s+)?((protected|private|public)\s+)?(async\s+)?\w+\s*[(]\s*(\w+\s*([?]?[:]\s*\w+)?[,]?\s*)*\s*[)]\s*([:]\w+\s*)?[{]\s*`)
+	line_regexp_map[LINE_TS_CLASS_FUNC_HEADER] = regexp.MustCompile(`\s*(static\s+)?((protected|private|public)\s+)?(async\s+)?\w+\s*[(]\s*(\w+\s*([?]?[:]\s*[\w|\[|\]|\<|\>|\,|\.|\||\s*]+)?[,]?\s*)*\s*[)]\s*([:]\s*[\w|\[|\]|\<|\>|\,|\.|\||\s*]+\s*)?[{]\s*`)
 	line_regexp_map[LINE_TS_CLASS_FUNC_END] = regexp.MustCompile(`\s{4}[}]\s*`)
 
 	line_regexp_map[LINE_TS_FUNC_HEADER] = regexp.MustCompile(`(export)?\s*function\s+\w+\s*\(.*\).*\{\s*`)
