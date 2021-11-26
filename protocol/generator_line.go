@@ -353,9 +353,9 @@ func init() {
 	line_regexp_map[LINE_TS_CLASS_FIELD_PUBLIC] = regexp.MustCompile(`\s+(public)\s+(\w+)\s*[:]\s*((\w|[.]|\[|\]|<|>|[,])+)(\s*[=]\s*.+)?\s*`)
 	line_regexp_replace_name[LINE_TS_CLASS_FIELD_PUBLIC] = "$2"
 	line_regexp_replace_type[LINE_TS_CLASS_FIELD_PUBLIC] = "$3"
-	line_regexp_map[LINE_TS_CLASS_FIELD_PROTECTED] = regexp.MustCompile(`\s+(protected)\s+(\w+)\s*[:]\s*((\w|[.]|\[|\]|<|>|[,])+)(\s*[=]\s*.+)?\s*`)
+	line_regexp_map[LINE_TS_CLASS_FIELD_PROTECTED] = regexp.MustCompile(`\s+(protected)\s+(\w+)\s*([:]\s*((\w|[.]|\[|\]|<|>|[,])+))*(\s*[=]\s*.+)?\s*`)
 	line_regexp_replace_name[LINE_TS_CLASS_FIELD_PROTECTED] = "$2"
-	line_regexp_replace_type[LINE_TS_CLASS_FIELD_PROTECTED] = "$3"
+	line_regexp_replace_type[LINE_TS_CLASS_FIELD_PROTECTED] = "$4"
 	line_regexp_map[LINE_TS_CLASS_FIELD] = regexp.MustCompile(`\s+(\w+)\s*[:]\s*((\w|[.]|\[|\]|<|>|[,])+)(\s*[=]\s*.+)?\s*`)
 	line_regexp_replace_name[LINE_TS_CLASS_FIELD] = "$1"
 	line_regexp_replace_type[LINE_TS_CLASS_FIELD] = "$2"
