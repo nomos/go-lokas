@@ -284,10 +284,13 @@ type IProcessConfig interface {
 
 //INetClient interface for client
 type INetClient interface {
-	events.EventEmmiter
+	SendMessage(transId uint32, msg interface{})
+	SetProtocol(p protocol.TYPE)
 	Connect(addr string) *promise.Promise
 	Disconnect(bool) *promise.Promise
 	Request(req interface{}) *promise.Promise
+	SetMessageHandler(handler func(msg *protocol.BinaryMessage))
+	GetContext(uint32)IReqContext
 	Connected() bool
 	OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise
 	OnRecv(conn IConn, data []byte)

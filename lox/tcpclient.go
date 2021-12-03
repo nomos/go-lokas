@@ -37,6 +37,7 @@ type TcpClient struct {
 	isOpen         bool
 	Closing        bool
 	Opening        bool
+	ConnType 	ConnType
 	Protocol    protocol.TYPE
 	context     lokas.IReqContext
 	reqContexts map[uint32]lokas.IReqContext
@@ -64,6 +65,13 @@ func NewTcpClient() *TcpClient {
 	}
 	ret.MsgHandler = ret.MessageHandler
 	return ret
+}
+
+func (this *TcpClient) SetProtocol(p protocol.TYPE) {
+	this.Protocol = p
+	if this.ActiveSession!=nil{
+		this.ActiveSession.Protocol = p
+	}
 }
 
 func (this *TcpClient) genId() uint32 {
@@ -151,6 +159,10 @@ func (this *TcpClient) Disconnect(b bool) *promise.Promise {
 
 func (this *TcpClient) Connected() bool {
 	return this.isOpen
+}
+
+func (this *TcpClient) SetMessageHandler(handler func(msg *protocol.BinaryMessage)) {
+	this.MsgHandler = handler
 }
 
 func (this *TcpClient) OnOpen(conn lokas.IConn) {

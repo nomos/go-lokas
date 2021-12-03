@@ -1,4 +1,4 @@
-package wsclient
+package lox
 
 import (
 	"context"
@@ -8,26 +8,24 @@ import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network"
+	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util/events"
 	"github.com/nomos/go-lokas/util/promise"
-	"github.com/nomos/go-lokas/protocol"
 	"go.uber.org/zap"
+	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
-)
-
-const (
-	TimeOut = time.Second * 3
 )
 
 var _ lokas.INetClient = (*WsClient)(nil)
 
 type WsClient struct {
 	events.EventEmmiter
-	session lokas.ISession
+	*ActiveSession
 	conn           *websocket.Conn
-	ws             *WebSocket
+	ws             *wsImpl
 	timeout        time.Duration
 	addr           string
 	idGen          uint32
@@ -49,8 +47,9 @@ func NewWsClient() *WsClient {
 		reqContexts:  make(map[uint32]lokas.IReqContext),
 		timeout:      TimeOut,
 		isOpen:       false,
-		session:network.NewDefaultSession(nil,0,nil),
+		ActiveSession: NewActiveSession(nil,0,nil),
 	}
+	ret.MsgHandler = ret.MessageHandler
 	ret.init()
 	return ret
 }
@@ -64,8 +63,25 @@ func (this *WsClient) genId() uint32 {
 	return this.idGen
 }
 
+func (this *WsClient) SetProtocol(p protocol.TYPE) {
+	this.Protocol = p
+	if this.ActiveSession!=nil {
+		this.ActiveSession.Protocol = p
+	}
+}
+
 func (this *WsClient) Connected() bool {
 	return this.isOpen
+}
+
+func (this *WsClient) MessageHandler(msg *protocol.BinaryMessage){
+	id,_:=msg.GetId()
+	log.Warnf("MessageHandler",id.String(),msg.TransId,id)
+	if msg.TransId!=0 {
+		ctx:=this.GetContext(msg.TransId)
+		ctx.SetResp(msg.Body)
+		ctx.Finish()
+	}
 }
 
 func (this *WsClient) Connect(addr string) *promise.Promise {
@@ -229,10 +245,15 @@ func (this *WsClient) removeContext(transId uint32) {
 	delete(this.reqContexts, transId)
 }
 
-func (this *WsClient) getContext(transId uint32) lokas.IReqContext {
+func (this *WsClient) GetContext(transId uint32) lokas.IReqContext {
 	this.contextMutex.Lock()
 	defer this.contextMutex.Unlock()
 	return this.reqContexts[transId]
+}
+
+
+func (this *WsClient) SetMessageHandler(handler func(msg *protocol.BinaryMessage)) {
+	this.MsgHandler = handler
 }
 
 func (this *WsClient) Request(req interface{}) *promise.Promise {
@@ -351,7 +372,7 @@ func (this *WsClient) HookRecv(data []byte) (interface{}, error) {
 		return msg, nil
 	}
 	if msg.TransId != 0 {
-		ctx := this.getContext(msg.TransId)
+		ctx := this.GetContext(msg.TransId)
 		if ctx == nil {
 			log.Error("msgCmdId:%d TransId :%d ctx not found",
 				zap.Any("cmdId", msg.CmdId),
@@ -376,3 +397,184 @@ func (this *WsClient) HookRecv(data []byte) (interface{}, error) {
 	}
 	return nil, nil
 }
+
+const (
+	HeaderSize = 8
+	ProtectLongPacketSize = 4 * 1024 * 1024
+)
+
+type wsImpl struct {
+	*websocket.Conn
+	client         *WsClient
+	writeChan      chan []byte
+	wg             sync.WaitGroup
+	closeOnce      sync.Once
+	longPacketData []byte
+	done           chan struct{}
+	once           sync.Once
+	closing        bool
+}
+
+func NewWebSocket(url string,client *WsClient) (*wsImpl, error) {
+	ret := &wsImpl{
+		Conn:      nil,
+		writeChan: make(chan []byte),
+	}
+
+	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+	if err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
+	ret.Conn = conn
+	ret.ServeIO()
+	return ret, nil
+}
+
+const (
+	writeWait = 10 * time.Second
+	pongWait = 60 * time.Second
+	pingPeriod = (pongWait * 9) / 10
+	maxMessageSize = 1024*1024
+)
+
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024*1024,
+	WriteBufferSize: 1024*1024*1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return strings.HasPrefix(r.RemoteAddr, "127.0.0.1") || r.Header["Origin"][0] == r.Host
+	},
+}
+
+func (this *wsImpl) ServeIO() {
+	this.wg.Add(2)
+	this.done = make(chan struct{})
+	go func() {
+		this.writePump()
+		this.wg.Done()
+	}()
+
+	go func() {
+		this.client.OnOpen(this.client.conn)
+		this.readPump()
+		this.client.OnClose(this.client.conn)
+		this.wg.Done()
+	}()
+}
+
+func (this *wsImpl) readPump() {
+	defer func() {
+		this.Conn.Close()
+	}()
+
+	this.Conn.SetReadLimit(maxMessageSize)
+	this.Conn.SetReadDeadline(time.Now().Add(pongWait))
+	this.Conn.SetPongHandler(func(string) error {
+		this.Conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
+
+	for {
+		select {
+		case <-this.done :
+			return
+		default:
+			_, message, err := this.Conn.ReadMessage()
+			if err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
+					log.Error("error: %v", zap.Error(err))
+				}
+				return
+			}
+			data := this.readLongPacket(message)
+			this.client.OnRecvData(data)
+		}
+	}
+}
+
+func (this *wsImpl) readLongPacket(data []byte) []byte {
+	isLongPacket, idx, packetData := protocol.PickBinaryLongPacket(data)
+	if !isLongPacket {
+		return data
+	}
+
+	this.longPacketData = append(this.longPacketData, packetData...)
+	if idx == 0 {
+		data := this.longPacketData[:]
+		this.longPacketData = nil
+		return data
+	}
+
+	//protect too long
+	if len(this.longPacketData) > ProtectLongPacketSize {
+		log.Error("protect too long")
+		this.longPacketData = nil
+	}
+	return nil
+}
+
+func (this *wsImpl) writePump() {
+	ticker := time.NewTicker(pingPeriod)
+	defer func() {
+		ticker.Stop()
+		this.Conn.Close()
+	}()
+
+	for {
+		select {
+		case <-this.done :
+			return
+		case res, ok := <-this.writeChan:
+			this.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if !ok {
+				this.Conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
+			//data := make([]byte, len(res))
+			//copy(data, res)
+			//log.Warn("send res",len(data))
+			//err := this.Conn.WriteMessage(websocket.BinaryMessage,data)
+			//if err != nil {
+			//	return
+			//}
+
+			w, err := this.Conn.NextWriter(websocket.BinaryMessage)
+			if err != nil {
+				return
+			}
+			w.Write(res)
+
+			if err := w.Close(); err != nil {
+				return
+			}
+		case <-ticker.C:
+			this.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+			if err := this.Conn.WriteMessage(websocket.PingMessage, []byte{}); err != nil {
+				return
+			}
+		}
+	}
+}
+
+func (this *wsImpl) Close() *promise.Promise {
+	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
+		if this.closing {
+			for {
+				time.Sleep(time.Millisecond*50)
+				if this.closing == false {
+					resolve(nil)
+					return
+				}
+			}
+		} else {
+			if this.done!=nil {
+				this.done <- struct{}{}
+				close(this.done)
+			}
+			this.wg.Wait()
+			resolve(nil)
+		}
+	})
+}
+
+
