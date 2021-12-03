@@ -225,12 +225,33 @@ func (this *WsClient) Off(cmdId uint16, listener events.Listener) {
 }
 
 func (this *WsClient) SendMessage(transId uint32, msg interface{}) {
+	if this.Protocol == protocol.JSON {
+		this.sendJsonMessage(transId,msg)
+	} else if this.Protocol == protocol.BINARY {
+		this.sendBinaryMessage(transId,msg)
+	} else {
+		panic("unidentified protocol")
+	}
+}
+
+
+
+func (this *WsClient) sendJsonMessage(transId uint32, msg interface{}) {
+	rb, err := protocol.MarshalJsonMessage(transId, msg)
+	if err != nil {
+		log.Error(err.Error())
+		return
+	}
+	this.conn.WriteMessage(websocket.BinaryMessage,rb)
+}
+
+func (this *WsClient) sendBinaryMessage(transId uint32, msg interface{}) {
 	rb, err := protocol.MarshalBinaryMessage(transId, msg)
 	if err != nil {
 		log.Error(err.Error())
 		return
 	}
-	this.conn.WriteMessage(websocket.BinaryMessage, rb)
+	this.conn.WriteMessage(websocket.BinaryMessage,rb)
 }
 
 func (this *WsClient) addContext(transId uint32, ctx lokas.IReqContext) {
