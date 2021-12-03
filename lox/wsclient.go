@@ -426,6 +426,7 @@ func NewWebSocket(url string,client *WsClient) (*wsImpl, error) {
 		log.Error(err.Error())
 		return nil, err
 	}
+	ret.client = client
 	ret.Conn = conn
 	ret.ServeIO()
 	return ret, nil
