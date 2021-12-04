@@ -203,6 +203,7 @@ func (this *ActiveSession) start() {
 				//	)
 				//	this.IConn.Close()
 				//}
+				log.Infof("handleMsg",msg)
 				this.handleMsg(msg)
 			case <-this.done:
 				log.Warn("closing",flog.FuncInfo(this,"start")...)

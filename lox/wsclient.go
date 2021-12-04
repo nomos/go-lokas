@@ -3,7 +3,6 @@ package lox
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
@@ -50,6 +49,7 @@ func NewWsClient() *WsClient {
 		ActiveSession: NewActiveSession(nil,0,nil),
 	}
 	ret.MsgHandler = ret.MessageHandler
+	ret.timeout = TimeOut
 	ret.init()
 	return ret
 }
@@ -158,7 +158,8 @@ func (this *WsClient) Open() *promise.Promise {
 				return
 			}
 			this.ws = ws
-
+			this.Conn = this.ws
+			this.Start()
 			this.Once("open", func(i ...interface{}) {
 				timeout.Close()
 				this.openingPending = nil
@@ -179,7 +180,7 @@ func (this *WsClient) Close() *promise.Promise {
 				this.closePending = nil
 				return
 			}
-			_, err := this.ws.Close().Await()
+			err := this.ws.Close()
 			if err != nil {
 				reject(err)
 				this.openingPending = nil
@@ -225,6 +226,7 @@ func (this *WsClient) Off(cmdId uint16, listener events.Listener) {
 }
 
 func (this *WsClient) SendMessage(transId uint32, msg interface{}) {
+	log.Infof("SendMessage",transId)
 	if this.Protocol == protocol.JSON {
 		this.sendJsonMessage(transId,msg)
 	} else if this.Protocol == protocol.BINARY {
@@ -237,12 +239,16 @@ func (this *WsClient) SendMessage(transId uint32, msg interface{}) {
 
 
 func (this *WsClient) sendJsonMessage(transId uint32, msg interface{}) {
+	log.Infof("sendJsonMessage",transId,msg)
 	rb, err := protocol.MarshalJsonMessage(transId, msg)
 	if err != nil {
 		log.Error(err.Error())
 		return
 	}
-	this.conn.WriteMessage(websocket.BinaryMessage,rb)
+	err=this.conn.WriteMessage(websocket.BinaryMessage,rb)
+	if err != nil {
+		log.Error(err.Error())
+	}
 }
 
 func (this *WsClient) sendBinaryMessage(transId uint32, msg interface{}) {
@@ -271,7 +277,6 @@ func (this *WsClient) GetContext(transId uint32) lokas.IReqContext {
 	defer this.contextMutex.Unlock()
 	return this.reqContexts[transId]
 }
-
 
 func (this *WsClient) SetMessageHandler(handler func(msg *protocol.BinaryMessage)) {
 	this.MsgHandler = handler
@@ -319,7 +324,7 @@ func (this *WsClient) doCall(ctx lokas.IReqContext, req interface{}, isSync bool
 	//	log.Error(err.Error())
 	//	return err
 	//}
-	rb, err := protocol.MarshalBinaryMessage(transId, req)
+	rb, err := protocol.MarshalMessage(transId, req,this.Protocol)
 	if err != nil {
 		log.Error(err.Error())
 		return nil,err
@@ -350,21 +355,6 @@ func (this *WsClient) doCall(ctx lokas.IReqContext, req interface{}, isSync bool
 	}
 }
 
-
-func (this *WsClient) OnRecv(connect lokas.IConn,data []byte) {
-	_, err := this.HookRecv(data)
-	if err != nil {
-		log.Error("WebSocket OnRecv err:" + err.Error())
-	}
-}
-
-func (this *WsClient) OnRecvData(data []byte) {
-	_, err := this.HookRecv(data)
-	if err != nil {
-		log.Error("WebSocket OnRecv err:" + err.Error())
-	}
-}
-
 func (this *WsClient) OnRecvMessage(cmdId protocol.BINARY_TAG, transId uint32, msg interface{}) {
 	this.Emit(events.EventName("CmdId"+strconv.Itoa(int(cmdId))), msg, transId)
 }
@@ -383,46 +373,12 @@ func (this *WsClient) OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *
 	})
 }
 
-func (this *WsClient) HookRecv(data []byte) (interface{}, error) {
-	msg, err := protocol.UnmarshalBinaryMessage(data)
-	if err != nil {
-		return nil, err
-	}
-	if msg.TransId == 0 {
-		this.OnRecvMessage(msg.CmdId, msg.TransId, msg.Body)
-		return msg, nil
-	}
-	if msg.TransId != 0 {
-		ctx := this.GetContext(msg.TransId)
-		if ctx == nil {
-			log.Error("msgCmdId:%d TransId :%d ctx not found",
-				zap.Any("cmdId", msg.CmdId),
-				zap.Uint32("transId", msg.TransId),
-			)
-			return msg, errors.New(fmt.Sprintf("msgCmdId:%d TransId :%d ctx not found", msg.CmdId, msg.TransId))
-		}
-		if msg.CmdId == protocol.TAG_Error {
-			log.Error("CmdErrorAckId")
-			body := msg.Body.(*protocol.ErrMsg)
-			ctx.Cancel(&protocol.ErrMsg{
-				Code:    body.Code,
-				Message: "code:" + strconv.Itoa(int(body.Code)) + "," + body.Message,
-			})
-			return nil, err
-		}
-		this.removeContext(ctx.GetTransId())
-		ctx.SetResp(msg.Body)
-		ctx.Finish()
-		this.OnRecvMessage(msg.CmdId, msg.TransId, msg.Body)
-		return msg, nil
-	}
-	return nil, nil
-}
-
 const (
 	HeaderSize = 8
 	ProtectLongPacketSize = 4 * 1024 * 1024
 )
+
+var _ lokas.IConn = (*wsImpl)(nil)
 
 type wsImpl struct {
 	*websocket.Conn
@@ -434,6 +390,42 @@ type wsImpl struct {
 	done           chan struct{}
 	once           sync.Once
 	closing        bool
+}
+
+func (this *wsImpl) Read(b []byte) (n int, err error) {
+	panic("implement me")
+}
+
+func (this *wsImpl) Write(b []byte) (n int, err error) {
+	panic("implement me")
+}
+
+func (this *wsImpl) SetDeadline(t time.Time) error {
+	panic("implement me")
+}
+
+func (this *wsImpl) SetUserData(userData interface{}) {
+	panic("implement me")
+}
+
+func (this *wsImpl) GetUserData() interface{} {
+	panic("implement me")
+}
+
+func (this *wsImpl) GetSession() lokas.ISession {
+	panic("implement me")
+}
+
+func (this *wsImpl) GetConnTime() time.Time {
+	panic("implement me")
+}
+
+func (this *wsImpl) Activate() {
+	panic("implement me")
+}
+
+func (this *wsImpl) Wait() {
+	panic("implement me")
 }
 
 func NewWebSocket(url string,client *WsClient) (*wsImpl, error) {
@@ -488,7 +480,6 @@ func (this *wsImpl) readPump() {
 	defer func() {
 		this.Conn.Close()
 	}()
-
 	this.Conn.SetReadLimit(maxMessageSize)
 	this.Conn.SetReadDeadline(time.Now().Add(pongWait))
 	this.Conn.SetPongHandler(func(string) error {
@@ -509,7 +500,8 @@ func (this *wsImpl) readPump() {
 				return
 			}
 			data := this.readLongPacket(message)
-			this.client.OnRecvData(data)
+			log.Infof("recv data",data)
+			this.client.OnRecv(nil,data)
 		}
 	}
 }
@@ -578,25 +570,22 @@ func (this *wsImpl) writePump() {
 	}
 }
 
-func (this *wsImpl) Close() *promise.Promise {
-	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-		if this.closing {
-			for {
-				time.Sleep(time.Millisecond*50)
-				if this.closing == false {
-					resolve(nil)
-					return
-				}
+func (this *wsImpl) Close() error {
+	if this.closing {
+		for {
+			time.Sleep(time.Millisecond*50)
+			if this.closing == false {
+				return nil
 			}
-		} else {
-			if this.done!=nil {
-				this.done <- struct{}{}
-				close(this.done)
-			}
-			this.wg.Wait()
-			resolve(nil)
 		}
-	})
+	} else {
+		if this.done!=nil {
+			this.done <- struct{}{}
+			close(this.done)
+		}
+		this.wg.Wait()
+		return nil
+	}
 }
 
 
