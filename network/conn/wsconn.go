@@ -72,11 +72,11 @@ func (this *WsPumper) readPump(conn *Conn) {
 		wsConn.SetReadLimit(int64(context.MaxMessageSize))
 	}
 
-	wsConn.SetReadDeadline(time.Now().Add(common.PongWait)) // client must send ping, or conn will be closed after PongWait
-	wsConn.SetPongHandler(func(s string) error {
-		wsConn.SetReadDeadline(time.Now().Add(common.PongWait))
-		return nil
-	})
+	//wsConn.SetReadDeadline(time.Now().Add(common.PongWait)) // client must send ping, or conn will be closed after PongWait
+	//wsConn.SetPongHandler(func(s string) error {
+	//	wsConn.SetReadDeadline(time.Now().Add(common.PongWait))
+	//	return nil
+	//})
 
 	for {
 		_, data, err := wsConn.ReadMessage()
