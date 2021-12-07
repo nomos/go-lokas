@@ -15,6 +15,7 @@ const (
 
 type AvatarMap struct {
 	Id util.ID `bson:"_id"`
+	UserId util.ID
 	GameId string
 	ServerId int32
 	UserName string

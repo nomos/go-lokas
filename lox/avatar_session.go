@@ -23,9 +23,10 @@ var _ lokas.IModel = (*AvatarSession)(nil)
 
 type AvatarSession struct {
 	Id               util.ID
+	UserId           util.ID
+	GateId           util.ID
 	UserName         string
 	GameId           string
-	GateId           util.ID
 	ServerId         int32
 	watchChan        clientv3.WatchChan `bson:"-",json:"-"`
 	done             chan struct{}      `bson:"-",json:"-"`
@@ -49,29 +50,29 @@ func (this *AvatarSession) SetOnSessionClosed(f func()) {
 
 func (this *AvatarSession) StartAvatarSession() {
 	go func() {
-		if this.watchChan==nil {
-			if this.onSessionClosed!=nil {
+		if this.watchChan == nil {
+			if this.onSessionClosed != nil {
 				log.Errorf("AvatarSession:onSessionClosed")
 				this.onSessionClosed()
 			}
 			return
 		}
 		this.done = make(chan struct{})
-		Loop:
+	Loop:
 		for {
 			select {
 			case msg := <-this.watchChan:
-				for _,e:=range msg.Events {
+				for _, e := range msg.Events {
 					switch e.Type {
 					case mvccpb.PUT:
-						sess:=NewAvatarSession(0)
-						err:=json.Unmarshal(e.Kv.Value,sess)
+						sess := NewAvatarSession(0)
+						err := json.Unmarshal(e.Kv.Value, sess)
 						if err != nil {
 							log.Error(err.Error())
 							break Loop
 						}
-						if sess.GateId!=this.GateId {
-							if this.onGateWayChanged!=nil {
+						if sess.GateId != this.GateId {
+							if this.onGateWayChanged != nil {
 								this.onGateWayChanged(sess)
 							}
 						}
@@ -83,14 +84,14 @@ func (this *AvatarSession) StartAvatarSession() {
 				break Loop
 			}
 		}
-		if this.onSessionClosed!=nil {
+		if this.onSessionClosed != nil {
 			this.onSessionClosed()
 		}
-		if this.done!=nil {
+		if this.done != nil {
 			close(this.done)
 			this.done = nil
 		}
-		if this.watchChan!=nil {
+		if this.watchChan != nil {
 			this.watchChan = nil
 		}
 	}()
@@ -98,7 +99,7 @@ func (this *AvatarSession) StartAvatarSession() {
 
 func (this *AvatarSession) StopAvatarSession() {
 	log.Warn("AvatarSession StopAvatarSession")
-	if this.done !=nil {
+	if this.done != nil {
 		this.done <- struct{}{}
 	}
 }
@@ -115,6 +116,10 @@ func (this *AvatarSession) GetGateId() util.ID {
 	return this.GateId
 }
 
+func (this *AvatarSession) GetUserId() util.ID {
+	return this.UserId
+}
+
 func (this *AvatarSession) GetUserName() string {
 	return this.UserName
 }
@@ -129,7 +134,7 @@ func (this *AvatarSession) fetchUserName(a lokas.IProcess) error {
 	if err != nil || user.Id == 0 {
 		return err
 	}
-	log.Warn("fetch user", flog.UserName(user.UserName),flog.GameId(user.GameId),flog.ServerId(user.ServerId))
+	log.Warn("fetch user", flog.UserName(user.UserName), flog.GameId(user.GameId), flog.ServerId(user.ServerId))
 	this.UserName = user.UserName
 	return nil
 }
@@ -153,8 +158,8 @@ func (this *AvatarSession) Deserialize(a lokas.IProcess) error {
 	if len(res.Kvs) == 0 {
 		return errors.New("")
 	}
-	sess:=NewAvatarSession(0)
-	err=json.Unmarshal(res.Kvs[0].Value,sess)
+	sess := NewAvatarSession(0)
+	err = json.Unmarshal(res.Kvs[0].Value, sess)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -163,7 +168,7 @@ func (this *AvatarSession) Deserialize(a lokas.IProcess) error {
 	this.GameId = sess.GameId
 	this.ServerId = sess.ServerId
 	this.GateId = sess.GateId
-	log.Warn("AvatarSession Deserialize",flog.AvatarSessionInfo(this).Append(zap.Any("res",res.Kvs))...)
+	log.Warn("AvatarSession Deserialize", flog.AvatarSessionInfo(this).Append(zap.Any("res", res.Kvs))...)
 	return nil
 }
 
@@ -195,7 +200,7 @@ func (this *AvatarSession) Serialize(a lokas.IProcess) error {
 	key := AVATAR_SESSION_KEY.Assemble(this.Id)
 	mutexKey := MUTEX_AVATAR_SESSION_KEY.Assemble(this.Id)
 	s, _ := json.Marshal(this)
-	log.Warn("AvatarSession:Serialize", flog.AvatarSessionInfo(this).Append(zap.String("key",key))...)
+	log.Warn("AvatarSession:Serialize", flog.AvatarSessionInfo(this).Append(zap.String("key", key))...)
 	mutex, err := a.GlobalMutex(mutexKey, 6)
 	if err != nil {
 		log.Error(err.Error())

@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util/events"
@@ -22,7 +23,6 @@ var _ lokas.INetClient = (*WsClient)(nil)
 
 type WsClient struct {
 	events.EventEmmiter
-	*ActiveSession
 	conn           *websocket.Conn
 	ws             *wsImpl
 	timeout        time.Duration
@@ -33,6 +33,8 @@ type WsClient struct {
 	isOpen         bool
 	Closing        bool
 	Opening        bool
+	Protocol 		protocol.TYPE
+	MsgHandler 		func(msg *protocol.BinaryMessage)
 	done           chan struct{}
 	contextMutex   sync.Mutex
 	openingPending *promise.Promise
@@ -46,7 +48,6 @@ func NewWsClient() *WsClient {
 		reqContexts:  make(map[uint32]lokas.IReqContext),
 		timeout:      TimeOut,
 		isOpen:       false,
-		ActiveSession: NewActiveSession(nil,0,nil),
 	}
 	ret.MsgHandler = ret.MessageHandler
 	ret.timeout = TimeOut
@@ -63,10 +64,29 @@ func (this *WsClient) genId() uint32 {
 	return this.idGen
 }
 
+func (this *WsClient) OnRecv(conn lokas.IConn, data []byte) {
+	cmdId := protocol.GetCmdId16(data)
+	msg, err := protocol.UnmarshalMessage(data,this.Protocol)
+	if err != nil {
+		log.Error("unmarshal client message error",
+			flog.FuncInfo(this,"start").Append(zap.Any("cmdId", cmdId))...
+		)
+		return
+	}
+
+	this.handleMsg(msg)
+}
+
+func (this *WsClient) handleMsg(msg *protocol.BinaryMessage) {
+	if this.MsgHandler != nil {
+		this.MsgHandler(msg)
+	}
+}
+
 func (this *WsClient) SetProtocol(p protocol.TYPE) {
 	this.Protocol = p
-	if this.ActiveSession!=nil {
-		this.ActiveSession.Protocol = p
+	if this.ws!=nil {
+		this.ws.Protocol = p
 	}
 }
 
@@ -150,7 +170,7 @@ func (this *WsClient) Open() *promise.Promise {
 				this.openingPending = nil
 			})
 			this.Opening = true
-			ws, err := NewWebSocket(this.addr, this)
+			ws, err := NewWebSocket(this.addr, this,this.Protocol)
 			if err != nil {
 				log.Error("create ws error", zap.String("err", err.Error()))
 				reject(err)
@@ -158,8 +178,6 @@ func (this *WsClient) Open() *promise.Promise {
 				return
 			}
 			this.ws = ws
-			this.Conn = this.ws
-			this.Start()
 			this.Once("open", func(i ...interface{}) {
 				timeout.Close()
 				this.openingPending = nil
@@ -382,6 +400,7 @@ var _ lokas.IConn = (*wsImpl)(nil)
 
 type wsImpl struct {
 	*websocket.Conn
+	Protocol protocol.TYPE
 	client         *WsClient
 	writeChan      chan []byte
 	wg             sync.WaitGroup
@@ -428,9 +447,10 @@ func (this *wsImpl) Wait() {
 	panic("implement me")
 }
 
-func NewWebSocket(url string,client *WsClient) (*wsImpl, error) {
+func NewWebSocket(url string,client *WsClient,p protocol.TYPE) (*wsImpl, error) {
 	ret := &wsImpl{
 		Conn:      nil,
+		Protocol: p,
 		writeChan: make(chan []byte),
 	}
 
@@ -499,24 +519,27 @@ func (this *wsImpl) readPump() {
 				}
 				return
 			}
+			log.Infof(len(message))
 			data := this.readLongPacket(message)
-			log.Infof("recv data",data)
-			this.client.OnRecv(nil,data)
+			log.Infof(len(data))
+			if data!=nil {
+				this.client.OnRecv(nil,data)
+			}
 		}
 	}
 }
 
 func (this *wsImpl) readLongPacket(data []byte) []byte {
-	isLongPacket, idx, packetData := protocol.PickBinaryLongPacket(data)
+	isLongPacket, idx, packetData := protocol.PickLongPacket(this.Protocol)(data)
 	if !isLongPacket {
 		return data
 	}
 
 	this.longPacketData = append(this.longPacketData, packetData...)
 	if idx == 0 {
-		data := this.longPacketData[:]
+		d := this.longPacketData[:]
 		this.longPacketData = nil
-		return data
+		return d
 	}
 
 	//protect too long
