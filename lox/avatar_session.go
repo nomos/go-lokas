@@ -48,6 +48,17 @@ func (this *AvatarSession) SetOnSessionClosed(f func()) {
 	this.onSessionClosed = f
 }
 
+
+func (this *AvatarSession) ChangeUserName(a lokas.IProcess,name string)error {
+	this.UserName = name
+	err:=this.Serialize(a)
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	return nil
+}
+
 func (this *AvatarSession) StartAvatarSession() {
 	go func() {
 		if this.watchChan == nil {
