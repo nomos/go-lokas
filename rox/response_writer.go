@@ -126,7 +126,7 @@ func (this *responseWriter) WriteContent() error {
 		return err
 	}
 	_, err = this.Write(msg)
-	if err != nil {
+	if err != nil && err!=http.ErrHijacked {
 		log.Error(err.Error())
 		return err
 	}
