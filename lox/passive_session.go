@@ -172,6 +172,7 @@ func (this *PassiveSession) StartMessagePump() {
 				}
 				if cmdId == protocol.TAG_Ping {
 					//ping:=msg.Body.(*Protocol.Ping)
+					log.Info("receive ping",zap.Int64("client_session_id",this.GetId().Int64()))
 					pong := &protocol.Pong{Time: time.Now()}
 					data, err := protocol.MarshalMessage(msg.TransId, pong, this.Protocol)
 					if err != nil {
@@ -181,6 +182,7 @@ func (this *PassiveSession) StartMessagePump() {
 						break CLIENT_LOOP
 					}
 					_, err = this.Conn.Write(data)
+					log.Info("send ping",zap.Int64("client_session_id",this.GetId().Int64()))
 					if err != nil {
 						log.Error(err.Error())
 						this.Conn.Close()

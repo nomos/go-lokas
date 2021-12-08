@@ -97,6 +97,10 @@ func (this *AvatarManager) CreateAvatar(id util.ID)error{
 	avatar.ServerId = am.ServerId
 	avatar.SetProcess(this.GetProcess())
 	err =avatar.Deserialize(this.GetProcess())
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
 	avatar.SetId(id)
 	this.GetProcess().AddActor(avatar)
 	err = this.GetProcess().StartActor(avatar)

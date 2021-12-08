@@ -149,7 +149,7 @@ loop:
 				break loop
 			}
 		case <-pingTicker.C:
-			wsConn.SetWriteDeadline(time.Now().Add(common.WriteWait))
+			//wsConn.SetWriteDeadline(time.Now().Add(common.WriteWait))
 			err := wsConn.WriteMessage(websocket.PingMessage, []byte{})
 			if err != nil {
 				log.Info("wsserver send ping error: %s",
@@ -166,7 +166,7 @@ loop:
 }
 
 func (this *WsPumper) write(conn *Conn, data []byte, buff *DataBuff, outChan <-chan []byte) error {
-	conn.SetWriteDeadline(time.Now().Add(common.WriteWait))
+	//conn.SetWriteDeadline(time.Now().Add(common.WriteWait))
 
 	if this.longPacketCreator != nil && this.maxPacketWriteLen > 0 {
 		return buff.WriteData(data, outChan, this.spiltLongPacket, this.maxPacketWriteLen, func(rb []byte, count int) error {

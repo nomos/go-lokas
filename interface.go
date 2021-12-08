@@ -365,6 +365,7 @@ type IAvatarSession interface {
 	GetServerId()int32
 	GetGateId()util.ID
 	GetUserName()string
+	GetUserId() util.ID
 	GetId()util.ID
 }
 
