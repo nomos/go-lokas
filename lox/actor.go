@@ -66,11 +66,12 @@ func (this *Actor) Unload() error {
 }
 
 func (this *Actor) Start() error {
-	panic("implement me")
+	return nil
 }
 
 func (this *Actor) Stop() error {
-	panic("implement me")
+	this.done<- struct{}{}
+	return nil
 }
 
 func (this *Actor) OnStart() error {

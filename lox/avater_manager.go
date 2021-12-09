@@ -91,7 +91,7 @@ func (this *AvatarManager) CreateAvatar(id util.ID)error{
 		log.Error(err.Error())
 		return err
 	}
-	avatar= NewAvatar(id,this.Option)
+	avatar= NewAvatar(id,this.Option,this)
 	avatar.UserName = am.UserName
 	avatar.GameId = am.GameId
 	avatar.ServerId = am.ServerId

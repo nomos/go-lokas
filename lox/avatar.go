@@ -11,10 +11,11 @@ import (
 
 var _ lokas.IModel = (*Avatar)(nil)
 
-func NewAvatar(id util.ID,handler lokas.IGameHandler) *Avatar {
+func NewAvatar(id util.ID,handler lokas.IGameHandler,manager *AvatarManager) *Avatar {
 	ret := &Avatar{
 		Actor:        NewActor(),
 		AvatarSession: NewAvatarSession(id),
+		manager: manager,
 	}
 	ret.SetType("Avatar")
 	ret.SetId(id)
@@ -32,6 +33,7 @@ var _ lokas.IActor = (*Avatar)(nil)
 type Avatar struct {
 	*Actor
 	*AvatarSession
+	manager *AvatarManager
 	Serializer func(avatar lokas.IActor,process lokas.IProcess)error
 	Deserializer func(avatar lokas.IActor,process lokas.IProcess)error
 	Updater      func(avatar lokas.IActor,process lokas.IProcess)error
@@ -90,6 +92,7 @@ func (this *Avatar) OnUpdate() {
 				buf := make([]byte, 1<<14)
 				runtime.Stack(buf, true)
 				log.Error(string(buf))
+				this.Stop()
 			}
 		}
 	}()
@@ -132,6 +135,7 @@ func (this *Avatar) Start() error {
 }
 
 func (this *Avatar) Stop() error {
+	this.Actor.Stop()
 	this.Dirty()
 	log.Warn("save player state", flog.AvatarId(this.GetId()))
 	err:=this.Serialize(this.GetProcess())
@@ -142,6 +146,7 @@ func (this *Avatar) Stop() error {
 	this.RemoveAll()
 	this.GetProcess().UnregisterActorLocal(this)
 	this.GetProcess().UnregisterActorRemote(this)
+	this.manager.RemoveAvatar(this.GetId())
 	return nil
 }
 
