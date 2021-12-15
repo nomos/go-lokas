@@ -8,23 +8,23 @@ import (
 type KEY_EVENT_TYPE protocol.Enum 
 
 const (
-	KEY_EVENT_TYPE_NULL KEY_EVENT_TYPE  = 0 //0
-	KEY_EVENT_TYPE_DOWN KEY_EVENT_TYPE  = 1 //1
-	KEY_EVENT_TYPE_UP KEY_EVENT_TYPE  = 2 //2
-	KEY_EVENT_TYPE_PRESS KEY_EVENT_TYPE  = 3 //3
+	KEY_EVENT_TYPE_NULL KEY_EVENT_TYPE  = 0 //NULL
+	KEY_EVENT_TYPE_DOWN KEY_EVENT_TYPE  = 1 //DOWN
+	KEY_EVENT_TYPE_UP KEY_EVENT_TYPE  = 2 //UP
+	KEY_EVENT_TYPE_PRESS KEY_EVENT_TYPE  = 3 //PRESS
 )
 
 var ALL_KEY_EVENT_TYPE protocol.IEnumCollection = []protocol.IEnum{KEY_EVENT_TYPE_NULL,KEY_EVENT_TYPE_DOWN,KEY_EVENT_TYPE_UP,KEY_EVENT_TYPE_PRESS}
 
 func TO_KEY_EVENT_TYPE(s string)KEY_EVENT_TYPE{
 	switch s {
-	case "0":
+	case "NULL":
 		return KEY_EVENT_TYPE_NULL
-	case "1":
+	case "DOWN":
 		return KEY_EVENT_TYPE_DOWN
-	case "2":
+	case "UP":
 		return KEY_EVENT_TYPE_UP
-	case "3":
+	case "PRESS":
 		return KEY_EVENT_TYPE_PRESS
 	}
 	return -1
@@ -38,13 +38,13 @@ func (this KEY_EVENT_TYPE) Enum()protocol.Enum{
 func (this KEY_EVENT_TYPE) ToString()string{
 	switch this {
 	case KEY_EVENT_TYPE_NULL:
-		return "0"
+		return "NULL"
 	case KEY_EVENT_TYPE_DOWN:
-		return "1"
+		return "DOWN"
 	case KEY_EVENT_TYPE_UP:
-		return "2"
+		return "UP"
 	case KEY_EVENT_TYPE_PRESS:
-		return "3"
+		return "PRESS"
 	}
 	return ""
 }

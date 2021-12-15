@@ -8,545 +8,539 @@ import (
 type KEY protocol.Enum 
 
 const (
-	KEY_NULL KEY  = 0 //0
-	KEY_LBUTTON KEY  = 1 //1
-	KEY_RBUTTON KEY  = 2 //2
-	KEY_CANCEL KEY  = 3 //3
-	KEY_MBUTTON KEY  = 4 //4
-	KEY_XBUTTON_1 KEY  = 5 //5
-	KEY_XBUTTON_2 KEY  = 6 //6
-	KEY_BACK KEY  = 8 //8
-	KEY_TAB KEY  = 9 //9
-	KEY_LINEFEED KEY  = 10 //10
-	KEY_CLEAR KEY  = 12 //12
-	KEY_RETURN KEY  = 13 //13
-	KEY_SHIFT KEY  = 16 //16
-	KEY_CONTROL KEY  = 17 //17
-	KEY_ALT KEY  = 18 //18
-	KEY_PAUSE KEY  = 19 //19
-	KEY_CAPITAL KEY  = 20 //20
-	KEY_HANGUL KEY  = 21 //21
-	KEY_JUNJA KEY  = 23 //23
-	KEY_FINAL KEY  = 24 //24
-	KEY_KANJI KEY  = 25 //25
-	KEY_CONVERT KEY  = 28 //28
-	KEY_NONCONVERT KEY  = 29 //29
-	KEY_ACCEPT KEY  = 30 //30
-	KEY_MODECHANGE KEY  = 31 //31
-	KEY_ESCAPE KEY  = 27 //27
-	KEY_SPACE KEY  = 32 //32
-	KEY_PGUP KEY  = 33 //33
-	KEY_PGDN KEY  = 34 //34
-	KEY_END KEY  = 35 //35
-	KEY_HOME KEY  = 36 //36
-	KEY_LEFT KEY  = 37 //37
-	KEY_UP KEY  = 38 //38
-	KEY_RIGHT KEY  = 39 //39
-	KEY_DOWN KEY  = 40 //40
-	KEY_SELECT KEY  = 41 //41
-	KEY_PRINT KEY  = 42 //42
-	KEY_EXECUTE KEY  = 43 //43
-	KEY_SNAPSHOT KEY  = 44 //44
-	KEY_INSERT KEY  = 45 //45
-	KEY_DELETE KEY  = 46 //46
-	KEY_HELP KEY  = 47 //47
-	KEY_N_0 KEY  = 48 //48
-	KEY_N_1 KEY  = 49 //49
-	KEY_N_2 KEY  = 50 //50
-	KEY_N_3 KEY  = 51 //51
-	KEY_N_4 KEY  = 52 //52
-	KEY_N_5 KEY  = 53 //53
-	KEY_N_6 KEY  = 54 //54
-	KEY_N_7 KEY  = 55 //55
-	KEY_N_8 KEY  = 56 //56
-	KEY_N_9 KEY  = 57 //57
-	KEY_A KEY  = 65 //65
-	KEY_B KEY  = 66 //66
-	KEY_C KEY  = 67 //67
-	KEY_D KEY  = 68 //68
-	KEY_E KEY  = 69 //69
-	KEY_F KEY  = 70 //70
-	KEY_G KEY  = 71 //71
-	KEY_H KEY  = 72 //72
-	KEY_I KEY  = 73 //73
-	KEY_J KEY  = 74 //74
-	KEY_K KEY  = 75 //75
-	KEY_L KEY  = 76 //76
-	KEY_M KEY  = 77 //77
-	KEY_N KEY  = 78 //78
-	KEY_O KEY  = 79 //79
-	KEY_P KEY  = 80 //80
-	KEY_Q KEY  = 81 //81
-	KEY_R KEY  = 82 //82
-	KEY_S KEY  = 83 //83
-	KEY_T KEY  = 84 //84
-	KEY_U KEY  = 85 //85
-	KEY_V KEY  = 86 //86
-	KEY_W KEY  = 87 //87
-	KEY_X KEY  = 88 //88
-	KEY_Y KEY  = 89 //89
-	KEY_Z KEY  = 90 //90
-	KEY_LWIN KEY  = 91 //91
-	KEY_RWIN KEY  = 92 //92
-	KEY_APPS KEY  = 93 //93
-	KEY_SLEEP KEY  = 95 //95
-	KEY_NUMPAD_0 KEY  = 96 //96
-	KEY_NUMPAD_1 KEY  = 97 //97
-	KEY_NUMPAD_2 KEY  = 98 //98
-	KEY_NUMPAD_3 KEY  = 99 //99
-	KEY_NUMPAD_4 KEY  = 100 //100
-	KEY_NUMPAD_5 KEY  = 101 //101
-	KEY_NUMPAD_6 KEY  = 102 //102
-	KEY_NUMPAD_7 KEY  = 103 //103
-	KEY_NUMPAD_8 KEY  = 104 //104
-	KEY_NUMPAD_9 KEY  = 105 //105
-	KEY_MULTIPLY KEY  = 106 //106
-	KEY_ADD KEY  = 107 //107
-	KEY_SEPARATOR KEY  = 108 //108
-	KEY_SUBTRACT KEY  = 109 //109
-	KEY_DECIMAL KEY  = 110 //110
-	KEY_DIVIDEKEY KEY  = 111 //111
-	KEY_F_1 KEY  = 112 //112
-	KEY_F_2 KEY  = 113 //113
-	KEY_F_3 KEY  = 114 //114
-	KEY_F_4 KEY  = 115 //115
-	KEY_F_5 KEY  = 116 //116
-	KEY_F_6 KEY  = 117 //117
-	KEY_F_7 KEY  = 118 //118
-	KEY_F_8 KEY  = 119 //119
-	KEY_F_9 KEY  = 120 //120
-	KEY_F_10 KEY  = 121 //121
-	KEY_F_11 KEY  = 122 //122
-	KEY_F_12 KEY  = 123 //123
-	KEY_F_13 KEY  = 124 //124
-	KEY_F_14 KEY  = 125 //125
-	KEY_F_15 KEY  = 126 //126
-	KEY_F_16 KEY  = 127 //127
-	KEY_F_17 KEY  = 128 //128
-	KEY_F_18 KEY  = 129 //129
-	KEY_F_19 KEY  = 130 //130
-	KEY_F_20 KEY  = 131 //131
-	KEY_F_21 KEY  = 132 //132
-	KEY_F_22 KEY  = 133 //133
-	KEY_F_23 KEY  = 134 //134
-	KEY_F_24 KEY  = 135 //135
-	KEY_CAMERA KEY  = 136 //136
-	KEY_HARDWAREBACK KEY  = 137 //137
-	KEY_NUMLOCK KEY  = 144 //144
-	KEY_SCROLL KEY  = 145 //145
-	KEY_LSHIFT KEY  = 160 //160
-	KEY_RSHIFT KEY  = 161 //161
-	KEY_LCONTROL KEY  = 162 //162
-	KEY_RCONTROL KEY  = 163 //163
-	KEY_LALT KEY  = 164 //164
-	KEY_RALT KEY  = 165 //165
-	KEY_BROWSERBACK KEY  = 166 //166
-	KEY_BROWSERFORWARDKEY KEY  = 167 //167
-	KEY_BROWSERREFRESHKEY KEY  = 168 //168
-	KEY_BROWSERSTOP KEY  = 169 //169
-	KEY_BROWSERSEARCH KEY  = 170 //170
-	KEY_BROWSERFAVORITES KEY  = 171 //171
-	KEY_BROWSERHOME KEY  = 172 //172
-	KEY_VOLUMEMUTE KEY  = 173 //173
-	KEY_VOLUMEDOWN KEY  = 174 //174
-	KEY_VOLUMEUP KEY  = 175 //175
-	KEY_MEDIANEXTTRACKKEY KEY  = 176 //176
-	KEY_MEDIAPREVTRACKKEY KEY  = 177 //177
-	KEY_MEDIASTOP KEY  = 178 //178
-	KEY_MEDIAPLAYPAUSEKEY KEY  = 179 //179
-	KEY_LAUNCHMAIL KEY  = 180 //180
-	KEY_LAUNCHMEDIASELECT KEY  = 181 //181
-	KEY_LAUNCHAPP_1 KEY  = 182 //182
-	KEY_LAUNCHAPP_2 KEY  = 183 //183
-	KEY_SEMICOLONKEY KEY  = 186 //186
-	KEY_EQUAL KEY  = 187 //187
-	KEY_COMMA KEY  = 188 //188
-	KEY_MINUS KEY  = 189 //189
-	KEY_PERIOD KEY  = 190 //190
-	KEY_SLASH KEY  = 191 //191
-	KEY_TILDE KEY  = 192 //192
-	KEY_LEFTBRACKET KEY  = 219 //219
-	KEY_BACKSLASHKEY KEY  = 220 //220
-	KEY_RIGHTBRACKET KEY  = 221 //221
-	KEY_QUOTE KEY  = 222 //222
-	KEY_PARA KEY  = 223 //223
-	KEY_OEM_102 KEY  = 226 //226
-	KEY_ICOHELPKEY KEY  = 227 //227
-	KEY_ICO_00 KEY  = 228 //228
-	KEY_PROCESSKEY KEY  = 229 //229
-	KEY_ICOCLEAR KEY  = 230 //230
-	KEY_PACKET KEY  = 231 //231
-	KEY_ATTN KEY  = 246 //246
-	KEY_CRSEL KEY  = 247 //247
-	KEY_EXSEL KEY  = 248 //248
-	KEY_EREOF KEY  = 249 //249
-	KEY_PLAY KEY  = 250 //250
-	KEY_ZOOM KEY  = 251 //251
-	KEY_NONAME KEY  = 252 //252
-	KEY_PA_1 KEY  = 253 //253
-	KEY_OEMCLEAR KEY  = 254 //254
-	KEY_NONE KEY  = 255 //255
+	KEY_NULL KEY  = 0 //NULL
+	KEY_CANCEL KEY  = 3 //CANCEL
+	KEY_MBUTTON KEY  = 4 //MBUTTON
+	KEY_XBUTTON_1 KEY  = 5 //XBUTTON1
+	KEY_XBUTTON_2 KEY  = 6 //XBUTTON2
+	KEY_BACK KEY  = 8 //BACK
+	KEY_TAB KEY  = 9 //TAB
+	KEY_LINEFEED KEY  = 10 //LINEFEED
+	KEY_CLEAR KEY  = 12 //CLEAR
+	KEY_RETURN KEY  = 13 //RETURN
+	KEY_SHIFT KEY  = 16 //SHIFT
+	KEY_CONTROL KEY  = 17 //CONTROL
+	KEY_ALT KEY  = 18 //ALT
+	KEY_PAUSE KEY  = 19 //PAUSE
+	KEY_CAPITAL KEY  = 20 //CAPITAL
+	KEY_HANGUL KEY  = 21 //HANGUL
+	KEY_JUNJA KEY  = 23 //JUNJA
+	KEY_FINAL KEY  = 24 //FINAL
+	KEY_KANJI KEY  = 25 //KANJI
+	KEY_CONVERT KEY  = 28 //CONVERT
+	KEY_NONCONVERT KEY  = 29 //NONCONVERT
+	KEY_ACCEPT KEY  = 30 //ACCEPT
+	KEY_MODECHANGE KEY  = 31 //MODECHANGE
+	KEY_ESCAPE KEY  = 27 //ESCAPE
+	KEY_SPACE KEY  = 32 //SPACE
+	KEY_PGUP KEY  = 33 //PGUP
+	KEY_PGDN KEY  = 34 //PGDN
+	KEY_END KEY  = 35 //END
+	KEY_HOME KEY  = 36 //HOME
+	KEY_LEFT KEY  = 37 //LEFT
+	KEY_UP KEY  = 38 //UP
+	KEY_RIGHT KEY  = 39 //RIGHT
+	KEY_DOWN KEY  = 40 //DOWN
+	KEY_SELECT KEY  = 41 //SELECT
+	KEY_PRINT KEY  = 42 //PRINT
+	KEY_EXECUTE KEY  = 43 //EXECUTE
+	KEY_SNAPSHOT KEY  = 44 //SNAPSHOT
+	KEY_INSERT KEY  = 45 //INSERT
+	KEY_DELETE KEY  = 46 //DELETE
+	KEY_HELP KEY  = 47 //HELP
+	KEY_N_0 KEY  = 48 //N0
+	KEY_N_1 KEY  = 49 //N1
+	KEY_N_2 KEY  = 50 //N2
+	KEY_N_3 KEY  = 51 //N3
+	KEY_N_4 KEY  = 52 //N4
+	KEY_N_5 KEY  = 53 //N5
+	KEY_N_6 KEY  = 54 //N6
+	KEY_N_7 KEY  = 55 //N7
+	KEY_N_8 KEY  = 56 //N8
+	KEY_N_9 KEY  = 57 //N9
+	KEY_A KEY  = 65 //A
+	KEY_B KEY  = 66 //B
+	KEY_C KEY  = 67 //C
+	KEY_D KEY  = 68 //D
+	KEY_E KEY  = 69 //E
+	KEY_F KEY  = 70 //F
+	KEY_G KEY  = 71 //G
+	KEY_H KEY  = 72 //H
+	KEY_I KEY  = 73 //I
+	KEY_J KEY  = 74 //J
+	KEY_K KEY  = 75 //K
+	KEY_L KEY  = 76 //L
+	KEY_M KEY  = 77 //M
+	KEY_N KEY  = 78 //N
+	KEY_O KEY  = 79 //O
+	KEY_P KEY  = 80 //P
+	KEY_Q KEY  = 81 //Q
+	KEY_R KEY  = 82 //R
+	KEY_S KEY  = 83 //S
+	KEY_T KEY  = 84 //T
+	KEY_U KEY  = 85 //U
+	KEY_V KEY  = 86 //V
+	KEY_W KEY  = 87 //W
+	KEY_X KEY  = 88 //X
+	KEY_Y KEY  = 89 //Y
+	KEY_Z KEY  = 90 //Z
+	KEY_LWIN KEY  = 91 //LWIN
+	KEY_RWIN KEY  = 92 //RWIN
+	KEY_APPS KEY  = 93 //APPS
+	KEY_SLEEP KEY  = 95 //SLEEP
+	KEY_NUMPAD_0 KEY  = 96 //NUMPAD0
+	KEY_NUMPAD_1 KEY  = 97 //NUMPAD1
+	KEY_NUMPAD_2 KEY  = 98 //NUMPAD2
+	KEY_NUMPAD_3 KEY  = 99 //NUMPAD3
+	KEY_NUMPAD_4 KEY  = 100 //NUMPAD4
+	KEY_NUMPAD_5 KEY  = 101 //NUMPAD5
+	KEY_NUMPAD_6 KEY  = 102 //NUMPAD6
+	KEY_NUMPAD_7 KEY  = 103 //NUMPAD7
+	KEY_NUMPAD_8 KEY  = 104 //NUMPAD8
+	KEY_NUMPAD_9 KEY  = 105 //NUMPAD9
+	KEY_MULTIPLY KEY  = 106 //MULTIPLY
+	KEY_ADD KEY  = 107 //ADD
+	KEY_SEPARATOR KEY  = 108 //SEPARATOR
+	KEY_SUBTRACT KEY  = 109 //SUBTRACT
+	KEY_DECIMAL KEY  = 110 //DECIMAL
+	KEY_DIVIDEKEY KEY  = 111 //DIVIDEKEY
+	KEY_F_1 KEY  = 112 //F1
+	KEY_F_2 KEY  = 113 //F2
+	KEY_F_3 KEY  = 114 //F3
+	KEY_F_4 KEY  = 115 //F4
+	KEY_F_5 KEY  = 116 //F5
+	KEY_F_6 KEY  = 117 //F6
+	KEY_F_7 KEY  = 118 //F7
+	KEY_F_8 KEY  = 119 //F8
+	KEY_F_9 KEY  = 120 //F9
+	KEY_F_10 KEY  = 121 //F10
+	KEY_F_11 KEY  = 122 //F11
+	KEY_F_12 KEY  = 123 //F12
+	KEY_F_13 KEY  = 124 //F13
+	KEY_F_14 KEY  = 125 //F14
+	KEY_F_15 KEY  = 126 //F15
+	KEY_F_16 KEY  = 127 //F16
+	KEY_F_17 KEY  = 128 //F17
+	KEY_F_18 KEY  = 129 //F18
+	KEY_F_19 KEY  = 130 //F19
+	KEY_F_20 KEY  = 131 //F20
+	KEY_F_21 KEY  = 132 //F21
+	KEY_F_22 KEY  = 133 //F22
+	KEY_F_23 KEY  = 134 //F23
+	KEY_F_24 KEY  = 135 //F24
+	KEY_CAMERA KEY  = 136 //CAMERA
+	KEY_HARDWAREBACK KEY  = 137 //HARDWAREBACK
+	KEY_NUMLOCK KEY  = 144 //NUMLOCK
+	KEY_SCROLL KEY  = 145 //SCROLL
+	KEY_LSHIFT KEY  = 160 //LSHIFT
+	KEY_RSHIFT KEY  = 161 //RSHIFT
+	KEY_LCONTROL KEY  = 162 //LCONTROL
+	KEY_RCONTROL KEY  = 163 //RCONTROL
+	KEY_LALT KEY  = 164 //LALT
+	KEY_RALT KEY  = 165 //RALT
+	KEY_BROWSERBACK KEY  = 166 //BROWSERBACK
+	KEY_BROWSERFORWARDKEY KEY  = 167 //BROWSERFORWARDKEY
+	KEY_BROWSERREFRESHKEY KEY  = 168 //BROWSERREFRESHKEY
+	KEY_BROWSERSTOP KEY  = 169 //BROWSERSTOP
+	KEY_BROWSERSEARCH KEY  = 170 //BROWSERSEARCH
+	KEY_BROWSERFAVORITES KEY  = 171 //BROWSERFAVORITES
+	KEY_BROWSERHOME KEY  = 172 //BROWSERHOME
+	KEY_VOLUMEMUTE KEY  = 173 //VOLUMEMUTE
+	KEY_VOLUMEDOWN KEY  = 174 //VOLUMEDOWN
+	KEY_VOLUMEUP KEY  = 175 //VOLUMEUP
+	KEY_MEDIANEXTTRACKKEY KEY  = 176 //MEDIANEXTTRACKKEY
+	KEY_MEDIAPREVTRACKKEY KEY  = 177 //MEDIAPREVTRACKKEY
+	KEY_MEDIASTOP KEY  = 178 //MEDIASTOP
+	KEY_MEDIAPLAYPAUSEKEY KEY  = 179 //MEDIAPLAYPAUSEKEY
+	KEY_LAUNCHMAIL KEY  = 180 //LAUNCHMAIL
+	KEY_LAUNCHMEDIASELECT KEY  = 181 //LAUNCHMEDIASELECT
+	KEY_LAUNCHAPP_1 KEY  = 182 //LAUNCHAPP1
+	KEY_LAUNCHAPP_2 KEY  = 183 //LAUNCHAPP2
+	KEY_SEMICOLONKEY KEY  = 186 //SEMICOLONKEY
+	KEY_EQUAL KEY  = 187 //EQUAL
+	KEY_COMMA KEY  = 188 //COMMA
+	KEY_MINUS KEY  = 189 //MINUS
+	KEY_PERIOD KEY  = 190 //PERIOD
+	KEY_SLASH KEY  = 191 //SLASH
+	KEY_TILDE KEY  = 192 //TILDE
+	KEY_LEFTBRACKET KEY  = 219 //LEFTBRACKET
+	KEY_BACKSLASHKEY KEY  = 220 //BACKSLASHKEY
+	KEY_RIGHTBRACKET KEY  = 221 //RIGHTBRACKET
+	KEY_QUOTE KEY  = 222 //QUOTE
+	KEY_PARA KEY  = 223 //PARA
+	KEY_OEM_102 KEY  = 226 //OEM102
+	KEY_ICOHELPKEY KEY  = 227 //ICOHELPKEY
+	KEY_ICO_00 KEY  = 228 //ICO00
+	KEY_PROCESSKEY KEY  = 229 //PROCESSKEY
+	KEY_ICOCLEAR KEY  = 230 //ICOCLEAR
+	KEY_PACKET KEY  = 231 //PACKET
+	KEY_ATTN KEY  = 246 //ATTN
+	KEY_CRSEL KEY  = 247 //CRSEL
+	KEY_EXSEL KEY  = 248 //EXSEL
+	KEY_EREOF KEY  = 249 //EREOF
+	KEY_PLAY KEY  = 250 //PLAY
+	KEY_ZOOM KEY  = 251 //ZOOM
+	KEY_NONAME KEY  = 252 //NONAME
+	KEY_PA_1 KEY  = 253 //PA1
+	KEY_OEMCLEAR KEY  = 254 //OEMCLEAR
+	KEY_NONE KEY  = 255 //NONE
 )
 
-var ALL_KEY protocol.IEnumCollection = []protocol.IEnum{KEY_NULL,KEY_LBUTTON,KEY_RBUTTON,KEY_CANCEL,KEY_MBUTTON,KEY_XBUTTON_1,KEY_XBUTTON_2,KEY_BACK,KEY_TAB,KEY_LINEFEED,KEY_CLEAR,KEY_RETURN,KEY_SHIFT,KEY_CONTROL,KEY_ALT,KEY_PAUSE,KEY_CAPITAL,KEY_HANGUL,KEY_JUNJA,KEY_FINAL,KEY_KANJI,KEY_CONVERT,KEY_NONCONVERT,KEY_ACCEPT,KEY_MODECHANGE,KEY_ESCAPE,KEY_SPACE,KEY_PGUP,KEY_PGDN,KEY_END,KEY_HOME,KEY_LEFT,KEY_UP,KEY_RIGHT,KEY_DOWN,KEY_SELECT,KEY_PRINT,KEY_EXECUTE,KEY_SNAPSHOT,KEY_INSERT,KEY_DELETE,KEY_HELP,KEY_N_0,KEY_N_1,KEY_N_2,KEY_N_3,KEY_N_4,KEY_N_5,KEY_N_6,KEY_N_7,KEY_N_8,KEY_N_9,KEY_A,KEY_B,KEY_C,KEY_D,KEY_E,KEY_F,KEY_G,KEY_H,KEY_I,KEY_J,KEY_K,KEY_L,KEY_M,KEY_N,KEY_O,KEY_P,KEY_Q,KEY_R,KEY_S,KEY_T,KEY_U,KEY_V,KEY_W,KEY_X,KEY_Y,KEY_Z,KEY_LWIN,KEY_RWIN,KEY_APPS,KEY_SLEEP,KEY_NUMPAD_0,KEY_NUMPAD_1,KEY_NUMPAD_2,KEY_NUMPAD_3,KEY_NUMPAD_4,KEY_NUMPAD_5,KEY_NUMPAD_6,KEY_NUMPAD_7,KEY_NUMPAD_8,KEY_NUMPAD_9,KEY_MULTIPLY,KEY_ADD,KEY_SEPARATOR,KEY_SUBTRACT,KEY_DECIMAL,KEY_DIVIDEKEY,KEY_F_1,KEY_F_2,KEY_F_3,KEY_F_4,KEY_F_5,KEY_F_6,KEY_F_7,KEY_F_8,KEY_F_9,KEY_F_10,KEY_F_11,KEY_F_12,KEY_F_13,KEY_F_14,KEY_F_15,KEY_F_16,KEY_F_17,KEY_F_18,KEY_F_19,KEY_F_20,KEY_F_21,KEY_F_22,KEY_F_23,KEY_F_24,KEY_CAMERA,KEY_HARDWAREBACK,KEY_NUMLOCK,KEY_SCROLL,KEY_LSHIFT,KEY_RSHIFT,KEY_LCONTROL,KEY_RCONTROL,KEY_LALT,KEY_RALT,KEY_BROWSERBACK,KEY_BROWSERFORWARDKEY,KEY_BROWSERREFRESHKEY,KEY_BROWSERSTOP,KEY_BROWSERSEARCH,KEY_BROWSERFAVORITES,KEY_BROWSERHOME,KEY_VOLUMEMUTE,KEY_VOLUMEDOWN,KEY_VOLUMEUP,KEY_MEDIANEXTTRACKKEY,KEY_MEDIAPREVTRACKKEY,KEY_MEDIASTOP,KEY_MEDIAPLAYPAUSEKEY,KEY_LAUNCHMAIL,KEY_LAUNCHMEDIASELECT,KEY_LAUNCHAPP_1,KEY_LAUNCHAPP_2,KEY_SEMICOLONKEY,KEY_EQUAL,KEY_COMMA,KEY_MINUS,KEY_PERIOD,KEY_SLASH,KEY_TILDE,KEY_LEFTBRACKET,KEY_BACKSLASHKEY,KEY_RIGHTBRACKET,KEY_QUOTE,KEY_PARA,KEY_OEM_102,KEY_ICOHELPKEY,KEY_ICO_00,KEY_PROCESSKEY,KEY_ICOCLEAR,KEY_PACKET,KEY_ATTN,KEY_CRSEL,KEY_EXSEL,KEY_EREOF,KEY_PLAY,KEY_ZOOM,KEY_NONAME,KEY_PA_1,KEY_OEMCLEAR,KEY_NONE}
+var ALL_KEY protocol.IEnumCollection = []protocol.IEnum{KEY_NULL,KEY_CANCEL,KEY_MBUTTON,KEY_XBUTTON_1,KEY_XBUTTON_2,KEY_BACK,KEY_TAB,KEY_LINEFEED,KEY_CLEAR,KEY_RETURN,KEY_SHIFT,KEY_CONTROL,KEY_ALT,KEY_PAUSE,KEY_CAPITAL,KEY_HANGUL,KEY_JUNJA,KEY_FINAL,KEY_KANJI,KEY_CONVERT,KEY_NONCONVERT,KEY_ACCEPT,KEY_MODECHANGE,KEY_ESCAPE,KEY_SPACE,KEY_PGUP,KEY_PGDN,KEY_END,KEY_HOME,KEY_LEFT,KEY_UP,KEY_RIGHT,KEY_DOWN,KEY_SELECT,KEY_PRINT,KEY_EXECUTE,KEY_SNAPSHOT,KEY_INSERT,KEY_DELETE,KEY_HELP,KEY_N_0,KEY_N_1,KEY_N_2,KEY_N_3,KEY_N_4,KEY_N_5,KEY_N_6,KEY_N_7,KEY_N_8,KEY_N_9,KEY_A,KEY_B,KEY_C,KEY_D,KEY_E,KEY_F,KEY_G,KEY_H,KEY_I,KEY_J,KEY_K,KEY_L,KEY_M,KEY_N,KEY_O,KEY_P,KEY_Q,KEY_R,KEY_S,KEY_T,KEY_U,KEY_V,KEY_W,KEY_X,KEY_Y,KEY_Z,KEY_LWIN,KEY_RWIN,KEY_APPS,KEY_SLEEP,KEY_NUMPAD_0,KEY_NUMPAD_1,KEY_NUMPAD_2,KEY_NUMPAD_3,KEY_NUMPAD_4,KEY_NUMPAD_5,KEY_NUMPAD_6,KEY_NUMPAD_7,KEY_NUMPAD_8,KEY_NUMPAD_9,KEY_MULTIPLY,KEY_ADD,KEY_SEPARATOR,KEY_SUBTRACT,KEY_DECIMAL,KEY_DIVIDEKEY,KEY_F_1,KEY_F_2,KEY_F_3,KEY_F_4,KEY_F_5,KEY_F_6,KEY_F_7,KEY_F_8,KEY_F_9,KEY_F_10,KEY_F_11,KEY_F_12,KEY_F_13,KEY_F_14,KEY_F_15,KEY_F_16,KEY_F_17,KEY_F_18,KEY_F_19,KEY_F_20,KEY_F_21,KEY_F_22,KEY_F_23,KEY_F_24,KEY_CAMERA,KEY_HARDWAREBACK,KEY_NUMLOCK,KEY_SCROLL,KEY_LSHIFT,KEY_RSHIFT,KEY_LCONTROL,KEY_RCONTROL,KEY_LALT,KEY_RALT,KEY_BROWSERBACK,KEY_BROWSERFORWARDKEY,KEY_BROWSERREFRESHKEY,KEY_BROWSERSTOP,KEY_BROWSERSEARCH,KEY_BROWSERFAVORITES,KEY_BROWSERHOME,KEY_VOLUMEMUTE,KEY_VOLUMEDOWN,KEY_VOLUMEUP,KEY_MEDIANEXTTRACKKEY,KEY_MEDIAPREVTRACKKEY,KEY_MEDIASTOP,KEY_MEDIAPLAYPAUSEKEY,KEY_LAUNCHMAIL,KEY_LAUNCHMEDIASELECT,KEY_LAUNCHAPP_1,KEY_LAUNCHAPP_2,KEY_SEMICOLONKEY,KEY_EQUAL,KEY_COMMA,KEY_MINUS,KEY_PERIOD,KEY_SLASH,KEY_TILDE,KEY_LEFTBRACKET,KEY_BACKSLASHKEY,KEY_RIGHTBRACKET,KEY_QUOTE,KEY_PARA,KEY_OEM_102,KEY_ICOHELPKEY,KEY_ICO_00,KEY_PROCESSKEY,KEY_ICOCLEAR,KEY_PACKET,KEY_ATTN,KEY_CRSEL,KEY_EXSEL,KEY_EREOF,KEY_PLAY,KEY_ZOOM,KEY_NONAME,KEY_PA_1,KEY_OEMCLEAR,KEY_NONE}
 
 func TO_KEY(s string)KEY{
 	switch s {
-	case "0":
+	case "NULL":
 		return KEY_NULL
-	case "1":
-		return KEY_LBUTTON
-	case "2":
-		return KEY_RBUTTON
-	case "3":
+	case "CANCEL":
 		return KEY_CANCEL
-	case "4":
+	case "MBUTTON":
 		return KEY_MBUTTON
-	case "5":
+	case "XBUTTON1":
 		return KEY_XBUTTON_1
-	case "6":
+	case "XBUTTON2":
 		return KEY_XBUTTON_2
-	case "8":
+	case "BACK":
 		return KEY_BACK
-	case "9":
+	case "TAB":
 		return KEY_TAB
-	case "10":
+	case "LINEFEED":
 		return KEY_LINEFEED
-	case "12":
+	case "CLEAR":
 		return KEY_CLEAR
-	case "13":
+	case "RETURN":
 		return KEY_RETURN
-	case "16":
+	case "SHIFT":
 		return KEY_SHIFT
-	case "17":
+	case "CONTROL":
 		return KEY_CONTROL
-	case "18":
+	case "ALT":
 		return KEY_ALT
-	case "19":
+	case "PAUSE":
 		return KEY_PAUSE
-	case "20":
+	case "CAPITAL":
 		return KEY_CAPITAL
-	case "21":
+	case "HANGUL":
 		return KEY_HANGUL
-	case "23":
+	case "JUNJA":
 		return KEY_JUNJA
-	case "24":
+	case "FINAL":
 		return KEY_FINAL
-	case "25":
+	case "KANJI":
 		return KEY_KANJI
-	case "28":
+	case "CONVERT":
 		return KEY_CONVERT
-	case "29":
+	case "NONCONVERT":
 		return KEY_NONCONVERT
-	case "30":
+	case "ACCEPT":
 		return KEY_ACCEPT
-	case "31":
+	case "MODECHANGE":
 		return KEY_MODECHANGE
-	case "27":
+	case "ESCAPE":
 		return KEY_ESCAPE
-	case "32":
+	case "SPACE":
 		return KEY_SPACE
-	case "33":
+	case "PGUP":
 		return KEY_PGUP
-	case "34":
+	case "PGDN":
 		return KEY_PGDN
-	case "35":
+	case "END":
 		return KEY_END
-	case "36":
+	case "HOME":
 		return KEY_HOME
-	case "37":
+	case "LEFT":
 		return KEY_LEFT
-	case "38":
+	case "UP":
 		return KEY_UP
-	case "39":
+	case "RIGHT":
 		return KEY_RIGHT
-	case "40":
+	case "DOWN":
 		return KEY_DOWN
-	case "41":
+	case "SELECT":
 		return KEY_SELECT
-	case "42":
+	case "PRINT":
 		return KEY_PRINT
-	case "43":
+	case "EXECUTE":
 		return KEY_EXECUTE
-	case "44":
+	case "SNAPSHOT":
 		return KEY_SNAPSHOT
-	case "45":
+	case "INSERT":
 		return KEY_INSERT
-	case "46":
+	case "DELETE":
 		return KEY_DELETE
-	case "47":
+	case "HELP":
 		return KEY_HELP
-	case "48":
+	case "N0":
 		return KEY_N_0
-	case "49":
+	case "N1":
 		return KEY_N_1
-	case "50":
+	case "N2":
 		return KEY_N_2
-	case "51":
+	case "N3":
 		return KEY_N_3
-	case "52":
+	case "N4":
 		return KEY_N_4
-	case "53":
+	case "N5":
 		return KEY_N_5
-	case "54":
+	case "N6":
 		return KEY_N_6
-	case "55":
+	case "N7":
 		return KEY_N_7
-	case "56":
+	case "N8":
 		return KEY_N_8
-	case "57":
+	case "N9":
 		return KEY_N_9
-	case "65":
+	case "A":
 		return KEY_A
-	case "66":
+	case "B":
 		return KEY_B
-	case "67":
+	case "C":
 		return KEY_C
-	case "68":
+	case "D":
 		return KEY_D
-	case "69":
+	case "E":
 		return KEY_E
-	case "70":
+	case "F":
 		return KEY_F
-	case "71":
+	case "G":
 		return KEY_G
-	case "72":
+	case "H":
 		return KEY_H
-	case "73":
+	case "I":
 		return KEY_I
-	case "74":
+	case "J":
 		return KEY_J
-	case "75":
+	case "K":
 		return KEY_K
-	case "76":
+	case "L":
 		return KEY_L
-	case "77":
+	case "M":
 		return KEY_M
-	case "78":
+	case "N":
 		return KEY_N
-	case "79":
+	case "O":
 		return KEY_O
-	case "80":
+	case "P":
 		return KEY_P
-	case "81":
+	case "Q":
 		return KEY_Q
-	case "82":
+	case "R":
 		return KEY_R
-	case "83":
+	case "S":
 		return KEY_S
-	case "84":
+	case "T":
 		return KEY_T
-	case "85":
+	case "U":
 		return KEY_U
-	case "86":
+	case "V":
 		return KEY_V
-	case "87":
+	case "W":
 		return KEY_W
-	case "88":
+	case "X":
 		return KEY_X
-	case "89":
+	case "Y":
 		return KEY_Y
-	case "90":
+	case "Z":
 		return KEY_Z
-	case "91":
+	case "LWIN":
 		return KEY_LWIN
-	case "92":
+	case "RWIN":
 		return KEY_RWIN
-	case "93":
+	case "APPS":
 		return KEY_APPS
-	case "95":
+	case "SLEEP":
 		return KEY_SLEEP
-	case "96":
+	case "NUMPAD0":
 		return KEY_NUMPAD_0
-	case "97":
+	case "NUMPAD1":
 		return KEY_NUMPAD_1
-	case "98":
+	case "NUMPAD2":
 		return KEY_NUMPAD_2
-	case "99":
+	case "NUMPAD3":
 		return KEY_NUMPAD_3
-	case "100":
+	case "NUMPAD4":
 		return KEY_NUMPAD_4
-	case "101":
+	case "NUMPAD5":
 		return KEY_NUMPAD_5
-	case "102":
+	case "NUMPAD6":
 		return KEY_NUMPAD_6
-	case "103":
+	case "NUMPAD7":
 		return KEY_NUMPAD_7
-	case "104":
+	case "NUMPAD8":
 		return KEY_NUMPAD_8
-	case "105":
+	case "NUMPAD9":
 		return KEY_NUMPAD_9
-	case "106":
+	case "MULTIPLY":
 		return KEY_MULTIPLY
-	case "107":
+	case "ADD":
 		return KEY_ADD
-	case "108":
+	case "SEPARATOR":
 		return KEY_SEPARATOR
-	case "109":
+	case "SUBTRACT":
 		return KEY_SUBTRACT
-	case "110":
+	case "DECIMAL":
 		return KEY_DECIMAL
-	case "111":
+	case "DIVIDEKEY":
 		return KEY_DIVIDEKEY
-	case "112":
+	case "F1":
 		return KEY_F_1
-	case "113":
+	case "F2":
 		return KEY_F_2
-	case "114":
+	case "F3":
 		return KEY_F_3
-	case "115":
+	case "F4":
 		return KEY_F_4
-	case "116":
+	case "F5":
 		return KEY_F_5
-	case "117":
+	case "F6":
 		return KEY_F_6
-	case "118":
+	case "F7":
 		return KEY_F_7
-	case "119":
+	case "F8":
 		return KEY_F_8
-	case "120":
+	case "F9":
 		return KEY_F_9
-	case "121":
+	case "F10":
 		return KEY_F_10
-	case "122":
+	case "F11":
 		return KEY_F_11
-	case "123":
+	case "F12":
 		return KEY_F_12
-	case "124":
+	case "F13":
 		return KEY_F_13
-	case "125":
+	case "F14":
 		return KEY_F_14
-	case "126":
+	case "F15":
 		return KEY_F_15
-	case "127":
+	case "F16":
 		return KEY_F_16
-	case "128":
+	case "F17":
 		return KEY_F_17
-	case "129":
+	case "F18":
 		return KEY_F_18
-	case "130":
+	case "F19":
 		return KEY_F_19
-	case "131":
+	case "F20":
 		return KEY_F_20
-	case "132":
+	case "F21":
 		return KEY_F_21
-	case "133":
+	case "F22":
 		return KEY_F_22
-	case "134":
+	case "F23":
 		return KEY_F_23
-	case "135":
+	case "F24":
 		return KEY_F_24
-	case "136":
+	case "CAMERA":
 		return KEY_CAMERA
-	case "137":
+	case "HARDWAREBACK":
 		return KEY_HARDWAREBACK
-	case "144":
+	case "NUMLOCK":
 		return KEY_NUMLOCK
-	case "145":
+	case "SCROLL":
 		return KEY_SCROLL
-	case "160":
+	case "LSHIFT":
 		return KEY_LSHIFT
-	case "161":
+	case "RSHIFT":
 		return KEY_RSHIFT
-	case "162":
+	case "LCONTROL":
 		return KEY_LCONTROL
-	case "163":
+	case "RCONTROL":
 		return KEY_RCONTROL
-	case "164":
+	case "LALT":
 		return KEY_LALT
-	case "165":
+	case "RALT":
 		return KEY_RALT
-	case "166":
+	case "BROWSERBACK":
 		return KEY_BROWSERBACK
-	case "167":
+	case "BROWSERFORWARDKEY":
 		return KEY_BROWSERFORWARDKEY
-	case "168":
+	case "BROWSERREFRESHKEY":
 		return KEY_BROWSERREFRESHKEY
-	case "169":
+	case "BROWSERSTOP":
 		return KEY_BROWSERSTOP
-	case "170":
+	case "BROWSERSEARCH":
 		return KEY_BROWSERSEARCH
-	case "171":
+	case "BROWSERFAVORITES":
 		return KEY_BROWSERFAVORITES
-	case "172":
+	case "BROWSERHOME":
 		return KEY_BROWSERHOME
-	case "173":
+	case "VOLUMEMUTE":
 		return KEY_VOLUMEMUTE
-	case "174":
+	case "VOLUMEDOWN":
 		return KEY_VOLUMEDOWN
-	case "175":
+	case "VOLUMEUP":
 		return KEY_VOLUMEUP
-	case "176":
+	case "MEDIANEXTTRACKKEY":
 		return KEY_MEDIANEXTTRACKKEY
-	case "177":
+	case "MEDIAPREVTRACKKEY":
 		return KEY_MEDIAPREVTRACKKEY
-	case "178":
+	case "MEDIASTOP":
 		return KEY_MEDIASTOP
-	case "179":
+	case "MEDIAPLAYPAUSEKEY":
 		return KEY_MEDIAPLAYPAUSEKEY
-	case "180":
+	case "LAUNCHMAIL":
 		return KEY_LAUNCHMAIL
-	case "181":
+	case "LAUNCHMEDIASELECT":
 		return KEY_LAUNCHMEDIASELECT
-	case "182":
+	case "LAUNCHAPP1":
 		return KEY_LAUNCHAPP_1
-	case "183":
+	case "LAUNCHAPP2":
 		return KEY_LAUNCHAPP_2
-	case "186":
+	case "SEMICOLONKEY":
 		return KEY_SEMICOLONKEY
-	case "187":
+	case "EQUAL":
 		return KEY_EQUAL
-	case "188":
+	case "COMMA":
 		return KEY_COMMA
-	case "189":
+	case "MINUS":
 		return KEY_MINUS
-	case "190":
+	case "PERIOD":
 		return KEY_PERIOD
-	case "191":
+	case "SLASH":
 		return KEY_SLASH
-	case "192":
+	case "TILDE":
 		return KEY_TILDE
-	case "219":
+	case "LEFTBRACKET":
 		return KEY_LEFTBRACKET
-	case "220":
+	case "BACKSLASHKEY":
 		return KEY_BACKSLASHKEY
-	case "221":
+	case "RIGHTBRACKET":
 		return KEY_RIGHTBRACKET
-	case "222":
+	case "QUOTE":
 		return KEY_QUOTE
-	case "223":
+	case "PARA":
 		return KEY_PARA
-	case "226":
+	case "OEM102":
 		return KEY_OEM_102
-	case "227":
+	case "ICOHELPKEY":
 		return KEY_ICOHELPKEY
-	case "228":
+	case "ICO00":
 		return KEY_ICO_00
-	case "229":
+	case "PROCESSKEY":
 		return KEY_PROCESSKEY
-	case "230":
+	case "ICOCLEAR":
 		return KEY_ICOCLEAR
-	case "231":
+	case "PACKET":
 		return KEY_PACKET
-	case "246":
+	case "ATTN":
 		return KEY_ATTN
-	case "247":
+	case "CRSEL":
 		return KEY_CRSEL
-	case "248":
+	case "EXSEL":
 		return KEY_EXSEL
-	case "249":
+	case "EREOF":
 		return KEY_EREOF
-	case "250":
+	case "PLAY":
 		return KEY_PLAY
-	case "251":
+	case "ZOOM":
 		return KEY_ZOOM
-	case "252":
+	case "NONAME":
 		return KEY_NONAME
-	case "253":
+	case "PA1":
 		return KEY_PA_1
-	case "254":
+	case "OEMCLEAR":
 		return KEY_OEMCLEAR
-	case "255":
+	case "NONE":
 		return KEY_NONE
 	}
 	return -1
@@ -560,361 +554,357 @@ func (this KEY) Enum()protocol.Enum{
 func (this KEY) ToString()string{
 	switch this {
 	case KEY_NULL:
-		return "0"
-	case KEY_LBUTTON:
-		return "1"
-	case KEY_RBUTTON:
-		return "2"
+		return "NULL"
 	case KEY_CANCEL:
-		return "3"
+		return "CANCEL"
 	case KEY_MBUTTON:
-		return "4"
+		return "MBUTTON"
 	case KEY_XBUTTON_1:
-		return "5"
+		return "XBUTTON1"
 	case KEY_XBUTTON_2:
-		return "6"
+		return "XBUTTON2"
 	case KEY_BACK:
-		return "8"
+		return "BACK"
 	case KEY_TAB:
-		return "9"
+		return "TAB"
 	case KEY_LINEFEED:
-		return "10"
+		return "LINEFEED"
 	case KEY_CLEAR:
-		return "12"
+		return "CLEAR"
 	case KEY_RETURN:
-		return "13"
+		return "RETURN"
 	case KEY_SHIFT:
-		return "16"
+		return "SHIFT"
 	case KEY_CONTROL:
-		return "17"
+		return "CONTROL"
 	case KEY_ALT:
-		return "18"
+		return "ALT"
 	case KEY_PAUSE:
-		return "19"
+		return "PAUSE"
 	case KEY_CAPITAL:
-		return "20"
+		return "CAPITAL"
 	case KEY_HANGUL:
-		return "21"
+		return "HANGUL"
 	case KEY_JUNJA:
-		return "23"
+		return "JUNJA"
 	case KEY_FINAL:
-		return "24"
+		return "FINAL"
 	case KEY_KANJI:
-		return "25"
+		return "KANJI"
 	case KEY_CONVERT:
-		return "28"
+		return "CONVERT"
 	case KEY_NONCONVERT:
-		return "29"
+		return "NONCONVERT"
 	case KEY_ACCEPT:
-		return "30"
+		return "ACCEPT"
 	case KEY_MODECHANGE:
-		return "31"
+		return "MODECHANGE"
 	case KEY_ESCAPE:
-		return "27"
+		return "ESCAPE"
 	case KEY_SPACE:
-		return "32"
+		return "SPACE"
 	case KEY_PGUP:
-		return "33"
+		return "PGUP"
 	case KEY_PGDN:
-		return "34"
+		return "PGDN"
 	case KEY_END:
-		return "35"
+		return "END"
 	case KEY_HOME:
-		return "36"
+		return "HOME"
 	case KEY_LEFT:
-		return "37"
+		return "LEFT"
 	case KEY_UP:
-		return "38"
+		return "UP"
 	case KEY_RIGHT:
-		return "39"
+		return "RIGHT"
 	case KEY_DOWN:
-		return "40"
+		return "DOWN"
 	case KEY_SELECT:
-		return "41"
+		return "SELECT"
 	case KEY_PRINT:
-		return "42"
+		return "PRINT"
 	case KEY_EXECUTE:
-		return "43"
+		return "EXECUTE"
 	case KEY_SNAPSHOT:
-		return "44"
+		return "SNAPSHOT"
 	case KEY_INSERT:
-		return "45"
+		return "INSERT"
 	case KEY_DELETE:
-		return "46"
+		return "DELETE"
 	case KEY_HELP:
-		return "47"
+		return "HELP"
 	case KEY_N_0:
-		return "48"
+		return "N0"
 	case KEY_N_1:
-		return "49"
+		return "N1"
 	case KEY_N_2:
-		return "50"
+		return "N2"
 	case KEY_N_3:
-		return "51"
+		return "N3"
 	case KEY_N_4:
-		return "52"
+		return "N4"
 	case KEY_N_5:
-		return "53"
+		return "N5"
 	case KEY_N_6:
-		return "54"
+		return "N6"
 	case KEY_N_7:
-		return "55"
+		return "N7"
 	case KEY_N_8:
-		return "56"
+		return "N8"
 	case KEY_N_9:
-		return "57"
+		return "N9"
 	case KEY_A:
-		return "65"
+		return "A"
 	case KEY_B:
-		return "66"
+		return "B"
 	case KEY_C:
-		return "67"
+		return "C"
 	case KEY_D:
-		return "68"
+		return "D"
 	case KEY_E:
-		return "69"
+		return "E"
 	case KEY_F:
-		return "70"
+		return "F"
 	case KEY_G:
-		return "71"
+		return "G"
 	case KEY_H:
-		return "72"
+		return "H"
 	case KEY_I:
-		return "73"
+		return "I"
 	case KEY_J:
-		return "74"
+		return "J"
 	case KEY_K:
-		return "75"
+		return "K"
 	case KEY_L:
-		return "76"
+		return "L"
 	case KEY_M:
-		return "77"
+		return "M"
 	case KEY_N:
-		return "78"
+		return "N"
 	case KEY_O:
-		return "79"
+		return "O"
 	case KEY_P:
-		return "80"
+		return "P"
 	case KEY_Q:
-		return "81"
+		return "Q"
 	case KEY_R:
-		return "82"
+		return "R"
 	case KEY_S:
-		return "83"
+		return "S"
 	case KEY_T:
-		return "84"
+		return "T"
 	case KEY_U:
-		return "85"
+		return "U"
 	case KEY_V:
-		return "86"
+		return "V"
 	case KEY_W:
-		return "87"
+		return "W"
 	case KEY_X:
-		return "88"
+		return "X"
 	case KEY_Y:
-		return "89"
+		return "Y"
 	case KEY_Z:
-		return "90"
+		return "Z"
 	case KEY_LWIN:
-		return "91"
+		return "LWIN"
 	case KEY_RWIN:
-		return "92"
+		return "RWIN"
 	case KEY_APPS:
-		return "93"
+		return "APPS"
 	case KEY_SLEEP:
-		return "95"
+		return "SLEEP"
 	case KEY_NUMPAD_0:
-		return "96"
+		return "NUMPAD0"
 	case KEY_NUMPAD_1:
-		return "97"
+		return "NUMPAD1"
 	case KEY_NUMPAD_2:
-		return "98"
+		return "NUMPAD2"
 	case KEY_NUMPAD_3:
-		return "99"
+		return "NUMPAD3"
 	case KEY_NUMPAD_4:
-		return "100"
+		return "NUMPAD4"
 	case KEY_NUMPAD_5:
-		return "101"
+		return "NUMPAD5"
 	case KEY_NUMPAD_6:
-		return "102"
+		return "NUMPAD6"
 	case KEY_NUMPAD_7:
-		return "103"
+		return "NUMPAD7"
 	case KEY_NUMPAD_8:
-		return "104"
+		return "NUMPAD8"
 	case KEY_NUMPAD_9:
-		return "105"
+		return "NUMPAD9"
 	case KEY_MULTIPLY:
-		return "106"
+		return "MULTIPLY"
 	case KEY_ADD:
-		return "107"
+		return "ADD"
 	case KEY_SEPARATOR:
-		return "108"
+		return "SEPARATOR"
 	case KEY_SUBTRACT:
-		return "109"
+		return "SUBTRACT"
 	case KEY_DECIMAL:
-		return "110"
+		return "DECIMAL"
 	case KEY_DIVIDEKEY:
-		return "111"
+		return "DIVIDEKEY"
 	case KEY_F_1:
-		return "112"
+		return "F1"
 	case KEY_F_2:
-		return "113"
+		return "F2"
 	case KEY_F_3:
-		return "114"
+		return "F3"
 	case KEY_F_4:
-		return "115"
+		return "F4"
 	case KEY_F_5:
-		return "116"
+		return "F5"
 	case KEY_F_6:
-		return "117"
+		return "F6"
 	case KEY_F_7:
-		return "118"
+		return "F7"
 	case KEY_F_8:
-		return "119"
+		return "F8"
 	case KEY_F_9:
-		return "120"
+		return "F9"
 	case KEY_F_10:
-		return "121"
+		return "F10"
 	case KEY_F_11:
-		return "122"
+		return "F11"
 	case KEY_F_12:
-		return "123"
+		return "F12"
 	case KEY_F_13:
-		return "124"
+		return "F13"
 	case KEY_F_14:
-		return "125"
+		return "F14"
 	case KEY_F_15:
-		return "126"
+		return "F15"
 	case KEY_F_16:
-		return "127"
+		return "F16"
 	case KEY_F_17:
-		return "128"
+		return "F17"
 	case KEY_F_18:
-		return "129"
+		return "F18"
 	case KEY_F_19:
-		return "130"
+		return "F19"
 	case KEY_F_20:
-		return "131"
+		return "F20"
 	case KEY_F_21:
-		return "132"
+		return "F21"
 	case KEY_F_22:
-		return "133"
+		return "F22"
 	case KEY_F_23:
-		return "134"
+		return "F23"
 	case KEY_F_24:
-		return "135"
+		return "F24"
 	case KEY_CAMERA:
-		return "136"
+		return "CAMERA"
 	case KEY_HARDWAREBACK:
-		return "137"
+		return "HARDWAREBACK"
 	case KEY_NUMLOCK:
-		return "144"
+		return "NUMLOCK"
 	case KEY_SCROLL:
-		return "145"
+		return "SCROLL"
 	case KEY_LSHIFT:
-		return "160"
+		return "LSHIFT"
 	case KEY_RSHIFT:
-		return "161"
+		return "RSHIFT"
 	case KEY_LCONTROL:
-		return "162"
+		return "LCONTROL"
 	case KEY_RCONTROL:
-		return "163"
+		return "RCONTROL"
 	case KEY_LALT:
-		return "164"
+		return "LALT"
 	case KEY_RALT:
-		return "165"
+		return "RALT"
 	case KEY_BROWSERBACK:
-		return "166"
+		return "BROWSERBACK"
 	case KEY_BROWSERFORWARDKEY:
-		return "167"
+		return "BROWSERFORWARDKEY"
 	case KEY_BROWSERREFRESHKEY:
-		return "168"
+		return "BROWSERREFRESHKEY"
 	case KEY_BROWSERSTOP:
-		return "169"
+		return "BROWSERSTOP"
 	case KEY_BROWSERSEARCH:
-		return "170"
+		return "BROWSERSEARCH"
 	case KEY_BROWSERFAVORITES:
-		return "171"
+		return "BROWSERFAVORITES"
 	case KEY_BROWSERHOME:
-		return "172"
+		return "BROWSERHOME"
 	case KEY_VOLUMEMUTE:
-		return "173"
+		return "VOLUMEMUTE"
 	case KEY_VOLUMEDOWN:
-		return "174"
+		return "VOLUMEDOWN"
 	case KEY_VOLUMEUP:
-		return "175"
+		return "VOLUMEUP"
 	case KEY_MEDIANEXTTRACKKEY:
-		return "176"
+		return "MEDIANEXTTRACKKEY"
 	case KEY_MEDIAPREVTRACKKEY:
-		return "177"
+		return "MEDIAPREVTRACKKEY"
 	case KEY_MEDIASTOP:
-		return "178"
+		return "MEDIASTOP"
 	case KEY_MEDIAPLAYPAUSEKEY:
-		return "179"
+		return "MEDIAPLAYPAUSEKEY"
 	case KEY_LAUNCHMAIL:
-		return "180"
+		return "LAUNCHMAIL"
 	case KEY_LAUNCHMEDIASELECT:
-		return "181"
+		return "LAUNCHMEDIASELECT"
 	case KEY_LAUNCHAPP_1:
-		return "182"
+		return "LAUNCHAPP1"
 	case KEY_LAUNCHAPP_2:
-		return "183"
+		return "LAUNCHAPP2"
 	case KEY_SEMICOLONKEY:
-		return "186"
+		return "SEMICOLONKEY"
 	case KEY_EQUAL:
-		return "187"
+		return "EQUAL"
 	case KEY_COMMA:
-		return "188"
+		return "COMMA"
 	case KEY_MINUS:
-		return "189"
+		return "MINUS"
 	case KEY_PERIOD:
-		return "190"
+		return "PERIOD"
 	case KEY_SLASH:
-		return "191"
+		return "SLASH"
 	case KEY_TILDE:
-		return "192"
+		return "TILDE"
 	case KEY_LEFTBRACKET:
-		return "219"
+		return "LEFTBRACKET"
 	case KEY_BACKSLASHKEY:
-		return "220"
+		return "BACKSLASHKEY"
 	case KEY_RIGHTBRACKET:
-		return "221"
+		return "RIGHTBRACKET"
 	case KEY_QUOTE:
-		return "222"
+		return "QUOTE"
 	case KEY_PARA:
-		return "223"
+		return "PARA"
 	case KEY_OEM_102:
-		return "226"
+		return "OEM102"
 	case KEY_ICOHELPKEY:
-		return "227"
+		return "ICOHELPKEY"
 	case KEY_ICO_00:
-		return "228"
+		return "ICO00"
 	case KEY_PROCESSKEY:
-		return "229"
+		return "PROCESSKEY"
 	case KEY_ICOCLEAR:
-		return "230"
+		return "ICOCLEAR"
 	case KEY_PACKET:
-		return "231"
+		return "PACKET"
 	case KEY_ATTN:
-		return "246"
+		return "ATTN"
 	case KEY_CRSEL:
-		return "247"
+		return "CRSEL"
 	case KEY_EXSEL:
-		return "248"
+		return "EXSEL"
 	case KEY_EREOF:
-		return "249"
+		return "EREOF"
 	case KEY_PLAY:
-		return "250"
+		return "PLAY"
 	case KEY_ZOOM:
-		return "251"
+		return "ZOOM"
 	case KEY_NONAME:
-		return "252"
+		return "NONAME"
 	case KEY_PA_1:
-		return "253"
+		return "PA1"
 	case KEY_OEMCLEAR:
-		return "254"
+		return "OEMCLEAR"
 	case KEY_NONE:
-		return "255"
+		return "NONE"
 	}
 	return ""
 }

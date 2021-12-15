@@ -8,11 +8,11 @@ import (
 type MOUSE_BUTTON protocol.Enum 
 
 const (
-	MOUSE_BUTTON_NULL MOUSE_BUTTON  = 0 //0
-	MOUSE_BUTTON_LEFT MOUSE_BUTTON  = 1 //1
-	MOUSE_BUTTON_RIGHT MOUSE_BUTTON  = 2 //2
-	MOUSE_BUTTON_MIDDLE MOUSE_BUTTON  = 3 //3
-	MOUSE_BUTTON_EXTRA_1 MOUSE_BUTTON  = 4 //4
+	MOUSE_BUTTON_NULL MOUSE_BUTTON  = 0 //NULL
+	MOUSE_BUTTON_LEFT MOUSE_BUTTON  = 1 //LEFT
+	MOUSE_BUTTON_RIGHT MOUSE_BUTTON  = 2 //RIGHT
+	MOUSE_BUTTON_MIDDLE MOUSE_BUTTON  = 3 //MIDDLE
+	MOUSE_BUTTON_EXTRA_1 MOUSE_BUTTON  = 4 //EXTRA1
 	MOUSE_BUTTON_EXTRA_2 MOUSE_BUTTON  = 5 //5
 )
 
@@ -20,15 +20,15 @@ var ALL_MOUSE_BUTTON protocol.IEnumCollection = []protocol.IEnum{MOUSE_BUTTON_NU
 
 func TO_MOUSE_BUTTON(s string)MOUSE_BUTTON{
 	switch s {
-	case "0":
+	case "NULL":
 		return MOUSE_BUTTON_NULL
-	case "1":
+	case "LEFT":
 		return MOUSE_BUTTON_LEFT
-	case "2":
+	case "RIGHT":
 		return MOUSE_BUTTON_RIGHT
-	case "3":
+	case "MIDDLE":
 		return MOUSE_BUTTON_MIDDLE
-	case "4":
+	case "EXTRA1":
 		return MOUSE_BUTTON_EXTRA_1
 	case "5":
 		return MOUSE_BUTTON_EXTRA_2
@@ -44,15 +44,15 @@ func (this MOUSE_BUTTON) Enum()protocol.Enum{
 func (this MOUSE_BUTTON) ToString()string{
 	switch this {
 	case MOUSE_BUTTON_NULL:
-		return "0"
+		return "NULL"
 	case MOUSE_BUTTON_LEFT:
-		return "1"
+		return "LEFT"
 	case MOUSE_BUTTON_RIGHT:
-		return "2"
+		return "RIGHT"
 	case MOUSE_BUTTON_MIDDLE:
-		return "3"
+		return "MIDDLE"
 	case MOUSE_BUTTON_EXTRA_1:
-		return "4"
+		return "EXTRA1"
 	case MOUSE_BUTTON_EXTRA_2:
 		return "5"
 	}
