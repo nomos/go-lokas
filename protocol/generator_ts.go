@@ -54,6 +54,7 @@ func (this *Generator) LoadTsFolder(p string) *promise.Promise {
 }
 
 func (this *Generator) LoadTsIds(p string) error {
+	p=strings.ReplaceAll(p,"\\","/")
 	baseName := path.Base(p)
 	this.TsPath = p
 	idsPath := util.FindFile(p, baseName+"_ids.ts", false)
