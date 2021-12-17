@@ -75,11 +75,11 @@ func (this *Actor) Stop() error {
 }
 
 func (this *Actor) OnStart() error {
-	panic("implement me")
+	return nil
 }
 
 func (this *Actor) OnStop() error {
-	panic("implement me")
+	return nil
 }
 
 func (this *Actor) Type()string{
