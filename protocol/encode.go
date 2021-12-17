@@ -340,7 +340,7 @@ func getTagId(v reflect.Value, t reflect.Type) (BINARY_TAG, reflect.Value, refle
 				return TAG_Time,v.Elem(), t.Elem()
 			}
 			if t.Elem() == reflect.TypeOf((*colors.Color)(nil)).Elem() {
-				log.Warn("时间格式")
+				log.Warn("颜色格式")
 				return TAG_Color,v.Elem(), t.Elem()
 			}
 			if t.Elem() == reflect.TypeOf((*decimal.Decimal)(nil)).Elem() {

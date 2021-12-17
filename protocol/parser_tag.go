@@ -35,6 +35,7 @@ func init(){
 	tag_go_regexp_map[TAG_Buffer] = regexp.MustCompile(`([*]bytes.Buffer)`)
 	tag_go_regexp_map[TAG_Time] = regexp.MustCompile(`time.Time`)
 	tag_go_regexp_map[TAG_Decimal] = regexp.MustCompile(`decimal.Decimal`)
+	tag_go_regexp_map[TAG_Color] = regexp.MustCompile(`colors.Color`)
 
 
 	tag_model_regexp_map[TAG_Bool] = regexp.MustCompile(`(bool)`)
@@ -64,6 +65,7 @@ func init(){
 	tag_model_regexp_map[TAG_Buffer] = regexp.MustCompile(`(bytes)`)
 	tag_model_regexp_map[TAG_Time] = regexp.MustCompile(`time`)
 	tag_model_regexp_map[TAG_Decimal] = regexp.MustCompile(`decimal`)
+	tag_model_regexp_map[TAG_Color] = regexp.MustCompile(`color`)
 }
 
 const tag_go_slice_item_reg = "$4"
@@ -79,7 +81,7 @@ func (this BINARY_TAG) MatchRegExp(str string)bool {
 }
 
 func MatchGoProtoTag(s string)bool {
-	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time,TAG_Buffer}
+	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time,TAG_Color,TAG_Buffer}
 	for _,tag:=range protoTagArr {
 		if tag_go_regexp_map[tag].FindString(s) == s {
 			return true
@@ -104,7 +106,7 @@ func MatchGoSystemTag(s string)(BINARY_TAG,string,string) {
 }
 
 func MatchModelProtoTag(s string)BINARY_TAG {
-	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time,TAG_BoolArray,TAG_ByteArray,TAG_UShortArray,TAG_ShortArray,TAG_UIntArray,TAG_IntArray,TAG_ULongArray,TAG_LongArray}
+	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time,TAG_Color,TAG_BoolArray,TAG_ByteArray,TAG_UShortArray,TAG_ShortArray,TAG_UIntArray,TAG_IntArray,TAG_ULongArray,TAG_LongArray}
 	for _,tag:=range protoTagArr {
 		if tag_model_regexp_map[tag].FindString(s) == s {
 			return tag
@@ -114,7 +116,7 @@ func MatchModelProtoTag(s string)BINARY_TAG {
 }
 
 func GetModelProtoTag(s string)BINARY_TAG {
-	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time,TAG_BoolArray,TAG_ByteArray,TAG_UShortArray,TAG_ShortArray,TAG_UIntArray,TAG_IntArray,TAG_ULongArray,TAG_LongArray}
+	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time,TAG_Color,TAG_BoolArray,TAG_ByteArray,TAG_UShortArray,TAG_ShortArray,TAG_UIntArray,TAG_IntArray,TAG_ULongArray,TAG_LongArray}
 	for _,tag:=range protoTagArr {
 		if tag_model_regexp_map[tag].FindString(s) == s {
 			return tag

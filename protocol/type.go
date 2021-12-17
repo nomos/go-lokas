@@ -69,7 +69,7 @@ func init(){
 	system_ts_types[TAG_Buffer] = "Uint8Array"
 	system_ts_types[TAG_Time] = "Date"
 	system_ts_types[TAG_Decimal] = "bigDecimal"
-	system_ts_types[TAG_Color] = "Color"
+	system_ts_types[TAG_Color] = "colors.Color"
 
 
 	system_cs_types[TAG_Bool] = "bool"

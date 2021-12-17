@@ -1577,8 +1577,16 @@ func (this *{EnumName}) Serializable()protocol.ISerializable {
 	return this
 }
 `
-	if this.hasTime() {
-		ret = strings.Replace(ret,`{OtherImport}`,"\n\t"+`"time"`,-1)
+	if this.hasTime()||this.hasColor() {
+		str:="\n\t"
+		if this.hasColor() {
+			str+=`"github.com/nomos/go-lokas/util/colors"`+"\n"
+		}
+		if this.hasTime() {
+			str+=`"time"`+"\n"
+		}
+		str = strings.TrimRight(str,"\n")
+		ret = strings.Replace(ret,`{OtherImport}`,str,-1)
 	} else {
 		ret = strings.Replace(ret,`{OtherImport}`,"",-1)
 	}
@@ -1602,6 +1610,15 @@ func (this *{EnumName}) Serializable()protocol.ISerializable {
 func (this *ModelClassObject) hasTime()bool {
 	for _,f:=range this.Fields {
 		if f.Type=="time" {
+			return true
+		}
+	}
+	return false
+}
+
+func (this *ModelClassObject) hasColor()bool {
+	for _,f:=range this.Fields {
+		if f.Type=="color" {
 			return true
 		}
 	}
