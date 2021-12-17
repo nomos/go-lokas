@@ -858,6 +858,18 @@ func (this *ModelEnumObject) TsString(g *Generator)string{
 {ClassBody}
 }
 
+export function STRING_TO_{EnumName}(name:string):{EnumName}{
+	switch (name) {
+{StringField}
+	}
+	return -1
+}
+export function {EnumName}_STRING(type:{EnumName}):string{
+	switch (type) {
+{EnumField}
+	}
+	return ""
+}
 `
 	if this.Comment!="" {
 		comment:="\n"+this.Comment
@@ -866,7 +878,43 @@ func (this *ModelEnumObject) TsString(g *Generator)string{
 		ret = strings.Replace(ret,`{Comment}`,"",-1)
 	}
 	ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSnake(this.EnumName),-1)
+	ret = strings.Replace(ret,`{StringField}`,this.tsStringFields(g),-1)
+	ret = strings.Replace(ret,`{EnumField}`,this.tsEnumFields(g),-1)
 	ret = strings.Replace(ret,`{ClassBody}`,this.tsFields(g),-1)
+	return ret
+}
+
+func (this *ModelEnumObject) tsEnumFields(g *Generator)string{
+	ret:=""
+	for _,l:=range this.lines {
+		if l.LineType ==LINE_MODEL_ENUM_FIELD {
+			lstr:=`		case {EnumName}.{FieldName}:
+			return "{Comment}"`
+			lstr = strings.Replace(lstr,`{EnumName}`,stringutil.SplitCamelCaseUpperSnake(this.EnumName),-1)
+			lstr = strings.Replace(lstr,`{Comment}`,strings.TrimSpace(strings.ReplaceAll(l.Comment,"/","")),-1)
+			lstr = strings.Replace(lstr,`{FieldName}`,stringutil.SplitCamelCaseUpperSnake(l.Name),-1)
+			ret+=lstr
+			ret+="\n"
+		}
+	}
+	ret = strings.TrimRight(ret,"\n")
+	return ret
+}
+
+func (this *ModelEnumObject) tsStringFields(g *Generator)string{
+	ret:=""
+	for _,l:=range this.lines {
+		if l.LineType ==LINE_MODEL_ENUM_FIELD {
+			lstr:=`		case "{Comment}":
+			return {EnumName}.{FieldName}`
+			lstr = strings.Replace(lstr,`{EnumName}`,stringutil.SplitCamelCaseUpperSnake(this.EnumName),-1)
+			lstr = strings.Replace(lstr,`{Comment}`,strings.TrimSpace(strings.ReplaceAll(l.Comment,"/","")),-1)
+			lstr = strings.Replace(lstr,`{FieldName}`,stringutil.SplitCamelCaseUpperSnake(l.Name),-1)
+			ret+=lstr
+			ret+="\n"
+		}
+	}
+	ret = strings.TrimRight(ret,"\n")
 	return ret
 }
 
