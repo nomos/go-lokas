@@ -35,6 +35,7 @@ const (
 	TAG_Time
 	TAG_Decimal
 	TAG_Proto
+	TAG_Color
 	TAG_Null
 	TAG_LongString
 	//Ecs

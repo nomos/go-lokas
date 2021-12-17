@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/util/colors"
 	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 	"io"
@@ -167,6 +168,11 @@ func writeDecimal(out io.Writer,v reflect.Value) {
 	w(out,data)
 }
 
+func writeColor(out io.Writer,v reflect.Value){
+	data:=v.Interface().(*colors.Color)
+	w(out,data.Uint32())
+}
+
 func writeBuffer(out io.Writer,v reflect.Value) {
 	data:=v.Interface().(*bytes.Buffer).Bytes()
 	w(out, uint16(len(data)))
@@ -312,6 +318,9 @@ func getTagId(v reflect.Value, t reflect.Type) (BINARY_TAG, reflect.Value, refle
 		if t == reflect.TypeOf((*time.Time)(nil)).Elem() {
 			return TAG_Time,v, t
 		}
+		if t == reflect.TypeOf((*colors.Color)(nil)).Elem() {
+			return TAG_Color,v, t
+		}
 		if t == reflect.TypeOf((*decimal.Decimal)(nil)).Elem() {
 			return TAG_Decimal,v, t
 		}
@@ -329,6 +338,10 @@ func getTagId(v reflect.Value, t reflect.Type) (BINARY_TAG, reflect.Value, refle
 			if t.Elem() == reflect.TypeOf((*time.Time)(nil)).Elem() {
 				log.Warn("时间格式")
 				return TAG_Time,v.Elem(), t.Elem()
+			}
+			if t.Elem() == reflect.TypeOf((*colors.Color)(nil)).Elem() {
+				log.Warn("时间格式")
+				return TAG_Color,v.Elem(), t.Elem()
 			}
 			if t.Elem() == reflect.TypeOf((*decimal.Decimal)(nil)).Elem() {
 				log.Warn("Decimal格式")
@@ -377,6 +390,8 @@ func writeValue(out io.Writer, tag BINARY_TAG, v reflect.Value, t reflect.Type) 
 		writeString(out, v.String())
 	} else if tag == TAG_Time {
 		writeTime(out, v)
+	} else if tag == TAG_Color {
+		writeColor(out, v)
 	} else if tag == TAG_Decimal {
 		writeDecimal(out, v)
 	} else if tag == TAG_Buffer {

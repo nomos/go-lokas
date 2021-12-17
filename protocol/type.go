@@ -41,6 +41,7 @@ func init(){
 	system_tags[TAG_Time] = "Time"
 	system_tags[TAG_Decimal] = "Decimal"
 	system_tags[TAG_Proto] = "Proto"
+	system_tags[TAG_Color] = "Color"
 	system_tags[TAG_Null] = "Null"
 
 
@@ -68,6 +69,7 @@ func init(){
 	system_ts_types[TAG_Buffer] = "Uint8Array"
 	system_ts_types[TAG_Time] = "Date"
 	system_ts_types[TAG_Decimal] = "bigDecimal"
+	system_ts_types[TAG_Color] = "Color"
 
 
 	system_cs_types[TAG_Bool] = "bool"
@@ -120,6 +122,7 @@ func init(){
 	system_go_types[TAG_Buffer] = "bytes.Buffer"
 	system_go_types[TAG_Time] = "time.Time"
 	system_go_types[TAG_Decimal] = "decimal.Decimal"
+	system_go_types[TAG_Color] = "colors.Color"
 	GetTypeRegistry()
 }
 

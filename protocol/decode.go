@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/util/colors"
 	"github.com/shopspring/decimal"
 	"go.uber.org/zap"
 	"io"
@@ -353,6 +354,23 @@ func (this *decodeState) readValue(tag BINARY_TAG, v reflect.Value, t reflect.Ty
 			v.Set(reflect.ValueOf(value))
 		case reflect.Struct:
 			v.Set(reflect.ValueOf(value))
+		}
+	case TAG_Color:
+		var value uint32
+		this.r(&value)
+		switch v.Kind() {
+		case reflect.Ptr:
+			v1 := v.Elem()
+			t = t.Elem()
+			if v1.IsValid() {
+				v = v1
+			} else {
+				v.Set(reflect.New(t))
+			}
+			v = reflect.Indirect(v)
+			v.Set(reflect.ValueOf(colors.NewColorUint32(value)))
+		case reflect.Struct:
+			v.Set(reflect.ValueOf(colors.NewColorUint32(value)))
 		}
 	case TAG_Time:
 		var value int64

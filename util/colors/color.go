@@ -1,6 +1,8 @@
 package colors
 
 import (
+	"bytes"
+	"encoding/binary"
 	"strconv"
 	"strings"
 )
@@ -34,6 +36,13 @@ func NewColorHSL(h,s,l float64) Color{
 func NewColorHexString(hex string) Color{
 	r,g,b:=Hex2Rgb(hex)
 	return NewColor(r,g,b)
+}
+
+func NewColorUint32(v uint32) Color {
+	bytebuf := bytes.NewBuffer([]byte{})
+	binary.Write(bytebuf, binary.BigEndian, v)
+	arr:=bytebuf.Bytes()
+	return NewColorRGBA(arr[0],arr[1],arr[2],arr[3])
 }
 
 func (this Color) RGB() (byte, byte, byte) {
@@ -196,4 +205,8 @@ func (this Color) SetHSV(h, s, v float64) {
 	this.R = r
 	this.G = g
 	this.B = b
+}
+
+func (this Color) Uint32()uint32{
+	return uint32(this.R)<<24+uint32(this.G)<<16+uint32(this.B)<<8+uint32(this.A)
 }
