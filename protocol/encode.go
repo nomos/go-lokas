@@ -169,8 +169,13 @@ func writeDecimal(out io.Writer,v reflect.Value) {
 }
 
 func writeColor(out io.Writer,v reflect.Value){
-	data:=v.Interface().(*colors.Color)
-	w(out,data.Uint32())
+	if v.Kind()==reflect.Ptr {
+		data:=v.Interface().(*colors.Color)
+		w(out,data.Uint32())
+	} else {
+		data:=v.Interface().(colors.Color)
+		w(out,data.Uint32())
+	}
 }
 
 func writeBuffer(out io.Writer,v reflect.Value) {
