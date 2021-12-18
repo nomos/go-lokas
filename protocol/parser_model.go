@@ -870,6 +870,18 @@ export function {EnumName}_STRING(type:{EnumName}):string{
 	}
 	return ""
 }
+
+export const ALL_{EnumName} = [{AllField}]
+
+export function IS_{EnumName} (type):boolean {
+	for (let e of ALL_{EnumName}) {
+		if (e == type) {
+			return true
+		}
+	}
+	return false
+}
+
 `
 	if this.Comment!="" {
 		comment:="\n"+this.Comment
@@ -880,6 +892,7 @@ export function {EnumName}_STRING(type:{EnumName}):string{
 	ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSnake(this.EnumName),-1)
 	ret = strings.Replace(ret,`{StringField}`,this.tsStringFields(g),-1)
 	ret = strings.Replace(ret,`{EnumField}`,this.tsEnumFields(g),-1)
+	ret = strings.Replace(ret,`{AllField}`,this.tsAllFields(g),-1)
 	ret = strings.Replace(ret,`{ClassBody}`,this.tsFields(g),-1)
 	return ret
 }
@@ -898,6 +911,20 @@ func (this *ModelEnumObject) tsEnumFields(g *Generator)string{
 		}
 	}
 	ret = strings.TrimRight(ret,"\n")
+	return ret
+}
+
+func (this *ModelEnumObject) tsAllFields(g *Generator)string{
+	ret:=""
+	for _,l:=range this.lines {
+		if l.LineType ==LINE_MODEL_ENUM_FIELD {
+			ret+=stringutil.SplitCamelCaseUpperSnake(this.EnumName)
+			ret+="."
+			ret+=stringutil.SplitCamelCaseUpperSnake(l.Name)
+			ret+=","
+		}
+	}
+	ret = strings.TrimRight(ret,",")
 	return ret
 }
 
