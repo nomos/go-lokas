@@ -278,14 +278,14 @@ func (this *Generator) regenTsClassField(schema *ModelClassObject, tsClass *TsCl
 		member := tsClass.GetClassMember(body.Name)
 		if member != nil {
 			if member.IsPublic {
-				if member.Type=="Uint8Array" &&body.TsPublicType(this)=="number[]" {
+				if strings.ReplaceAll(strings.TrimSpace(member.Type)," ","")=="Uint8Array" &&body.TsPublicType(this)=="number[]" {
 					continue
 				}
-				if member.Type != strings.TrimRight(body.TsPublicType(this)," ") {
-					this.GetLogger().Warnf(member.Type, body.TsPublicType(this), member.Name)
+				if strings.ReplaceAll(strings.TrimSpace(member.Type)," ","") != strings.TrimSpace(body.TsPublicType(this)) {
+					this.GetLogger().Warnf("ADSASDASDSDADSDS",member.Type, body.TsPublicType(this), member.Name)
 
 				}
-				if member.Type == strings.TrimRight(body.TsPublicType(this)," ") {
+				if strings.ReplaceAll(strings.TrimSpace(member.Type)," ","") == strings.TrimSpace(body.TsPublicType(this)) {
 					continue
 				}
 				member.Line.Text = body.TsPublicString(this)
