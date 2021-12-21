@@ -18,6 +18,32 @@ func NewColor(r,g,b byte) Color{
 	return NewColorRGBA(r,g,b,255)
 }
 
+func (this Color) Equal(c Color)bool{
+	return this.R == c.R&&this.G==c.G&&this.B==c.B&&this.A==c.A
+}
+
+func byteDiff(a,b byte)byte {
+	if a>b {
+		return a-b
+	}
+	return b-a
+}
+
+func maxbyte(b... byte)byte{
+	var max byte =0
+	for _,v:=range b {
+		if v>max {
+			max = v
+		}
+	}
+	return max
+}
+
+func (this Color) EqualTolerant(c Color,t byte)bool{
+	max:=maxbyte(byteDiff(this.R,c.R),byteDiff(this.G,c.G),byteDiff(this.B,c.B))
+	return max<=t
+}
+
 func NewColorRGBA(r, g, b, a byte) Color {
 	ret := Color{R: r, G: g, B: b, A: a}
 	return ret
