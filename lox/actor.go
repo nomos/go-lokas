@@ -266,7 +266,7 @@ func (this *Actor) handleMsg(actorId util.ID, transId uint32, msg protocol.ISeri
 
 func (this *Actor) OnMessage(msg *protocol.RouteMessage) {
 	msg = this.hookReceive(msg)
-	if msg != nil {
+	if msg != nil&&msg.Req {
 		err:=this.handleMsg(msg.FromActor, msg.TransId, msg.Body)
 		if err != nil {
 			log.Error("Actor:OnMessage:Error",
