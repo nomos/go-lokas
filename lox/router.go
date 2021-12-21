@@ -32,15 +32,15 @@ func (this *Router) SetProcess(process lokas.IProcess) {
 
 func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 	if msg.ToActor.IsValidProcessId() {
-		log.Info("Router:isProcessId",flog.ActorRouterMsgInfo(msg.Body,msg.TransId,msg.FromActor,msg.ToActor)...)
+		log.Info("Router:isProcessId",flog.ActorRouterMsgInfo(msg.Body,msg.TransId,msg.FromActor,msg.ToActor,msg.Req)...)
 	} else if msg.ToActor!=0 {
 		a:=this.process.GetActor(msg.ToActor)
-		log.Info("Router:RouteMsg",flog.ActorRouterMsgInfo(msg.Body,msg.TransId,msg.FromActor,msg.ToActor)...)
+		log.Info("Router:RouteMsg",flog.ActorRouterMsgInfo(msg.Body,msg.TransId,msg.FromActor,msg.ToActor,msg.Req)...)
 		if a!=nil {
 			a.ReceiveMessage(msg)
 			return
 		}
-		log.Info("proxy msg",flog.ActorRouterMsgInfo(msg.Body,msg.TransId,msg.FromActor,msg.ToActor)...)
+		log.Info("proxy msg",flog.ActorRouterMsgInfo(msg.Body,msg.TransId,msg.FromActor,msg.ToActor,msg.Req)...)
 		//TODO:proxy msg
 		pid,err:=this.process.GetProcessIdByActor(msg.ToActor)
 		log.Info("processId",flog.ProcessId(pid.Snowflake()))

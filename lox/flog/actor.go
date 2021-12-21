@@ -149,6 +149,10 @@ func ToActorId(id util.ID )zap.Field{
 	return zap.Int64("to_actor_id",id.Int64())
 }
 
+func ReqMsg(req bool)zap.Field{
+	return zap.Bool("is_req",req)
+}
+
 func FromActorId(id util.ID )zap.Field{
 	return zap.Int64("from_actor_id",id.Int64())
 }
@@ -161,6 +165,6 @@ func ActorReceiveMsgInfo(actor lokas.IActorInfo,serializable protocol.ISerializa
 	return ActorInfo(actor).Concat(MsgInfo(serializable)).Append(TransId(transid)).Append(FromActorId(fromActorId))
 }
 
-func ActorRouterMsgInfo(serializable protocol.ISerializable,transid uint32,fromActorId util.ID,toActorId util.ID)log.ZapFields{
-	return MsgInfo(serializable).Append(TransId(transid)).Append(FromActorId(fromActorId)).Append(ToActorId(toActorId))
+func ActorRouterMsgInfo(serializable protocol.ISerializable,transid uint32,fromActorId util.ID,toActorId util.ID,isReq bool)log.ZapFields{
+	return MsgInfo(serializable).Append(TransId(transid)).Append(FromActorId(fromActorId)).Append(ToActorId(toActorId)).Append(ReqMsg(isReq))
 }

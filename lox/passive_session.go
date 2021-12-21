@@ -88,7 +88,7 @@ func (this *PassiveSession) GetConn() lokas.IConn {
 func (this *PassiveSession) StartMessagePump() {
 	log.Info("PassiveSession:StartMessagePump", flog.ActorInfo(this)...)
 
-	this.msgChan = make(chan *protocol.RouteMessage, 100)
+	this.MsgChan = make(chan *protocol.RouteMessage, 100)
 	this.doneClient = make(chan struct{})
 	this.doneServer = make(chan struct{})
 	go func() {
@@ -218,14 +218,27 @@ func (this *PassiveSession) StartMessagePump() {
 		for {
 			select {
 			//ServerSideMsgLoop
-			case rMsg := <-this.msgChan:
+			case rMsg := <-this.MsgChan:
 				this.OnMessage(rMsg)
 			case <-this.doneServer:
 				break SERVER_LOOP
 			}
 		}
-		close(this.msgChan)
+		close(this.MsgChan)
 	}()
+}
+
+func (this *PassiveSession) OnMessage(msg *protocol.RouteMessage) {
+	msg = this.HookReceive(msg)
+	if msg != nil {
+		err:=this.HandleMsg(msg.FromActor, msg.TransId, msg.Body)
+		if err != nil {
+			log.Error("Actor:OnMessage:Error",
+				flog.ActorReceiveMsgInfo(this,msg.Body,msg.TransId,msg.FromActor).
+					Append(flog.Error(err))...
+			)
+		}
+	}
 }
 
 func (this *PassiveSession) closeSession() {

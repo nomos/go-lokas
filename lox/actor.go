@@ -28,10 +28,10 @@ var _ lokas.IActor = (*Actor)(nil)
 
 func NewActor() *Actor {
 	ret := &Actor{
-		IEntity:ecs.CreateEntity(),
-		reqContexts: make(map[uint32]lokas.IReqContext),
-		timer:time.NewTicker(UpdateTime),
-		timeout:     TimeOut,
+		IEntity:     ecs.CreateEntity(),
+		ReqContexts: make(map[uint32]lokas.IReqContext),
+		Timer:       time.NewTicker(UpdateTime),
+		Timeout:     TimeOut,
 	}
 	ret.SetType("Actor")
 	return ret
@@ -40,15 +40,16 @@ func NewActor() *Actor {
 type Actor struct {
 	lokas.IEntity
 	typeString string
-	process     lokas.IProcess
-	msgChan     chan *protocol.RouteMessage
+	process lokas.IProcess
 	idGen       uint32
-	reqContexts map[uint32]lokas.IReqContext
-	timeout     time.Duration
-	ctxMutex    sync.Mutex
-	timer 		*time.Ticker
-	done        chan struct{}
-	leaseId     clientv3.LeaseID
+	leaseId  clientv3.LeaseID
+	MsgChan chan *protocol.RouteMessage
+	ReplyChan chan *protocol.RouteMessage
+	ReqContexts map[uint32]lokas.IReqContext
+	Timeout  time.Duration
+	CtxMutex sync.Mutex
+	Timer    *time.Ticker
+	DoneChan chan struct{}
 	OnUpdateFunc func()
 	MsgHandler  func(actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error)
 }
@@ -70,7 +71,7 @@ func (this *Actor) Start() error {
 }
 
 func (this *Actor) Stop() error {
-	this.done<- struct{}{}
+	this.DoneChan <- struct{}{}
 	return nil
 }
 
@@ -144,48 +145,66 @@ func (this *Actor) SetProcess(process lokas.IProcess) {
 }
 
 func (this *Actor) StartMessagePump() {
-	this.msgChan = make(chan *protocol.RouteMessage, 100)
-	this.done = make(chan struct{})
+	this.MsgChan = make(chan *protocol.RouteMessage, 100)
+	this.ReplyChan = make(chan *protocol.RouteMessage, 100)
+	this.DoneChan = make(chan struct{})
 	go func() {
-		LOOP:
+		MSG_LOOP:
 		for {
 			select {
-			case <-this.timer.C:
+			case <-this.Timer.C:
 				this.Update(0,time.Now())
-			case rMsg := <-this.msgChan:
+			case rMsg := <-this.MsgChan:
 				this.OnMessage(rMsg)
-			case <-this.done:
-				break LOOP
+			case <-this.DoneChan:
+				break MSG_LOOP
 			}
 		}
-		close(this.msgChan)
-		close(this.done)
+		close(this.MsgChan)
+		close(this.DoneChan)
 	}()
+	go func() {
+	REP_LOOP:
+		for {
+			select {
+			case rMsg := <-this.ReplyChan:
+				this.OnMessage(rMsg)
+			case <-this.DoneChan:
+				break REP_LOOP
+			}
+		}
+		close(this.ReplyChan)
+	}()
+
 }
 
 func (this *Actor) ReceiveMessage(msg *protocol.RouteMessage) {
-	this.msgChan <- msg
+	if msg.Req {
+		this.MsgChan <- msg
+	} else {
+		this.ReplyChan <- msg
+	}
 }
 
 func (this *Actor) clearContext(err error) {
-	this.ctxMutex.Lock()
-	defer this.ctxMutex.Unlock()
-	for _, v := range this.reqContexts {
+	this.CtxMutex.Lock()
+	defer this.CtxMutex.Unlock()
+	for _, v := range this.ReqContexts {
 		v.Cancel(err)
 	}
-	this.reqContexts = map[uint32]lokas.IReqContext{}
+	this.ReqContexts = map[uint32]lokas.IReqContext{}
 }
 
 func (this *Actor) addContext(transId uint32, ctx lokas.IReqContext) {
-	this.ctxMutex.Lock()
-	defer this.ctxMutex.Unlock()
-	this.reqContexts[transId] = ctx
+	this.CtxMutex.Lock()
+	defer this.CtxMutex.Unlock()
+	this.ReqContexts[transId] = ctx
 }
 
 func (this *Actor) removeContext(transId uint32) {
-	this.ctxMutex.Lock()
-	defer this.ctxMutex.Unlock()
-	delete(this.reqContexts, transId)
+	this.CtxMutex.Lock()
+	defer this.CtxMutex.Unlock()
+	delete(this.ReqContexts, transId)
 }
 
 func (this *Actor) PId()util.ProcessId{
@@ -196,9 +215,9 @@ func (this *Actor) PId()util.ProcessId{
 }
 
 func (this *Actor) getContext(transId uint32) lokas.IReqContext {
-	this.ctxMutex.Lock()
-	defer this.ctxMutex.Unlock()
-	return this.reqContexts[transId]
+	this.CtxMutex.Lock()
+	defer this.CtxMutex.Unlock()
+	return this.ReqContexts[transId]
 }
 
 func (this *Actor) genId() uint32 {
@@ -206,7 +225,7 @@ func (this *Actor) genId() uint32 {
 	return this.idGen
 }
 
-func (this *Actor) hookReceive(msg *protocol.RouteMessage) *protocol.RouteMessage {
+func (this *Actor) HookReceive(msg *protocol.RouteMessage) *protocol.RouteMessage {
 	ctx := this.getContext(msg.TransId)
 	if ctx != nil {
 		ctx.SetResp(msg.Body)
@@ -216,7 +235,7 @@ func (this *Actor) hookReceive(msg *protocol.RouteMessage) *protocol.RouteMessag
 	return msg
 }
 
-func (this *Actor) handleMsg(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
+func (this *Actor) HandleMsg(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
 	id,err:=msg.GetId()
 	if err != nil {
 		log.Error(err.Error())
@@ -265,9 +284,12 @@ func (this *Actor) handleMsg(actorId util.ID, transId uint32, msg protocol.ISeri
 }
 
 func (this *Actor) OnMessage(msg *protocol.RouteMessage) {
-	msg = this.hookReceive(msg)
+	if !msg.Req {
+		this.HookReceive(msg)
+		return
+	}
 	if msg != nil&&msg.Req {
-		err:=this.handleMsg(msg.FromActor, msg.TransId, msg.Body)
+		err:=this.HandleMsg(msg.FromActor, msg.TransId, msg.Body)
 		if err != nil {
 			log.Error("Actor:OnMessage:Error",
 				flog.ActorReceiveMsgInfo(this,msg.Body,msg.TransId,msg.FromActor).
@@ -302,7 +324,7 @@ func (this *Actor) SendMessage(actorId util.ID, transId uint32, msg protocol.ISe
 }
 
 func (this *Actor) Call(actorId util.ID, req protocol.ISerializable) (protocol.ISerializable, error) {
-	ctx := network.NewDefaultContextWithTimeout(context.TODO(), this.genId(), this.timeout)
+	ctx := network.NewDefaultContextWithTimeout(context.TODO(), this.genId(), this.Timeout)
 	transId := ctx.GetTransId()
 	this.addContext(transId, ctx)
 	err:=this.SendMessage(actorId, transId, req)

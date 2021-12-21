@@ -158,7 +158,7 @@ func (this *ProxySession) handleMsg(msg *protocol.BinaryMessage) {
 }
 
 func (this *ProxySession) startMessagePumpPassive(){
-	this.msgChan = make(chan *protocol.RouteMessage,100)
+	this.MsgChan = make(chan *protocol.RouteMessage,100)
 	this.done = make(chan struct{})
 	go func() {
 		defer func() {
@@ -178,7 +178,7 @@ func (this *ProxySession) startMessagePumpPassive(){
 					if this.OnUpdateFunc!=nil&&this.Verified {
 						this.OnUpdateFunc()
 					}
-				case rMsg := <-this.msgChan:
+				case rMsg := <-this.MsgChan:
 					this.OnMessage(rMsg)
 				case data := <-this.Messages:
 					cmdId := protocol.GetCmdId16(data)
@@ -262,7 +262,7 @@ func (this *ProxySession) startMessagePumpPassive(){
 }
 
 func (this *ProxySession) startMessagePumpActive(){
-	this.msgChan = make(chan *protocol.RouteMessage,100)
+	this.MsgChan = make(chan *protocol.RouteMessage,100)
 	this.done = make(chan struct{})
 	go func() {
 		defer func() {
@@ -296,7 +296,7 @@ func (this *ProxySession) startMessagePumpActive(){
 				if this.OnUpdateFunc!=nil&&this.Verified {
 					this.OnUpdateFunc()
 				}
-			case rMsg := <-this.msgChan:
+			case rMsg := <-this.MsgChan:
 				this.OnMessage(rMsg)
 			case data := <-this.Messages:
 				cmdId := protocol.GetCmdId16(data)
