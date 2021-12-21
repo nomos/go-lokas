@@ -468,7 +468,7 @@ func (this *Client) ZAdd(k string, args ...interface{}) *RedisReply {
 	args2 := []interface{}{}
 	args2 = append(args2, k)
 	args2 = append(args2, args...)
-	return this.Execute("ZADD", args...)
+	return this.Execute("ZADD", args2...)
 }
 
 //获取有序集合的成员数
