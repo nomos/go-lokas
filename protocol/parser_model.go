@@ -830,7 +830,11 @@ namespace {CsPackageName}
 		ret = strings.Replace(ret,`{Comment}`,"",-1)
 	}
 	ret = strings.Replace(ret,`{CsPackageName}`,this.CsPackage,1)
-	ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSnake(this.EnumName),-1)
+	if g.CsCamelCase {
+		ret = strings.Replace(ret,`{EnumName}`,this.EnumName,-1)
+	} else {
+		ret = strings.Replace(ret,`{EnumName}`,stringutil.SplitCamelCaseUpperSnake(this.EnumName),-1)
+	}
 	ret = strings.Replace(ret,`{ClassBody}`,this.csFields(g),-1)
 	return ret
 }
@@ -840,7 +844,11 @@ func (this *ModelEnumObject) csFields(g *Generator)string{
 	for _,l:=range this.lines {
 		if l.LineType ==LINE_MODEL_ENUM_FIELD {
 			ret+="\t\t"
-			ret+=stringutil.SplitCamelCaseUpperSnake(l.Name)
+			if g.CsCamelCase {
+				ret+=stringutil.SnakeToCamel(l.Name)
+			} else {
+				ret+=stringutil.SplitCamelCaseUpperSnake(l.Name)
+			}
 			ret+= " = "
 			ret+=strconv.Itoa(l.GetValue())
 			ret+=","
@@ -1226,7 +1234,11 @@ func (this *ModelClassFields) csString(g *Generator,lower bool)string {
 					ret = "List<"+t.CsTypeString()+"> "+name
 				}
 			} else if g.IsEnum(s1) {
-				ret = "List<"+stringutil.SplitCamelCaseUpperSnake(s1)+"> "+name
+				if g.CsCamelCase {
+					ret = "List<"+s1+"> "+name
+				} else {
+					ret = "List<"+stringutil.SplitCamelCaseUpperSnake(s1)+"> "+name
+				}
 			} else {
 				ret = "List<"+s1+"> "+name
 			}
@@ -1238,20 +1250,32 @@ func (this *ModelClassFields) csString(g *Generator,lower bool)string {
 				type1 = t1.CsTypeString()
 			}
 			if g.IsEnum(s1) {
-				type1 = stringutil.SplitCamelCaseUpperSnake(s1)
+				if g.CsCamelCase {
+					type1 = s1
+				} else {
+					type1 = stringutil.SplitCamelCaseUpperSnake(s1)
+				}
 			}
 			type2 := s2
 			if t2!=0 {
 				type2 = t2.CsTypeString()
 			}
 			if g.IsEnum(s2) {
-				type1 = stringutil.SplitCamelCaseUpperSnake(s2)
+				if g.CsCamelCase {
+					type1 = s2
+				} else {
+					type1 = stringutil.SplitCamelCaseUpperSnake(s2)
+				}
 			}
 			ret =  "Dictionary<"+type1+","+type2+"> "+name
 
 		}
 	} else if g.IsEnum(this.Type) {
-		ret = stringutil.SplitCamelCaseUpperSnake(this.Type)+" "+name
+		if g.CsCamelCase {
+			ret = this.Type+" "+name
+		} else {
+			ret = stringutil.SplitCamelCaseUpperSnake(this.Type)+" "+name
+		}
 	} else {
 		ret = this.Type+" "+name
 	}

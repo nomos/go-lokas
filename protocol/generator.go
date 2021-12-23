@@ -22,6 +22,7 @@ type GeneratorOption struct {
 
 type Generator struct {
 	logger log.ILogger
+	CsCamelCase bool
 	Models            map[string]GeneratorFile
 	GoModels          map[string]GeneratorFile
 	Protos            map[string]GeneratorFile
