@@ -299,6 +299,18 @@ func SplitCamelCaseCapitalizeSlash(src string) string {
 	return strings.Join(ret,"_")
 }
 
+func SnakeToCamel(src string)string{
+	splits:=strings.Split(src,"_")
+	if len(splits)==1 {
+		return src
+	}
+	ret:=""
+	for _,v:=range splits {
+		ret+=Capitalize(v)
+	}
+	return ret
+}
+
 func SplitCamelCaseUpperSnake(src string) string {
 	ret:= SplitCamelCaseUpperSlice(src)
 	return strings.Join(ret,"_")
