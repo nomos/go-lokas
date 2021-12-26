@@ -218,6 +218,12 @@ type IContext interface {
 	GetIdType(key string) util.ID
 	GetProcessIdType(key string) util.ProcessId
 	GetString(key string) string
+	GetInt(key string)int
+	GetBool(key string)bool
+	GetInt32(key string)int32
+	GetInt64(key string)int64
+	GetFloat32(key string)float32
+	GetFloat64(key string)float64
 	Set(key string, value interface{})
 }
 

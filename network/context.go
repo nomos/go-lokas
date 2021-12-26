@@ -262,6 +262,30 @@ type DefaultContext struct {
 	pending  bool
 }
 
+func (this *DefaultContext) GetInt(key string) int {
+	return this.Get(key).(int)
+}
+
+func (this *DefaultContext) GetBool(key string) bool {
+	return this.Get(key).(bool)
+}
+
+func (this *DefaultContext) GetInt32(key string) int32 {
+	return this.Get(key).(int32)
+}
+
+func (this *DefaultContext) GetInt64(key string) int64 {
+	return this.Get(key).(int64)
+}
+
+func (this *DefaultContext) GetFloat32(key string) float32 {
+	return this.Get(key).(float32)
+}
+
+func (this *DefaultContext) GetFloat64(key string) float64 {
+	return this.Get(key).(float64)
+}
+
 var _ lokas.IReqContext = (*DefaultContext)(nil)
 
 var ContextFinish = errors.New("context finished")
