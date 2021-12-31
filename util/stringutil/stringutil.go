@@ -23,6 +23,23 @@ func SplitStringArray(s string,split string)[]string{
 	return arr
 }
 
+func SplitFloat64Array(s string,split string)([]float64,error){
+	arr:=strings.Split(s,split)
+	ret:=make([]float64,0)
+	if s=="" {
+		return ret,nil
+	}
+	for _,v:=range arr {
+		elem,err:=strconv.ParseFloat(v,64)
+		if err != nil {
+			log.Error(err.Error())
+			return nil,err
+		}
+		ret = append(ret, float64(elem))
+	}
+	return ret,nil
+}
+
 func SplitInt32Array(s string,split string)([]int32,error){
 	arr:=strings.Split(s,split)
 	ret:=make([]int32,0)
