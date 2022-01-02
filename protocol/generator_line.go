@@ -391,7 +391,7 @@ func init() {
 	line_regexp_replace_tag_name[LINE_MODEL_PACKAGE] = "$4"
 
 	line_regexp_map[LINE_TS_INIT_FUNC_HEADER] = regexp.MustCompile(`\(\s*function\s*(reg)*\s*\(\s*\)\s*\{\s*`)
-	line_regexp_map[LINE_TS_INIT_FUNC_COCOS] = regexp.MustCompile(`(\s*if\s*\(CC_EDITOR\)\s*[{]\s*)|(\s*return[;]?\s*)|(\s*[}]\s*)`)
+	line_regexp_map[LINE_TS_INIT_FUNC_COCOS] = regexp.MustCompile(`(\s*if\s*\(window\[\"CC_EDITOR\"\]\)\s*[{]\s*)|(\s*return[;]?\s*)|(\s*[}]\s*)`)
 	line_regexp_map[LINE_TS_INIT_FUNC_END] = regexp.MustCompile(`\}\)\(\)\s*`)
 	line_regexp_map[LINE_TS_ID_REG] = regexp.MustCompile(`\s*TypeRegistry[.]getInstance\(\)[.]RegisterCustomTag\(\s*"\w+"\s*[,]\s*[0-9]+\s*\)[;|\s]*`)
 	line_regexp_map[LINE_TS_PROTO_ID_REG] = regexp.MustCompile(`\s*TypeRegistry[.]getInstance\(\)[.]RegisterProtoTag\(\s*([.]|\w)+\s*[,]\s*[0-9]+\s*\)[;|\s]*`)

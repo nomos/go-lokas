@@ -161,7 +161,7 @@ func (this *Generator) generateModel2TsIds() error {
 	strs+="\n"
 	strs+="}\n\n"
 	strs += "(function () {\n"
-	strs += "\tif (CC_EDITOR) {\n"
+	strs += "\t"+`if (window["CC_EDITOR"]) {`+"\n"
 	strs += "\t\treturn;\n"
 	strs += "\t}\n"
 	ids := []*ModelId{}
