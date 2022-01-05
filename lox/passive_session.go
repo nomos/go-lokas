@@ -200,8 +200,10 @@ func (this *PassiveSession) StartMessagePump() {
 				break CLIENT_LOOP
 			}
 		}
-		close(this.doneServer)
+		close(this.doneClient)
+		this.doneClient = nil
 		close(this.Messages)
+		this.Messages = nil
 	}()
 
 	go func() {
@@ -225,6 +227,9 @@ func (this *PassiveSession) StartMessagePump() {
 			}
 		}
 		close(this.MsgChan)
+		this.MsgChan = nil
+		close(this.doneServer)
+		this.doneServer = nil
 	}()
 }
 
@@ -249,6 +254,7 @@ func (this *PassiveSession) closeSession() {
 
 func (this *PassiveSession) stop() {
 	this.doneClient <- struct{}{}
+	this.doneServer <- struct{}{}
 }
 
 func (this *PassiveSession) OnOpen(conn lokas.IConn) {
