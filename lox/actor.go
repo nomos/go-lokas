@@ -161,7 +161,9 @@ func (this *Actor) StartMessagePump() {
 			}
 		}
 		close(this.MsgChan)
+		this.MsgChan = nil
 		close(this.DoneChan)
+		this.DoneChan = nil
 	}()
 	go func() {
 	REP_LOOP:
@@ -174,8 +176,8 @@ func (this *Actor) StartMessagePump() {
 			}
 		}
 		close(this.ReplyChan)
+		this.ReplyChan = nil
 	}()
-
 }
 
 func (this *Actor) ReceiveMessage(msg *protocol.RouteMessage) {
