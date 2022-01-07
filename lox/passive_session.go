@@ -253,8 +253,15 @@ func (this *PassiveSession) closeSession() {
 }
 
 func (this *PassiveSession) stop() {
-	this.doneClient <- struct{}{}
-	this.doneServer <- struct{}{}
+	defer func() {
+		if r := recover(); r != nil {
+			util.Recover(r,false)
+		}
+	}()
+	if this.doneClient!=nil {
+		this.doneClient <- struct{}{}
+		this.doneServer <- struct{}{}
+	}
 }
 
 func (this *PassiveSession) OnOpen(conn lokas.IConn) {
