@@ -25,13 +25,13 @@ func UnmarshalFromBytes(data []byte, v interface{}) error {
 	return nil
 }
 
-func UnmarshalMessage(data []byte,t TYPE) (*BinaryMessage ,error) {
+func UnmarshalMessage(data []byte, t TYPE) (*BinaryMessage, error) {
 	if t == JSON {
 		return UnmarshalJsonMessage(data)
 	} else if t == BINARY {
 		return UnmarshalBinaryMessage(data)
 	} else {
-		return nil,errors.New("unidentified protocol")
+		return nil, errors.New("unidentified protocol")
 	}
 }
 
@@ -43,16 +43,17 @@ func UnmarshalJsonMessage(data []byte) (*BinaryMessage, error) {
 		)
 		return nil, err
 	}
-	bodyData:=data[HEADER_SIZE+2:]
-	body,err:=GetTypeRegistry().GetInterfaceByTag(header.CmdId)
+	data = data[:header.Len]
+	bodyData := data[HEADER_SIZE+2:]
+	body, err := GetTypeRegistry().GetInterfaceByTag(header.CmdId)
 	if err != nil {
 		log.Error(err.Error())
-		return nil,err
+		return nil, err
 	}
-	err=json.Unmarshal(bodyData,body)
+	err = json.Unmarshal(bodyData, body)
 	if err != nil {
 		log.Error(err.Error())
-		return nil,err
+		return nil, err
 	}
 	return &BinaryMessage{
 		CmdId:   header.CmdId,
@@ -278,14 +279,14 @@ func (this *decodeState) readDecimal() decimal.Decimal {
 	if err != nil {
 		panic(err)
 	}
-	ret,err:=decimal.NewFromString(string(value))
+	ret, err := decimal.NewFromString(string(value))
 	if err != nil {
 		panic(err)
 	}
 	return ret
 }
 
-func (this *decodeState) readBuffer()bytes.Buffer {
+func (this *decodeState) readBuffer() bytes.Buffer {
 	var length uint16
 	this.r(&length)
 	value := make([]byte, length)
@@ -324,7 +325,7 @@ func (this *decodeState) readValue(tag BINARY_TAG, v reflect.Value, t reflect.Ty
 			log.Panic(fmt.Sprintf("binary: Tag is %s, but I don't know how to put that in a %s!", tag, v.Kind()))
 		}
 	case TAG_Decimal:
-		value:=this.readDecimal()
+		value := this.readDecimal()
 		switch v.Kind() {
 		case reflect.Ptr:
 			v1 := v.Elem()
@@ -340,7 +341,7 @@ func (this *decodeState) readValue(tag BINARY_TAG, v reflect.Value, t reflect.Ty
 			v.Set(reflect.ValueOf(value))
 		}
 	case TAG_Buffer:
-		value:=this.readBuffer()
+		value := this.readBuffer()
 		switch v.Kind() {
 		case reflect.Ptr:
 			v1 := v.Elem()
@@ -585,7 +586,7 @@ func (this *decodeState) readArray(tag BINARY_TAG, v reflect.Value) {
 			log.Panic(fmt.Sprintf("binary: Tag is %s, but I don't know how to put that in a %s!", tag, v.Kind()))
 		}
 
-	case TAG_ByteArray, TAG_ShortArray,TAG_UShortArray, TAG_IntArray,TAG_UIntArray, TAG_LongArray,TAG_ULongArray, TAG_FloatArray, TAG_DoubleArray:
+	case TAG_ByteArray, TAG_ShortArray, TAG_UShortArray, TAG_IntArray, TAG_UIntArray, TAG_LongArray, TAG_ULongArray, TAG_FloatArray, TAG_DoubleArray:
 		var length uint32
 		this.r(&length)
 		innerTag := tag.getArrayBaseType()
