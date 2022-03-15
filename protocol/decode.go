@@ -43,7 +43,9 @@ func UnmarshalJsonMessage(data []byte) (*BinaryMessage, error) {
 		)
 		return nil, err
 	}
-	data = data[:header.Len]
+	if header.Len != 0 {
+		data = data[:header.Len]
+	}
 	bodyData := data[HEADER_SIZE+2:]
 	body, err := GetTypeRegistry().GetInterfaceByTag(header.CmdId)
 	if err != nil {
