@@ -16,10 +16,8 @@ import (
 	"time"
 )
 
-
 var _ lokas.IModule = &Registry{}
 var _ lokas.IRegistry = &Registry{}
-
 
 type Registry struct {
 	process               lokas.IProcess
@@ -28,9 +26,9 @@ type Registry struct {
 	actorWatchCloseChan   chan struct{}
 	processWatchCloseChan chan struct{}
 
-	timer 		*time.Ticker
-	done        chan struct{}
-	leaseId     clientv3.LeaseID
+	timer   *time.Ticker
+	done    chan struct{}
+	leaseId clientv3.LeaseID
 }
 
 func NewRegistry(process lokas.IProcess) *Registry {
@@ -44,13 +42,13 @@ func NewRegistry(process lokas.IProcess) *Registry {
 
 func (this *Registry) GetActorIdsByTypeAndServerId(serverId int32, typ string) []util.ID {
 	if serverId == this.GetProcess().ServerId() {
-		log.Warn("GetLocalServer",flog.ServerId(serverId),zap.Int32("self_server_id",this.GetProcess().ServerId()))
+		log.Warn("GetLocalServer", flog.ServerId(serverId), zap.Int32("self_server_id", this.GetProcess().ServerId()))
 		return this.LocalRegistry.GetActorIdsByTypeAndServerId(serverId, typ)
 	}
 	return this.GlobalRegistry.GetActorIdsByTypeAndServerId(serverId, typ)
 }
 
-func (this *Registry) GetProcessInfo()string{
+func (this *Registry) GetProcessInfo() string {
 	return ""
 }
 
@@ -71,50 +69,50 @@ func (this *Registry) OnDestroy() error {
 }
 
 //return leaseId,(bool)is registered,error
-func (this *Registry) GetLeaseId() (clientv3.LeaseID,bool, error) {
+func (this *Registry) GetLeaseId() (clientv3.LeaseID, bool, error) {
 	c := this.process.GetEtcd()
-	if this.leaseId!= 0 {
-		resToLive,err:= c.Lease.TimeToLive(context.Background(),this.leaseId)
+	if this.leaseId != 0 {
+		resToLive, err := c.Lease.TimeToLive(context.Background(), this.leaseId)
 		if err != nil {
 			log.Error(err.Error())
-			return 0,false,err
+			return 0, false, err
 		}
 		//if lease id is expired,create a new lease id
-		if resToLive.TTL<=0 {
+		if resToLive.TTL <= 0 {
 			res, err := c.Lease.Grant(context.Background(), LeaseDuration)
 			if err != nil {
 				log.Error(err.Error())
-				return 0,false, err
+				return 0, false, err
 			}
 			this.leaseId = res.ID
-			return this.leaseId,false, nil
+			return this.leaseId, false, nil
 		}
-		if resToLive.TTL<LeaseRenewDuration {
-			_,err := c.Lease.KeepAliveOnce(context.Background(),this.leaseId)
+		if resToLive.TTL < LeaseRenewDuration {
+			_, err := c.Lease.KeepAliveOnce(context.Background(), this.leaseId)
 			if err != nil {
 				log.Error(err.Error())
-				return 0,false,err
+				return 0, false, err
 			}
 		}
-		return this.leaseId,true,nil
+		return this.leaseId, true, nil
 	}
 
 	res, err := c.Lease.Grant(context.Background(), LeaseDuration)
 	if err != nil {
 		log.Error(err.Error())
-		return 0,false, err
+		return 0, false, err
 	}
 	this.leaseId = res.ID
-	return this.leaseId,false, nil
+	return this.leaseId, false, nil
 }
 
-func (this *Registry) update(){
+func (this *Registry) update() {
 	this.updateProcessInfo()
 }
 
 func (this *Registry) start() {
 	this.registerProcessInfo()
-	this.timer = time.NewTicker(time.Second*5)
+	this.timer = time.NewTicker(time.Second * 5)
 	this.done = make(chan struct{})
 	go func() {
 	LOOP:
@@ -138,8 +136,8 @@ func (this *Registry) Start() error {
 }
 
 func (this *Registry) Stop() error {
-	if this.done!=nil {
-		this.done<- struct{}{}
+	if this.done != nil {
+		this.done <- struct{}{}
 	}
 	this.OnStop()
 	return nil
@@ -175,7 +173,7 @@ func (this *Registry) Load(conf lokas.IConfig) error {
 
 func (this *Registry) Unload() error {
 	this.actorWatchCloseChan <- struct{}{}
-	this.processWatchCloseChan<- struct{}{}
+	this.processWatchCloseChan <- struct{}{}
 	return nil
 }
 
@@ -187,7 +185,7 @@ func (this *Registry) checkOrCreateActorRegistry(kv *mvccpb.KeyValue) {
 	json.Unmarshal(kv.Value, actorReg)
 	log.Warn("success",
 		flog.FuncInfo(this, "checkOrCreateActorRegistry").
-			Append(flog.Result(log.PrettyStruct(actorReg)))...
+			Append(flog.Result(log.PrettyStruct(actorReg)))...,
 	)
 	this.GlobalRegistry.AddActor(actorReg)
 }
@@ -201,7 +199,7 @@ func (this *Registry) deleteActorRegistry(kv *mvccpb.KeyValue) {
 //check if process key exist,otherwise add it
 func (this *Registry) checkOrCreateProcessRegistry(kv *mvccpb.KeyValue) {
 	id, _ := strconv.Atoi(regexp.MustCompile(`[/]processids[/]([0-9]+)`).ReplaceAllString(string(kv.Key), "$1"))
-	log.Warn("checkOrCreateProcessRegistry",zap.Int("id",id))
+	log.Warn("checkOrCreateProcessRegistry", zap.Int("id", id))
 	pid := util.ProcessId(id)
 	processReg := NewProcessRegistry(pid)
 	this.GlobalRegistry.AddProcess(processReg)
@@ -229,7 +227,7 @@ func (this *Registry) startUpdateRemoteActorInfo() error {
 	watcher := client.Watch(context.TODO(), "/actor/", clientv3.WithPrefix())
 	this.actorWatchCloseChan = make(chan struct{})
 	go func() {
-		LOOP:
+	LOOP:
 		for {
 			select {
 			case resp := <-watcher:
@@ -237,14 +235,14 @@ func (this *Registry) startUpdateRemoteActorInfo() error {
 					if e.Type == mvccpb.PUT {
 						log.Warn("PUT actor",
 							flog.FuncInfo(this, "startUpdateRemoteActorInfo").
-								Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
+								Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...,
 						)
 						this.checkOrCreateActorRegistry(e.Kv)
 					} else if e.Type == mvccpb.DELETE {
-						log.Warn("DELETE actor",
-							flog.FuncInfo(this, "startUpdateRemoteActorInfo").
-								Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
-						)
+						//log.Warn("DELETE actor",
+						//	flog.FuncInfo(this, "startUpdateRemoteActorInfo").
+						//		Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
+						//)
 						this.deleteActorRegistry(e.Kv)
 					}
 				}
@@ -259,7 +257,7 @@ func (this *Registry) startUpdateRemoteActorInfo() error {
 
 //update process registries information via etcd
 func (this *Registry) startUpdateRemoteProcessInfo() error {
-	log.Info("start",flog.FuncInfo(this,"startUpdateRemoteProcessInfo")...)
+	log.Info("start", flog.FuncInfo(this, "startUpdateRemoteProcessInfo")...)
 	client := this.GetProcess().GetEtcd()
 	res, err := client.Get(context.TODO(), "/processids/", clientv3.WithPrefix())
 	if err != nil {
@@ -272,22 +270,22 @@ func (this *Registry) startUpdateRemoteProcessInfo() error {
 	watchChan := client.Watch(context.TODO(), "/processids/", clientv3.WithPrefix(), clientv3.WithRev(res.Header.Revision))
 	this.processWatchCloseChan = make(chan struct{})
 	go func() {
-		LOOP:
+	LOOP:
 		for {
 			select {
 			case resp := <-watchChan:
 				for _, e := range resp.Events {
 					if e.Type == mvccpb.PUT {
-						log.Warn("PUT Process Registry",
-							flog.FuncInfo(this, "startUpdateRemoteProcessInfo").
-								Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
-						)
+						//log.Warn("PUT Process Registry",
+						//	flog.FuncInfo(this, "startUpdateRemoteProcessInfo").
+						//		Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
+						//)
 						this.checkOrCreateProcessRegistry(e.Kv)
 					} else if e.Type == mvccpb.DELETE {
-						log.Warn("DELETE Process Registry",
-							flog.FuncInfo(this, "startUpdateRemoteProcessInfo").
-								Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
-						)
+						//log.Warn("DELETE Process Registry",
+						//	flog.FuncInfo(this, "startUpdateRemoteProcessInfo").
+						//		Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...
+						//)
 						this.deleteProcessRegistry(e.Kv)
 					}
 				}
@@ -300,7 +298,7 @@ func (this *Registry) startUpdateRemoteProcessInfo() error {
 	return nil
 }
 
-func (this *Registry) updateProcessInfo()error{
+func (this *Registry) updateProcessInfo() error {
 	client := this.GetProcess().GetEtcd()
 	leaseId, isReg, err := this.GetLeaseId()
 	if err != nil {
@@ -318,7 +316,7 @@ func (this *Registry) updateProcessInfo()error{
 	return nil
 }
 
-func (this *Registry) unregisterProcessInfo()error {
+func (this *Registry) unregisterProcessInfo() error {
 	client := this.GetProcess().GetEtcd()
 	leaseId, _, err := this.GetLeaseId()
 	if err != nil {
@@ -364,7 +362,7 @@ func (this *Registry) RegisterActors() error {
 		log.Error(err.Error())
 		return err
 	}
-	log.Info("res", flog.FuncInfo(this,"RegisterActors").Append(flog.Result(res.Header.String()))...)
+	log.Info("res", flog.FuncInfo(this, "RegisterActors").Append(flog.Result(res.Header.String()))...)
 	return nil
 }
 
@@ -387,7 +385,7 @@ func (this *Registry) RegisterActorRemote(actor lokas.IActor) error {
 			log.Error(err.Error())
 			return err
 		}
-		log.Warn("res", flog.FuncInfo(this,"RegisterActorRemote").Append(flog.Result(res.Header.String()))...)
+		log.Warn("res", flog.FuncInfo(this, "RegisterActorRemote").Append(flog.Result(res.Header.String()))...)
 	}
 	return nil
 }
@@ -419,8 +417,8 @@ func (this *Registry) QueryRemoteActorsByServer(typ string, ServerId int32) []*A
 
 func (this *Registry) RegisterActorLocal(actor lokas.IActor) error {
 	log.Info("register",
-		flog.FuncInfo(this,"RegisterActorLocal").
-		Concat(flog.ActorInfo(actor))...
+		flog.FuncInfo(this, "RegisterActorLocal").
+			Concat(flog.ActorInfo(actor))...,
 	)
 	re := &ActorRegistry{
 		Id:        actor.GetId(),
@@ -439,4 +437,3 @@ func (this *Registry) UnregisterActorLocal(actor lokas.IActor) error {
 	this.LocalRegistry.RemoveActor(actor.GetId())
 	return nil
 }
-
