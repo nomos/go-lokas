@@ -233,10 +233,10 @@ func (this *Registry) startUpdateRemoteActorInfo() error {
 			case resp := <-watcher:
 				for _, e := range resp.Events {
 					if e.Type == mvccpb.PUT {
-						log.Warn("PUT actor",
-							flog.FuncInfo(this, "startUpdateRemoteActorInfo").
-								Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...,
-						)
+						//log.Warn("PUT actor",
+						//	flog.FuncInfo(this, "startUpdateRemoteActorInfo").
+						//		Concat(flog.KeyValue(string(e.Kv.Key), string(e.Kv.Value)))...,
+						//)
 						this.checkOrCreateActorRegistry(e.Kv)
 					} else if e.Type == mvccpb.DELETE {
 						//log.Warn("DELETE actor",

@@ -1,6 +1,6 @@
 module github.com/nomos/go-lokas
 
-go 1.18
+go 1.17
 
 require (
 	github.com/gomodule/redigo v1.8.4
