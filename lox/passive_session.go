@@ -38,9 +38,9 @@ type PassiveSession struct {
 	Messages         chan []byte
 	Conn             lokas.IConn
 	Protocol         protocol.TYPE
-	manager    lokas.ISessionManager
-	doneClient chan struct{}
-	doneServer chan struct{}
+	manager          lokas.ISessionManager
+	doneClient       chan struct{}
+	doneServer       chan struct{}
 	OnCloseFunc      func(conn lokas.IConn)
 	OnOpenFunc       func(conn lokas.IConn)
 	ClientMsgHandler func(msg *protocol.BinaryMessage)
@@ -172,7 +172,7 @@ func (this *PassiveSession) StartMessagePump() {
 				}
 				if cmdId == protocol.TAG_Ping {
 					//ping:=msg.Body.(*Protocol.Ping)
-					log.Info("receive ping",zap.Int64("client_session_id",this.GetId().Int64()))
+					//log.Info("receive ping",zap.Int64("client_session_id",this.GetId().Int64()))
 					pong := &protocol.Pong{Time: time.Now()}
 					data, err := protocol.MarshalMessage(msg.TransId, pong, this.Protocol)
 					if err != nil {
@@ -182,7 +182,7 @@ func (this *PassiveSession) StartMessagePump() {
 						break CLIENT_LOOP
 					}
 					_, err = this.Conn.Write(data)
-					log.Info("send ping",zap.Int64("client_session_id",this.GetId().Int64()))
+					//log.Info("send ping",zap.Int64("client_session_id",this.GetId().Int64()))
 					if err != nil {
 						log.Error(err.Error())
 						this.Conn.Close()
@@ -210,13 +210,13 @@ func (this *PassiveSession) StartMessagePump() {
 		defer func() {
 			r := recover()
 			if r != nil {
-				if util.Recover(r,true)!=nil {
+				if util.Recover(r, true) != nil {
 					log.Error("服务端协议出错")
 					this.Conn.Close()
 				}
 			}
 		}()
-		SERVER_LOOP:
+	SERVER_LOOP:
 		for {
 			select {
 			//ServerSideMsgLoop
@@ -236,11 +236,11 @@ func (this *PassiveSession) StartMessagePump() {
 func (this *PassiveSession) OnMessage(msg *protocol.RouteMessage) {
 	msg = this.HookReceive(msg)
 	if msg != nil {
-		err:=this.HandleMsg(msg.FromActor, msg.TransId, msg.Body)
+		err := this.HandleMsg(msg.FromActor, msg.TransId, msg.Body)
 		if err != nil {
 			log.Error("Actor:OnMessage:Error",
-				flog.ActorReceiveMsgInfo(this,msg.Body,msg.TransId,msg.FromActor).
-					Append(flog.Error(err))...
+				flog.ActorReceiveMsgInfo(this, msg.Body, msg.TransId, msg.FromActor).
+					Append(flog.Error(err))...,
 			)
 		}
 	}
@@ -255,10 +255,10 @@ func (this *PassiveSession) closeSession() {
 func (this *PassiveSession) stop() {
 	defer func() {
 		if r := recover(); r != nil {
-			util.Recover(r,false)
+			util.Recover(r, false)
 		}
 	}()
-	if this.doneClient!=nil {
+	if this.doneClient != nil {
 		this.doneClient <- struct{}{}
 		this.doneServer <- struct{}{}
 	}
