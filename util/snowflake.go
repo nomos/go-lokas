@@ -11,7 +11,6 @@ import (
 	"time"
 )
 
-
 var (
 	// Epoch is set to the twitter snowflake epoch of Nov 04 2010 01:42:54 UTC in milliseconds
 	// You may customize this to set a different epoch for your application.
@@ -97,44 +96,40 @@ type Snowflake struct {
 type ID int64
 type ProcessId uint16
 
-func (this ProcessId) Snowflake()ID {
+func (this ProcessId) Snowflake() ID {
 	return ID(this)
 }
 
-func (this ProcessId) Int32()int32 {
+func (this ProcessId) Int32() int32 {
 	return int32(this)
 }
 
-func (this ProcessId) Int64()int64 {
+func (this ProcessId) Int64() int64 {
 	return this.Snowflake().Int64()
 }
 
-func (this ProcessId) String()string {
-	return strconv.Itoa(int(this))
+func (this ID) IsValidProcessId() bool {
+	return this >= 0 && this < 2<<NodeBits
 }
 
-func (this ID) IsValidProcessId()bool{
-	return this>=0&&this<2<<NodeBits
-}
-
-func IDFromB64 (s string)ID{
-	o:=b64.NewString(s)
+func IDFromB64(s string) ID {
+	o := b64.NewString(s)
 	o.Int64()
 	return ID(o.Int64())
 }
 
-func IDFromString (s string)ID{
-	id,_:=strconv.ParseInt(s,10,64)
+func IDFromString(s string) ID {
+	id, _ := strconv.ParseInt(s, 10, 64)
 	return ID(id)
 }
 
-func (this ID) B64()string{
-	o:=b64.NewInt64(int64(this))
+func (this ID) B64() string {
+	o := b64.NewInt64(int64(this))
 	return o.String()
 }
 
-func (this ProcessId) IsValid()bool{
-	return this>=0&&this<2<<NodeBits
+func (this ProcessId) IsValid() bool {
+	return this >= 0 && this < 2<<NodeBits
 }
 
 func (this ID) ProcessId() ProcessId {
@@ -376,11 +371,11 @@ func (f ID) TimeUnix() int64 {
 }
 
 func (f ID) TimeSecond() time.Time {
-	return time.Unix(f.TimeUnix()/1000,0)
+	return time.Unix(f.TimeUnix()/1000, 0)
 }
 
 func (f ID) Time() time.Time {
-	return time.Unix(0,f.TimeUnix()*1000000)
+	return time.Unix(0, f.TimeUnix()*1000000)
 }
 
 // Snowflake returns an int64 of the snowflake ID node number
