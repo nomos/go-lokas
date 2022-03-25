@@ -108,6 +108,10 @@ func (this ProcessId) Int64() int64 {
 	return this.Snowflake().Int64()
 }
 
+func (this ProcessId) ToString() string {
+	return strconv.Itoa(int(this))
+}
+
 func (this ID) IsValidProcessId() bool {
 	return this >= 0 && this < 2<<NodeBits
 }

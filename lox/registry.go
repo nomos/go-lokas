@@ -306,7 +306,7 @@ func (this *Registry) updateProcessInfo() error {
 		return err
 	}
 	if !isReg {
-		res, err := client.Put(context.TODO(), "/processids/"+this.process.PId().String()+"", time.Now().String(), clientv3.WithLease(leaseId))
+		res, err := client.Put(context.TODO(), "/processids/"+this.process.PId().ToString()+"", time.Now().String(), clientv3.WithLease(leaseId))
 		if err != nil {
 			log.Error(err.Error())
 			return err
@@ -340,7 +340,7 @@ func (this *Registry) registerProcessInfo() error {
 		return err
 	}
 
-	_, err = client.Put(context.TODO(), "/process/"+this.process.PId().String()+"/info", string(s))
+	_, err = client.Put(context.TODO(), "/process/"+this.process.PId().ToString()+"/info", string(s))
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -357,7 +357,7 @@ func (this *Registry) RegisterActors() error {
 		log.Error(err.Error())
 		return err
 	}
-	res, err := client.Put(context.TODO(), "/process/"+this.process.PId().String()+"/actors", string(s))
+	res, err := client.Put(context.TODO(), "/process/"+this.process.PId().ToString()+"/actors", string(s))
 	if err != nil {
 		log.Error(err.Error())
 		return err

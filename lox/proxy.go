@@ -34,15 +34,15 @@ var _ lokas.IModule = (*Proxy)(nil)
 var _ lokas.IProxy = (*Proxy)(nil)
 
 type Proxy struct {
-	Host               string
-	Port               string
-	server             lokas.Server
-	started            bool
-	mu                 sync.Mutex
+	Host    string
+	Port    string
+	server  lokas.Server
+	started bool
+	mu      sync.Mutex
 
 	dialerCloseChans map[util.ProcessId]chan struct{}
-	process         lokas.IProcess
-	Sessions        *ProxySessionManager
+	process          lokas.IProcess
+	Sessions         *ProxySessionManager
 }
 
 func (this *Proxy) GetProcess() lokas.IProcess {
@@ -53,7 +53,7 @@ func (this *Proxy) SetProcess(process lokas.IProcess) {
 	this.process = process
 }
 
-func NewProxy(process lokas.IProcess)*Proxy{
+func NewProxy(process lokas.IProcess) *Proxy {
 	ret := &Proxy{
 		dialerCloseChans: map[util.ProcessId]chan struct{}{},
 		Sessions:         NewProxySessionManager(true),
@@ -82,7 +82,6 @@ func (this *Proxy) OnDestroy() error {
 	panic("implement me")
 }
 
-
 func (this *Proxy) Load(conf lokas.IConfig) error {
 
 	context := &lokas.Context{
@@ -106,9 +105,9 @@ type processHandShake struct {
 	Id util.ID
 }
 
-func activeSessionCreator(id util.ID,p *Proxy) func(conn lokas.IConn) lokas.ISession {
+func activeSessionCreator(id util.ID, p *Proxy) func(conn lokas.IConn) lokas.ISession {
 	return func(conn lokas.IConn) lokas.ISession {
-		sess := NewProxySession(conn, id, p.Sessions,false)
+		sess := NewProxySession(conn, id, p.Sessions, false)
 		sess.AuthFunc = func(data []byte) error {
 			sess.Verified = true
 			p.Sessions.AddSession(sess.GetId(), sess)
@@ -123,17 +122,17 @@ func activeSessionCreator(id util.ID,p *Proxy) func(conn lokas.IConn) lokas.ISes
 
 func passiveSessionCreator(p *Proxy) func(conn lokas.IConn) lokas.ISession {
 	return func(conn lokas.IConn) lokas.ISession {
-		sess := NewProxySession(conn, p.GetProcess().GenId(), p.Sessions,true)
+		sess := NewProxySession(conn, p.GetProcess().GenId(), p.Sessions, true)
 		sess.AuthFunc = func(data []byte) error {
 			var hs processHandShake
-			err:=json.Unmarshal(data,hs)
+			err := json.Unmarshal(data, hs)
 			if err != nil {
 				log.Error(err.Error())
 				return err
 			}
 			p.Sessions.AddSession(hs.Id, sess)
-			data,_=protocol.MarshalMessage(0,hs,protocol.BINARY)
-			_,err=sess.Conn.Write(data)
+			data, _ = protocol.MarshalMessage(0, hs, protocol.BINARY)
+			_, err = sess.Conn.Write(data)
 			if err != nil {
 				log.Error(err.Error())
 				sess.Conn.Close()
@@ -150,37 +149,37 @@ func passiveSessionCreator(p *Proxy) func(conn lokas.IConn) lokas.ISession {
 	}
 }
 
-func getIdMutexKey(a,b util.ProcessId)string{
-	ret:= "proxy/"
-	if a>b {
-		ret+=a.String()
-		ret+="_"
-		ret+=b.String()
+func getIdMutexKey(a, b util.ProcessId) string {
+	ret := "proxy/"
+	if a > b {
+		ret += a.ToString()
+		ret += "_"
+		ret += b.ToString()
 	} else {
-		ret+=b.String()
-		ret+="_"
-		ret+=a.String()
+		ret += b.ToString()
+		ret += "_"
+		ret += a.ToString()
 	}
 	return ret
 }
 
-func (this *Proxy) checkIsConnected(id util.ProcessId)bool{
-	return this.Sessions.GetSession(id.Snowflake())!=nil||this.Sessions.GetSession(id.Snowflake())!=nil
+func (this *Proxy) checkIsConnected(id util.ProcessId) bool {
+	return this.Sessions.GetSession(id.Snowflake()) != nil || this.Sessions.GetSession(id.Snowflake()) != nil
 }
 
-func (this *Proxy) connect(id util.ProcessId,addr string) (*ProxySession,error) {
-	selfId:=this.GetProcess().PId()
-	mu,err:=this.GetProcess().GlobalMutex(getIdMutexKey(selfId,id),15)
+func (this *Proxy) connect(id util.ProcessId, addr string) (*ProxySession, error) {
+	selfId := this.GetProcess().PId()
+	mu, err := this.GetProcess().GlobalMutex(getIdMutexKey(selfId, id), 15)
 	if err != nil {
 		log.Error(err.Error())
-		return nil,err
+		return nil, err
 	}
 	mu.Lock()
 	defer mu.Unlock()
 	if this.checkIsConnected(id) {
 		//如果连上
-		log.Warnf("服务器已经连接",selfId.String(),id.String())
-		return this.getProxySession(id),nil
+		log.Warnf("服务器已经连接", selfId.ToString(), id.ToString())
+		return this.getProxySession(id), nil
 	}
 	context := &lokas.Context{
 		SessionCreator:    activeSessionCreator(id.Snowflake(), this),
@@ -192,20 +191,20 @@ func (this *Proxy) connect(id util.ProcessId,addr string) (*ProxySession,error) 
 		MaxPacketWriteLen: protocol.DEFAULT_PACKET_LEN,
 	}
 	//如果没有连接,尝试连接
-	conn,err := tcp.Dial(addr, context)
+	conn, err := tcp.Dial(addr, context)
 	if err != nil {
 		log.Error(err.Error())
-		return nil,err
+		return nil, err
 	}
-	if conn==nil {
+	if conn == nil {
 		log.Error("create session failed")
-		return nil,errors.New("create session failed")
+		return nil, errors.New("create session failed")
 	}
 	//握手协议
-	activeSession:=conn.Session.(*ProxySession)
-	_,err=promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-		timeout:=promise.SetTimeout(time.Second*14, func(timeout *promise.Timeout) {
-			reject("connect to server timeout:"+id.String())
+	activeSession := conn.Session.(*ProxySession)
+	_, err = promise.Async(func(resolve func(interface{}), reject func(interface{})) {
+		timeout := promise.SetTimeout(time.Second*14, func(timeout *promise.Timeout) {
+			reject("connect to server timeout:" + id.ToString())
 			activeSession.Conn.Close()
 			activeSession.closeSession()
 			return
@@ -215,27 +214,27 @@ func (this *Proxy) connect(id util.ProcessId,addr string) (*ProxySession,error) 
 			if success {
 				resolve(nil)
 			} else {
-				reject("connect to server failed:"+id.String())
+				reject("connect to server failed:" + id.ToString())
 			}
 		}
 	}).Await()
 	if err != nil {
 		log.Error(err.Error())
-		return nil,err
+		return nil, err
 	}
-	return activeSession,nil
+	return activeSession, nil
 }
 
-func (this *Proxy) getProxySession(id util.ProcessId)*ProxySession {
-	sess:=this.Sessions.GetSession(id.Snowflake())
-	if sess!=nil {
+func (this *Proxy) getProxySession(id util.ProcessId) *ProxySession {
+	sess := this.Sessions.GetSession(id.Snowflake())
+	if sess != nil {
 		return sess.(*ProxySession)
 	}
 	return nil
 }
 
-func (this *Proxy) Send(id util.ProcessId,msg *protocol.RouteMessage)error{
-	sess:=this.getProxySession(id)
+func (this *Proxy) Send(id util.ProcessId, msg *protocol.RouteMessage) error {
+	sess := this.getProxySession(id)
 	if sess == nil {
 		//info:=this.GetProcess().GetProcessInfo
 		//sess,err:=this.connect(id,addr)
@@ -246,8 +245,8 @@ func (this *Proxy) Send(id util.ProcessId,msg *protocol.RouteMessage)error{
 		//TODO
 		return nil
 	}
-	data,_:=msg.Marshal()
-	_,err := sess.Conn.Write(data)
+	data, _ := msg.Marshal()
+	_, err := sess.Conn.Write(data)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -255,12 +254,12 @@ func (this *Proxy) Send(id util.ProcessId,msg *protocol.RouteMessage)error{
 	return nil
 }
 
-func (this *Proxy) SetPort(p string){
+func (this *Proxy) SetPort(p string) {
 	this.Port = p
 }
 
 func (this *Proxy) Start() error {
-	log.Info("start",flog.FuncInfo(this,"Start")...)
+	log.Info("start", flog.FuncInfo(this, "Start")...)
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	if this.started {
@@ -278,7 +277,7 @@ func (this *Proxy) Start() error {
 func (this *Proxy) Stop() error {
 	this.mu.Lock()
 	defer this.mu.Unlock()
-	log.Warn("stop",flog.FuncInfo(this,"Stop")...)
+	log.Warn("stop", flog.FuncInfo(this, "Stop")...)
 	this.Sessions.Clear()
 	this.started = false
 	this.server.Stop()

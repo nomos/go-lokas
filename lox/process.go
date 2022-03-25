@@ -75,7 +75,7 @@ func (this *Process) Type() string {
 }
 
 func (this *Process) LoadModuleRegistry() error {
-	res, err := this.etcd.Get(context.TODO(), "/process/"+this.PId().String()+"/modules")
+	res, err := this.etcd.Get(context.TODO(), "/process/"+this.PId().ToString()+"/modules")
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -97,7 +97,7 @@ func (this *Process) LoadModuleRegistry() error {
 
 func (this *Process) SaveModuleRegistry() error {
 	s, _ := json.Marshal(this.modulesMap)
-	_, err := this.etcd.Put(context.TODO(), "/process/"+this.PId().String()+"/modules", string(s))
+	_, err := this.etcd.Put(context.TODO(), "/process/"+this.PId().ToString()+"/modules", string(s))
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -197,28 +197,28 @@ func (this *Process) LoadAllModule(conf lokas.IProcessConfig) error {
 
 func (this *Process) StartAllModule() error {
 	for _, mod := range this.modules {
-			log.Info("starting",flog.FuncInfo(this,"StartAllModule").Append(flog.Module(mod))...)
-			err := mod.Start()
-			if err != nil {
-				return err
-			}
-			log.Info("success",flog.FuncInfo(this,"StartAllModule").Append(flog.Module(mod))...)
+		log.Info("starting", flog.FuncInfo(this, "StartAllModule").Append(flog.Module(mod))...)
+		err := mod.Start()
+		if err != nil {
+			return err
+		}
+		log.Info("success", flog.FuncInfo(this, "StartAllModule").Append(flog.Module(mod))...)
 	}
 	return nil
 }
 
 func (this *Process) StopAllModule() error {
-	log.Warn("StopAllModule",zap.Any("modules",this.modules))
+	log.Warn("StopAllModule", zap.Any("modules", this.modules))
 	for _, mod := range this.modules {
-			log.Info("stop", flog.FuncInfo(this,"StopAllModule").Append(flog.Module(mod))...)
-			err := mod.Stop()
-			if err != nil {
-				return err
-			}
-			log.Info("success",
-				flog.FuncInfo(this, "StopAllModule").
-					Append(flog.Module(mod))...
-			)
+		log.Info("stop", flog.FuncInfo(this, "StopAllModule").Append(flog.Module(mod))...)
+		err := mod.Stop()
+		if err != nil {
+			return err
+		}
+		log.Info("success",
+			flog.FuncInfo(this, "StopAllModule").
+				Append(flog.Module(mod))...,
+		)
 	}
 	return nil
 }
@@ -244,7 +244,7 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 	this.IActorContainer = this.Add(NewActorContainer(this)).(lokas.IActorContainer)
 	this.IRouter = this.Add(NewRouter(this)).(lokas.IRouter)
 	if this.id == 0 {
-		log.Error("pid is not set",flog.FuncInfo(this,"Load")...)
+		log.Error("pid is not set", flog.FuncInfo(this, "Load")...)
 		return errors.New("pid is not set")
 	}
 	log.Info("process config",
@@ -252,7 +252,7 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 			Append(zap.Uint16("id", uint16(this.PId()))).
 			Append(zap.String("game", this.GameId())).
 			Append(zap.String("version", this.Version())).
-			Append(zap.Int32("server", this.ServerId()))...
+			Append(zap.Int32("server", this.ServerId()))...,
 	)
 	err := this.loadMongo(config.GetDb("mongo").(MongoConfig))
 	if err != nil {
@@ -302,14 +302,14 @@ func (this *Process) loadMongo(config MongoConfig) error {
 		flog.FuncInfo(this, "loadMongo").
 			Concat(flog.ActorInfo(this)).
 			Append(flog.DataBase(config.Database)).
-			Append(flog.Address(url))...
+			Append(flog.Address(url))...,
 	)
 	return nil
 }
 
 func (this *Process) loadRedis(config RedisConfig) error {
 	var err error
-	this.redis, err = redisclient.NewClient(config.Host + ":" + config.Port,config.Password)
+	this.redis, err = redisclient.NewClient(config.Host+":"+config.Port, config.Password)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -339,7 +339,7 @@ func (this *Process) Stop() error {
 	}
 	log.Warn("success",
 		flog.FuncInfo(this, "Stop").
-			Concat(flog.ActorInfo(this))...
+			Concat(flog.ActorInfo(this))...,
 	)
 	return nil
 }
