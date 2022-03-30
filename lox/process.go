@@ -13,18 +13,30 @@ import (
 	"github.com/nomos/qmgo"
 	"go.uber.org/zap"
 	"strconv"
+	"sync"
 )
 
 var _ lokas.IProcess = &Process{}
 var _ lokas.IRegistry = &Process{}
 
+var _pOnce sync.Once
+var _processInstance *Process
+
+func Instance() *Process {
+	_pOnce.Do(func() {
+		if _processInstance == nil {
+			_processInstance = &Process{
+				modulesMap:     map[string]util.ID{},
+				modules:        map[string]lokas.IModule{},
+				modulesCreator: map[string]lokas.IModuleCtor{},
+			}
+		}
+	})
+	return _processInstance
+}
+
 func CreateProcess() *Process {
-	ret := &Process{
-		modulesMap:     map[string]util.ID{},
-		modules:        map[string]lokas.IModule{},
-		modulesCreator: map[string]lokas.IModuleCtor{},
-	}
-	return ret
+	return Instance()
 }
 
 type Process struct {
