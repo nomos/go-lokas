@@ -22,6 +22,10 @@ type flagUtil struct {
 	items map[string]*flagValue
 }
 
+func (this *flagUtil) Items()map[string]*flagValue {
+	return this.items
+}
+
 func (this *flagUtil) Parse() {
 	flag.Parse()
 }

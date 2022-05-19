@@ -50,7 +50,7 @@ const (
 	SCAN_CODE_QUOTE SCAN_CODE  = 40 //QUOTE
 	SCAN_CODE_TILDE SCAN_CODE  = 41 //TILDE
 	SCAN_CODE_LSHIFT SCAN_CODE  = 42 //LSHIFT
-	SCAN_CODE_BACKSLASH SCAN_CODE  = 43 //BackSlash
+	SCAN_CODE_BACKSLASH SCAN_CODE  = 43 //BACKSLASH
 	SCAN_CODE_Z SCAN_CODE  = 44 //Z
 	SCAN_CODE_X SCAN_CODE  = 45 //X
 	SCAN_CODE_C SCAN_CODE  = 46 //C
@@ -199,7 +199,7 @@ func TO_SCAN_CODE(s string)SCAN_CODE{
 		return SCAN_CODE_TILDE
 	case "LSHIFT":
 		return SCAN_CODE_LSHIFT
-	case "BackSlash":
+	case "BACKSLASH":
 		return SCAN_CODE_BACKSLASH
 	case "Z":
 		return SCAN_CODE_Z
@@ -413,7 +413,7 @@ func (this SCAN_CODE) ToString()string{
 	case SCAN_CODE_LSHIFT:
 		return "LSHIFT"
 	case SCAN_CODE_BACKSLASH:
-		return "BackSlash"
+		return "BACKSLASH"
 	case SCAN_CODE_Z:
 		return "Z"
 	case SCAN_CODE_X:
