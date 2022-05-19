@@ -2,35 +2,35 @@ package util
 
 import "sync"
 
-type Queue struct {
-	first *node
-	last  *node
+type Queue[T any] struct {
+	first *node[T]
+	last  *node[T]
 	n     int
 	mutex sync.Mutex
 }
 
-type node struct {
-	item interface{}
-	next *node
+type node[T any] struct {
+	item T
+	next *node[T]
 }
 
-func NewQueue() Queue {
-	return Queue{}
+func NewQueue[T any]() Queue[T] {
+	return Queue[T]{}
 }
 
-func (q Queue) IsEmpty() bool {
+func (q Queue[T]) IsEmpty() bool {
 	return q.n == 0
 }
 
-func (q Queue) Size() int {
+func (q Queue[T]) Size() int {
 	return q.n
 }
 
-func (q *Queue) EnQueue(item interface{}) {
+func (q *Queue[T]) EnQueue(item T) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 	oldlast := q.last
-	q.last = &node{}
+	q.last = &node[T]{}
 	q.last.item = item
 	q.last.next = nil
 	if q.IsEmpty() {
@@ -41,9 +41,10 @@ func (q *Queue) EnQueue(item interface{}) {
 	q.n++
 }
 
-func (q *Queue) DeQueue() interface{} {
+func (q *Queue[T]) DeQueue() T {
+	var t T
 	if q.IsEmpty() {
-		return nil
+		return t
 	}
 	q.mutex.Lock()
 	defer q.mutex.Unlock()

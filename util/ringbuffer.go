@@ -7,8 +7,8 @@ import (
 	"sync"
 )
 
-type RingBuffer struct {
-	elements []interface{}
+type RingBuffer[T any] struct {
+	elements []T
 	first    int
 	last     int
 	size     int
@@ -17,9 +17,9 @@ type RingBuffer struct {
 	mutex    sync.RWMutex
 }
 
-func NewRingBuffer(capacity int) *RingBuffer {
-	ret := &RingBuffer{
-		elements: make([]interface{}, capacity, capacity),
+func NewRingBuffer[T any](capacity int) *RingBuffer[T] {
+	ret := &RingBuffer[T]{
+		elements: make([]T, capacity, capacity),
 		first:    0,
 		last:     0,
 		size:     0,
@@ -30,29 +30,29 @@ func NewRingBuffer(capacity int) *RingBuffer {
 	return ret
 }
 
-func (this *RingBuffer) Capacity() int {
+func (this *RingBuffer[T]) Capacity() int {
 	return this.capacity
 }
 
-func (this *RingBuffer) IsEmpty() bool {
+func (this *RingBuffer[T]) IsEmpty() bool {
 	return this.size == 0
 }
 
-func (this *RingBuffer) IsFull() bool {
+func (this *RingBuffer[T]) IsFull() bool {
 	return this.size == this.Capacity()
 }
 
-func (this *RingBuffer) Peek() interface{} {
+func (this *RingBuffer[T]) Peek() T {
 	this.mutex.RLock()
 	defer this.mutex.RUnlock()
 	if this.IsEmpty() {
 		log.Warn("isEmpty")
-		return nil
+		return Nil[T]()
 	}
 	return this.elements[this.first]
 }
 
-func (this *RingBuffer) PeekN(count int) interface{} {
+func (this *RingBuffer[T]) PeekN(count int) []T {
 	this.mutex.RLock()
 	defer this.mutex.RUnlock()
 	if count > this.size {
@@ -64,49 +64,49 @@ func (this *RingBuffer) PeekN(count int) interface{} {
 		return firstHalf
 	}
 	secondHalf := this.elements[0 : count-len(firstHalf)]
-	return slice.SliceConcat(secondHalf)
+	return slice.Concat(secondHalf)
 }
 
-func (this *RingBuffer) Deq() interface{} {
+func (this *RingBuffer[T]) Deq() T {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 	element := this.Peek()
-	if element != nil {
+	if !IsNil(element) {
 		this.size--
 		this.first = (this.first + 1) % this.capacity
 		return element
 	}
-	return nil
+	return Nil[T]()
 }
 
-func (this *RingBuffer) DeqN(count int) interface{} {
+func (this *RingBuffer[T]) DeqN(count int) T {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 
 	elements := this.PeekN(count)
-	count = len(elements.([]interface{}))
-	this.size-=count
-	this.first = (this.first+count)%this.capacity
-	return nil
+	count = len(elements)
+	this.size -= count
+	this.first = (this.first + count) % this.capacity
+	return Nil[T]()
 }
 
-func (this *RingBuffer) Enq(element interface{})int {
+func (this *RingBuffer[T]) Enq(element T) int {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
-	this.end = (this.first+this.size)%this.capacity
-	full:=this.IsFull()
+	this.end = (this.first + this.size) % this.capacity
+	full := this.IsFull()
 	if full {
 		fmt.Println("RingBuffer is Full")
 	}
 	this.elements[this.end] = element
 	if full {
-		this.first = (this.first+1)%this.capacity
+		this.first = (this.first + 1) % this.capacity
 	} else {
 		this.size++
 	}
 	return this.size
 }
 
-func (this RingBuffer) Size()int {
+func (this RingBuffer[T]) Size() int {
 	return this.size
 }

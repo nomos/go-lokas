@@ -12,7 +12,7 @@ var system_ts_types = make(map[BINARY_TAG]string)
 var system_go_types = make(map[BINARY_TAG]string)
 var system_cs_types = make(map[BINARY_TAG]string)
 
-func init(){
+func init() {
 	system_tags[TAG_End] = "End"
 	system_tags[TAG_Bool] = "Bool"
 	system_tags[TAG_Byte] = "Byte"
@@ -44,7 +44,6 @@ func init(){
 	system_tags[TAG_Color] = "Color"
 	system_tags[TAG_Null] = "Null"
 
-
 	system_ts_types[TAG_Bool] = "boolean"
 	system_ts_types[TAG_Byte] = "number"
 	system_ts_types[TAG_Short] = "number"
@@ -71,7 +70,6 @@ func init(){
 	system_ts_types[TAG_Decimal] = "bigDecimal"
 	system_ts_types[TAG_Color] = "colors.Color"
 
-
 	system_cs_types[TAG_Bool] = "bool"
 	system_cs_types[TAG_Byte] = "byte"
 	system_cs_types[TAG_Short] = "short"
@@ -96,7 +94,6 @@ func init(){
 	system_cs_types[TAG_Buffer] = "MemoryStream"
 	system_cs_types[TAG_Time] = "DateTime"
 	system_cs_types[TAG_Decimal] = "decimal"
-
 
 	system_go_types[TAG_Bool] = "bool"
 	system_go_types[TAG_Byte] = "byte"
@@ -133,23 +130,23 @@ func (this Enum) Enum() Enum {
 }
 
 type IEnum interface {
-	ToString()string
+	ToString() string
 	Enum() Enum
 }
 
 type IEnumCollection []IEnum
 
-func (this IEnumCollection) GetEnumByString(s string)IEnum{
-	for _,v:=range this {
-		if v.ToString()==s {
+func (this IEnumCollection) GetEnumByString(s string) IEnum {
+	for _, v := range this {
+		if v.ToString() == s {
 			return v
 		}
 	}
 	return nil
 }
 
-func (this IEnumCollection) HasInt32(i int32)bool{
-	for _,v:=range this {
+func (this IEnumCollection) Has(i int32) bool {
+	for _, v := range this {
 		if int32(v.Enum()) == i {
 			return true
 		}
@@ -157,9 +154,9 @@ func (this IEnumCollection) HasInt32(i int32)bool{
 	return false
 }
 
-func (this IEnumCollection) GetEnumByValue(s Enum)IEnum{
-	for _,v:=range this {
-		if v.Enum()==s {
+func (this IEnumCollection) GetEnumByValue(s Enum) IEnum {
+	for _, v := range this {
+		if v.Enum() == s {
 			return v
 		}
 	}
@@ -170,9 +167,9 @@ var once sync.Once
 var singleton *TypeRegistry
 
 type TypeRegistry struct {
-	tagMap map[BINARY_TAG]reflect.Type
-	typeMap map[reflect.Type]BINARY_TAG
-	nameMap map[reflect.Type]string
+	tagMap     map[BINARY_TAG]reflect.Type
+	typeMap    map[reflect.Type]BINARY_TAG
+	nameMap    map[reflect.Type]string
 	tagNameMap map[BINARY_TAG]string
 	nameTagMap map[string]BINARY_TAG
 }
@@ -182,61 +179,61 @@ func SetTypeRegistry(registry *TypeRegistry) {
 }
 
 //单例,进程唯一
-func GetTypeRegistry()*TypeRegistry {
+func GetTypeRegistry() *TypeRegistry {
 	if singleton == nil {
 		once.Do(func() {
 			//log.Info("init type registry")
 			singleton = &TypeRegistry{
-				tagMap:  make(map[BINARY_TAG]reflect.Type),
-				typeMap: make(map[reflect.Type]BINARY_TAG),
-				nameMap: make(map[reflect.Type]string),
+				tagMap:     make(map[BINARY_TAG]reflect.Type),
+				typeMap:    make(map[reflect.Type]BINARY_TAG),
+				nameMap:    make(map[reflect.Type]string),
 				tagNameMap: make(map[BINARY_TAG]string),
 				nameTagMap: make(map[string]BINARY_TAG),
 			}
-			for k,v:=range system_tags {
-				singleton.RegistrySystemTag(k,v)
+			for k, v := range system_tags {
+				singleton.RegistrySystemTag(k, v)
 			}
-			singleton.RegistryType(TAG_BinaryMessage,reflect.TypeOf((*BinaryMessage)(nil)).Elem())
-			singleton.RegistryType(TAG_Error,reflect.TypeOf((*ErrMsg)(nil)).Elem())
-			singleton.RegistryType(TAG_Compose,reflect.TypeOf((*ComposeData)(nil)).Elem())
-			singleton.RegistryType(TAG_Ping,reflect.TypeOf((*Ping)(nil)).Elem())
-			singleton.RegistryType(TAG_Pong,reflect.TypeOf((*Pong)(nil)).Elem())
-			singleton.RegistryType(TAG_HandShake,reflect.TypeOf((*HandShake)(nil)).Elem())
+			singleton.RegistryType(TAG_BinaryMessage, reflect.TypeOf((*BinaryMessage)(nil)).Elem())
+			singleton.RegistryType(TAG_Error, reflect.TypeOf((*ErrMsg)(nil)).Elem())
+			singleton.RegistryType(TAG_Compose, reflect.TypeOf((*ComposeData)(nil)).Elem())
+			singleton.RegistryType(TAG_Ping, reflect.TypeOf((*Ping)(nil)).Elem())
+			singleton.RegistryType(TAG_Pong, reflect.TypeOf((*Pong)(nil)).Elem())
+			singleton.RegistryType(TAG_HandShake, reflect.TypeOf((*HandShake)(nil)).Elem())
 		})
 	}
 	return singleton
 }
 
-func (this *TypeRegistry) RegistryTemplateTag(t BINARY_TAG,s string){
+func (this *TypeRegistry) RegistryTemplateTag(t BINARY_TAG, s string) {
 	this.tagNameMap[t] = s
 }
 
-func (this *TypeRegistry) RegistrySystemTag(t BINARY_TAG,s string){
+func (this *TypeRegistry) RegistrySystemTag(t BINARY_TAG, s string) {
 	this.tagNameMap[t] = s
 	this.nameTagMap[s] = t
 }
 
-func (this *TypeRegistry) GetNameByType(t reflect.Type)string {
-	name,ok:= this.nameMap[t]
+func (this *TypeRegistry) GetNameByType(t reflect.Type) string {
+	name, ok := this.nameMap[t]
 	if !ok {
 		name = "Unknown"
 	}
 	return name
 }
 
-func (this *TypeRegistry) GetTagName(t BINARY_TAG)string {
-	name,ok:= this.tagNameMap[t]
+func (this *TypeRegistry) GetTagName(t BINARY_TAG) string {
+	name, ok := this.tagNameMap[t]
 	if !ok {
 		name = "Unknown"
 	}
 	return name
 }
 
-func (this *TypeRegistry) RegistryType(t BINARY_TAG,p reflect.Type) {
-	if t<=TAG_Null {
-		log.Panic("tag id must > "+strconv.Itoa(int(TAG_Null)))
+func (this *TypeRegistry) RegistryType(t BINARY_TAG, p reflect.Type) {
+	if t <= TAG_Null {
+		log.Panic("tag id must > " + strconv.Itoa(int(TAG_Null)))
 	}
-	if t>=128&&t>65535 {
+	if t >= 128 && t > 65535 {
 		log.Panic("tag id must be <128 or >65535")
 	}
 	//log.Infof("RegistryType",t,p.Name())
@@ -247,33 +244,33 @@ func (this *TypeRegistry) RegistryType(t BINARY_TAG,p reflect.Type) {
 	this.nameTagMap[p.Name()] = t
 }
 
-func (this *TypeRegistry) GetTagByName(s string) BINARY_TAG{
-	if ret,ok:=this.nameTagMap[s];ok{
+func (this *TypeRegistry) GetTagByName(s string) BINARY_TAG {
+	if ret, ok := this.nameTagMap[s]; ok {
 		return ret
 	} else {
 		return 0
 	}
 }
 
-func (this *TypeRegistry) GetTagByType(p reflect.Type) (BINARY_TAG,error){
-	if ret,ok:=this.typeMap[p];ok{
-		return ret,nil
+func (this *TypeRegistry) GetTagByType(p reflect.Type) (BINARY_TAG, error) {
+	if ret, ok := this.typeMap[p]; ok {
+		return ret, nil
 	} else {
 		return 0, ERR_TYPE_NOT_FOUND
 	}
 }
 
-func (this *TypeRegistry) GetTypeByTag(t BINARY_TAG) (reflect.Type,error){
-	if ret,ok:=this.tagMap[t];ok{
-		return ret,nil
+func (this *TypeRegistry) GetTypeByTag(t BINARY_TAG) (reflect.Type, error) {
+	if ret, ok := this.tagMap[t]; ok {
+		return ret, nil
 	} else {
 		return nil, ERR_TYPE_NOT_FOUND
 	}
 }
 
-func (this *TypeRegistry) GetInterfaceByTag(t BINARY_TAG) (ISerializable,error){
-	if ret,ok:=this.tagMap[t];ok{
-		return reflect.New(ret).Interface().(ISerializable),nil
+func (this *TypeRegistry) GetInterfaceByTag(t BINARY_TAG) (ISerializable, error) {
+	if ret, ok := this.tagMap[t]; ok {
+		return reflect.New(ret).Interface().(ISerializable), nil
 	} else {
 		return nil, ERR_TYPE_NOT_FOUND
 	}

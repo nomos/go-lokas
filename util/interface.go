@@ -3,7 +3,7 @@ package util
 import "reflect"
 
 func IsNil(i interface{}) bool {
-	if i==nil {
+	if i == nil {
 		return true
 	}
 	vi := reflect.ValueOf(i)
@@ -11,4 +11,9 @@ func IsNil(i interface{}) bool {
 		return vi.IsNil()
 	}
 	return false
+}
+
+func Nil[T any]() T {
+	var t T
+	return t
 }
