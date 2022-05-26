@@ -17,6 +17,13 @@ type Float interface {
 	float32 | float64
 }
 
+func Ternary[T any](cond bool, a T, b T) T {
+	if cond {
+		return a
+	}
+	return b
+}
+
 func Pow[T Number](x, y T) T {
 	var ret T = 1
 	for y > 0 {

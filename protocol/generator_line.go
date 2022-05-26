@@ -102,7 +102,6 @@ const (
 	LINE_MODEL_ENUM_HEADER
 	LINE_MODEL_ENUM_FIELD
 
-
 	LINE_PROTO_PACKAGE
 	LINE_PROTO_HEADER
 	LINE_PROTO_FIELD
@@ -152,10 +151,10 @@ func GetAllLineRegExpEnums()IEnumCollection{
 	return ret
 }
 
-func GetLineRegExps()map[string]*regexp.Regexp{
-	ret:=make(map[string]*regexp.Regexp)
-	for k,v:=range line_regexp_map {
-		name:=line_string[k]
+func GetLineRegExps() map[string]*regexp.Regexp {
+	ret := make(map[string]*regexp.Regexp)
+	for k, v := range line_regexp_map {
+		name := line_string[k]
 		ret[name] = v
 	}
 	return ret
@@ -280,12 +279,12 @@ func init() {
 	line_regexp_map[LINE_GO_PRIVATE_STRUCT_HEADER] = regexp.MustCompile(`(type)\s+([a-z]\w*)\s+(struct)\s+[{]\s*`)
 	line_parse_map[LINE_GO_PRIVATE_STRUCT_HEADER] = `type {$struct} struct {`
 	line_regexp_replace_struct_name[LINE_GO_PRIVATE_STRUCT_HEADER] = "$2"
-	line_regexp_map[LINE_GO_STRUCT_FIELD_INHERIT] = regexp.MustCompile(`\s?(chan )?[*]?(\w|[_]|[.]|\[|\]|[*])+\s*`+"(`.*`)?"+`\s*`)
-	line_regexp_map[LINE_GO_STRUCT_FIELD_PUBLIC] = regexp.MustCompile(`\s?([A-Z]\w*)\s+((chan )?[*]?(\w|[_]|[.]|\[|\]|[*])+)\s*`+"(`.*`)?"+`\s*`)
+	line_regexp_map[LINE_GO_STRUCT_FIELD_INHERIT] = regexp.MustCompile(`\s?(chan )?[*]?(\w|[_]|[.]|\[|\]|[*])+\s*` + "(`.*`)?" + `\s*`)
+	line_regexp_map[LINE_GO_STRUCT_FIELD_PUBLIC] = regexp.MustCompile(`\s?([A-Z]\w*)\s+((chan )?[*]?(\w|[_]|[.]|\[|\]|[*])+)\s*` + "(`.*`)?" + `\s*`)
 	line_parse_map[LINE_GO_STRUCT_FIELD_PUBLIC] = `\t{$name} {$type}`
 	line_regexp_replace_name[LINE_GO_STRUCT_FIELD_PUBLIC] = "$1"
 	line_regexp_replace_type[LINE_GO_STRUCT_FIELD_PUBLIC] = "$2"
-	line_regexp_map[LINE_GO_STRUCT_FIELD_PRIVATE] = regexp.MustCompile(`\s?([a-z]\w*)\s+((chan )?[*]?(\w|[_]|[.]|\[|\]|[*])+)\s*`+"(`.*`)?"+`\s*`)
+	line_regexp_map[LINE_GO_STRUCT_FIELD_PRIVATE] = regexp.MustCompile(`\s?([a-z]\w*)\s+((chan )?[*]?(\w|[_]|[.]|\[|\]|[*])+)\s*` + "(`.*`)?" + `\s*`)
 	line_parse_map[LINE_GO_STRUCT_FIELD_PRIVATE] = `\t{$name} {$type}`
 	line_regexp_replace_name[LINE_GO_STRUCT_FIELD_PRIVATE] = "$1"
 	line_regexp_replace_type[LINE_GO_STRUCT_FIELD_PRIVATE] = "$2"
@@ -381,7 +380,6 @@ func init() {
 	line_regexp_map[LINE_TS_DEFINE_OBJ] = regexp.MustCompile(`\s*\[\s*"\s*(\w+)\s*"\s*(,\s*(\w|[.])+)+\]\s*[,]\s*`)
 	line_regexp_replace_name[LINE_TS_DEFINE_OBJ] = "$1"
 	line_regexp_map[LINE_TS_DEFINE_END] = regexp.MustCompile(`\]\s*([,]["]\s*\w+\s*["])*\s*\)\s*`)
-
 
 	line_regexp_map[LINE_TS_ERRORS_HEADER] = regexp.MustCompile(`export\s+namespace\s+(\w+)\s+\{\s*`)
 	line_regexp_replace_pkg[LINE_MODEL_PACKAGE] = "$1"
@@ -495,8 +493,8 @@ func (this *LineText) GetTypeName() string {
 func (this *LineText) GetName() string {
 	removeComment := COMMENT_REGEXP.ReplaceAllString(this.Text, "$1")
 	this.Name = this.LineType.RegReplaceName(removeComment)
-	this.Name = strings.TrimLeft(this.Name," ")
-	this.Name = strings.TrimRight(this.Name," ")
+	this.Name = strings.TrimLeft(this.Name, " ")
+	this.Name = strings.TrimRight(this.Name, " ")
 	return this.Name
 }
 

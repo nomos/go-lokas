@@ -48,7 +48,7 @@ func keysof(m map[string]*ModelPackageObject) []string {
 }
 
 func (this *Generator) getGoImportsString(deps []string) string {
-	deps = slice.RemoveMany(deps)
+	deps = slice.RemoveDuplicate(deps)
 	ret := "\n"
 	for _, v := range deps {
 		pack, ok := this.ModelPackages[v]

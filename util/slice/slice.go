@@ -11,9 +11,9 @@ func New[T any](v ...T) []T {
 	return v
 }
 
-func RemoveMany[T comparable](a []T) []T {
+func RemoveDuplicate[T comparable](arr []T) []T {
 	ret := []T{}
-	for _, v := range a {
+	for _, v := range arr {
 		found := false
 		for _, r := range ret {
 			if v == r {
@@ -27,11 +27,11 @@ func RemoveMany[T comparable](a []T) []T {
 	return ret
 }
 
-func Remove[T comparable](a ...T) []T {
+func Remove[T comparable](arr []T, a ...T) []T {
 	ret := []T{}
 	for _, v := range a {
 		found := false
-		for _, r := range ret {
+		for _, r := range arr {
 			if v == r {
 				found = true
 			}

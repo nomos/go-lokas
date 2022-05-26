@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/util"
 	"reflect"
 	"strconv"
 	"sync"
@@ -161,6 +162,43 @@ func (this IEnumCollection) GetEnumByValue(s Enum) IEnum {
 		}
 	}
 	return nil
+}
+
+type EnumCollection[T IEnum] struct {
+	Collection []T
+}
+
+func NewEnumCollection[T IEnum](colletion []T) EnumCollection[T] {
+	return EnumCollection[T]{
+		Collection: colletion,
+	}
+}
+
+func (this EnumCollection[T]) GetEnumByString(s string) T {
+	for _, v := range this.Collection {
+		if v.ToString() == s {
+			return v
+		}
+	}
+	return util.Nil[T]()
+}
+
+func (this EnumCollection[T]) Has(i int32) bool {
+	for _, v := range this.Collection {
+		if int32(v.Enum()) == i {
+			return true
+		}
+	}
+	return false
+}
+
+func (this EnumCollection[T]) GetEnumByValue(s Enum) T {
+	for _, v := range this.Collection {
+		if v.Enum() == s {
+			return v
+		}
+	}
+	return util.Nil[T]()
 }
 
 var once sync.Once
