@@ -14,28 +14,28 @@ import (
 	"unsafe"
 )
 
-func ExecPath()(string,error){
+func ExecPath() (string, error) {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		return "",err
+		return "", err
 	}
-	if strings.HasSuffix(dir,`.app/Contents/MacOS`) {
+	if strings.HasSuffix(dir, `.app/Contents/MacOS`) {
 		log.Warnf("is a macos app")
-		s:=strings.Split(dir,"/")
-		dir = strings.Join(s[:len(s)-3],"/")
+		s := strings.Split(dir, "/")
+		dir = strings.Join(s[:len(s)-3], "/")
 		log.Warnf(dir)
 	}
-	return dir,nil
+	return dir, nil
 }
 
-func Ternary(expr bool, whenTrue, whenFalse interface{}) interface{} {
+func Ternary[T any](expr bool, whenTrue, whenFalse T) T {
 	if expr == true {
 		return whenTrue
 	}
 	return whenFalse
 }
 
-func WaitForTerminateChanCb(c chan struct{},cb func()) {
+func WaitForTerminateChanCb(c chan struct{}, cb func()) {
 	signalChan := make(chan os.Signal, 1)
 	go func() {
 		<-signalChan
@@ -43,23 +43,23 @@ func WaitForTerminateChanCb(c chan struct{},cb func()) {
 	}()
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 	<-c
-	if cb!=nil {
+	if cb != nil {
 		cb()
 	}
 }
 func WaitForTerminateChan(c chan struct{}) {
-	WaitForTerminateChanCb(c,nil)
+	WaitForTerminateChanCb(c, nil)
 }
-
 
 func WaitForTerminate() {
 	WaitForTerminateChan(make(chan struct{}))
 }
 
-func Apply(f interface{}, args []interface{})([]reflect.Value){
+//Apply a function with parameters
+func Apply(f interface{}, args []interface{}) []reflect.Value {
 	fun := reflect.ValueOf(f)
 	in := make([]reflect.Value, len(args))
-	for k,param := range args{
+	for k, param := range args {
 		in[k] = reflect.ValueOf(param)
 	}
 	r := fun.Call(in)
@@ -75,8 +75,8 @@ func GetGoroutineID() uint64 {
 	return n
 }
 
-func IsEqual(a interface{},b interface{})bool {
-	if reflect.TypeOf(a)!=reflect.TypeOf(b) {
+func IsEqual(a interface{}, b interface{}) bool {
+	if reflect.TypeOf(a) != reflect.TypeOf(b) {
 		return false
 	}
 	switch a.(type) {
@@ -116,29 +116,15 @@ func IsEqual(a interface{},b interface{})bool {
 		return a.(unsafe.Pointer) == b.(unsafe.Pointer)
 	}
 
-	if a==b {
+	if a == b {
 		return true
 	}
 
 	return false
 }
-
-func HasInSlice(slice interface{},v interface{})bool {
-	if reflect.TypeOf(slice).Kind() != reflect.Slice {
-		panic("data is not a slice type")
-	}
-	value := reflect.ValueOf(slice)
-	for index:=0;index<value.Len();index++ {
-		if IsEqual(value.Index(index).Interface(),v) {
-			return true
-		}
-	}
-	return false
-}
-
-func HasReflectTypeInSlice(slice []reflect.Type,v interface{})bool {
+func HasReflectTypeInSlice(slice []reflect.Type, v interface{}) bool {
 	for _, va := range slice {
-		if IsEqual(va,v) {
+		if IsEqual(va, v) {
 			return true
 		}
 	}
@@ -160,7 +146,7 @@ func CheckDuplicateString(slice []string) bool {
 }
 
 func CheckDuplicate(slice interface{}) bool {
-	slice1:=slice.([]interface{})
+	slice1 := slice.([]interface{})
 	for i := 0; i < len(slice1); i++ {
 		for j := 0; j < len(slice1); j++ {
 			if i == j {
@@ -174,47 +160,12 @@ func CheckDuplicate(slice interface{}) bool {
 	return false
 }
 
-func GetIndexOfSlice(slice []interface{},v interface{})int {
-	for i, va := range slice {
-		if IsEqual(va,v) {
-			return i
-		}
-	}
-	return -1
-}
-
-func RemoveSliceElement(slice []interface{}, elem interface{}) []interface{} {
-	if len(slice) == 0 {
-		return slice
-	}
-	for i, v := range slice {
-		if IsEqual(v,elem) {
-			slice = append(slice[:i], slice[i+1:]...)
-			return RemoveSliceElement(slice, elem)
-		}
-	}
-	return slice
-}
-
-func ToSliceInterface(arr interface{}) []interface{} {
-	v := reflect.ValueOf(arr)
-	if v.Kind() != reflect.Slice {
-		panic("toslice arr not slice")
-	}
-	l := v.Len()
-	ret := make([]interface{}, l)
-	for i := 0; i < l; i++ {
-		ret[i] = v.Index(i).Interface()
-	}
-	return ret
-}
-
-func RemoveMapElement(obj map[interface{}]interface{},elem interface{}) map[interface{}]interface{} {
+func RemoveMapElement[T1 comparable, T2 comparable](obj map[T1]T2, elem T2) map[T1]T2 {
 	if len(obj) == 0 {
 		return obj
 	}
 	for i, v := range obj {
-		if IsEqual(v,elem) {
+		if v == elem {
 			delete(obj, i)
 			return RemoveMapElement(obj, elem)
 		}
@@ -229,8 +180,8 @@ func ToMapInterface(obj interface{}) map[interface{}]interface{} {
 	}
 	ret := map[interface{}]interface{}{}
 
-	for _,k := range v.MapKeys() {
-		value :=v.MapIndex(k)
+	for _, k := range v.MapKeys() {
+		value := v.MapIndex(k)
 		ret[k] = value
 
 	}
@@ -246,39 +197,14 @@ func IsNilPointer(c interface{}) bool {
 	return false
 }
 
-type RemoveSliceCondition func(index int,elem interface{}) bool
+type RemoveMapCondition func(key interface{}, elem interface{}) bool
 
-func GetSliceElemWithCondition(slice []interface{}, f RemoveSliceCondition) interface{} {
-	for i, v := range slice {
-		if f(i,v) {
-			return v
-		}
-	}
-	return nil
-}
-
-func RemoveSliceWithCondition(slice []interface{}, f RemoveSliceCondition) []interface{} {
-	if len(slice) == 0 {
-		return slice
-	}
-	ret := append(slice[:0])
-	for i, v := range slice {
-		if !f(i,v) {
-			ret = append(slice, v)
-		}
-	}
-	return ret
-}
-
-
-type RemoveMapCondition func(key interface{},elem interface{}) bool
-
-func RemoveMapWithCondition(obj map[interface{}]interface{}, f RemoveMapCondition) map[interface{}]interface{} {
+func RemoveMapWithCondition[T1 comparable, T2 any](obj map[T1]T2, f func(key T1, elem T2) bool) map[T1]T2 {
 	if len(obj) == 0 {
 		return obj
 	}
 	for k, v := range obj {
-		if f(k,v) {
+		if f(k, v) {
 			delete(obj, k)
 			return RemoveMapWithCondition(obj, f)
 		}

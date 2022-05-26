@@ -58,7 +58,7 @@ func (this *RingBuffer[T]) PeekN(count int) []T {
 	if count > this.size {
 		count = this.size
 	}
-	end := Ternary((this.first+count) > this.capacity, this.capacity, this.first+count).(int)
+	end := Ternary((this.first+count) > this.capacity, this.capacity, this.first+count)
 	firstHalf := this.elements[this.first:end]
 	if end < this.capacity {
 		return firstHalf

@@ -2,11 +2,12 @@ package ecs
 
 import (
 	"github.com/nomos/go-lokas/util"
+	"github.com/nomos/go-lokas/util/slice"
 	"reflect"
 )
 
 type Group interface {
-	Init(compGroup []string,ecs Runtime)
+	Init(compGroup []string, ecs Runtime)
 	AddEntity(e Entity)
 }
 
@@ -19,20 +20,21 @@ type group struct {
 	dirtyEntities  []Entity
 }
 
-func CreateGroup(compGroup []string,ecs Runtime) Group {
+func CreateGroup(compGroup []string, ecs Runtime) Group {
 	var ret Group = &group{}
-	ret.Init(compGroup,ecs)
+	ret.Init(compGroup, ecs)
 	return ret
 }
 
-func (this *group) Init(compGroup []string,ecs Runtime) {
-	for _,comp := range compGroup{
+func (this *group) Init(compGroup []string, ecs Runtime) {
+	for _, comp := range compGroup {
 		compType := ecs.GetComponentType(comp)
-		if util.HasInSlice(this.componentTypes,compType) {
+
+		if slice.HasInterface(this.componentTypes, compType) {
 			panic("Already has same type")
 		}
-		this.componentTypes = append(this.componentTypes,compType)
-		this.componentNames = append(this.componentNames,comp)
+		this.componentTypes = append(this.componentTypes, compType)
+		this.componentNames = append(this.componentNames, comp)
 	}
 	this.ecs = ecs
 }
@@ -43,10 +45,6 @@ func (this *group) AddEntity(e Entity) {
 	}
 }
 
-func (this *group) HasEntity (e Entity)bool {
-	return util.HasInSlice(this.entityIndexes,e.id)
+func (this *group) HasEntity(e Entity) bool {
+	return slice.Has(this.entityIndexes, e.id)
 }
-
-
-
-

@@ -6,12 +6,14 @@ import (
 	"runtime"
 )
 
-func Recover(r interface{},all bool)error{
+func Recover(r interface{}, all bool) error {
 	var err error
-	if err,ok:=r.(error);ok {
+	var ok bool
+	if err, ok = r.(error); ok {
 		log.Error(err.Error())
 	}
-	if str,ok:=r.(string);ok {
+	var str string
+	if str, ok = r.(string); ok {
 		log.Error(str)
 		err = errors.New(str)
 	}

@@ -1,6 +1,13 @@
 package slice
 
-import "reflect"
+import (
+	"reflect"
+)
+
+func Nil[T any]() T {
+	var t T
+	return t
+}
 
 type KVIntString struct {
 	K int
@@ -66,6 +73,23 @@ func Flip[T any](a []T) []T {
 	return v.Interface().([]T)
 }
 
+func HasInterface(arr interface{}, item ...interface{}) bool {
+	arr1 := arr.([]interface{})
+	for _, i := range item {
+		found := false
+		for _, v := range arr1 {
+			if v == i {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
 func Has[T comparable](arr []T, item ...T) bool {
 	for _, i := range item {
 		found := false
@@ -98,6 +122,42 @@ func IndexOf[T comparable](arr []T, id T) int {
 		}
 	}
 	return idx
+}
+
+func GetOneWithCondition[T any](slice []T, f func(index int, elem T) bool) T {
+	for i, v := range slice {
+		if f(i, v) {
+			return v
+		}
+	}
+	return Nil[T]()
+}
+
+func RemoveWithCondition[T any](slice []T, f func(index int, elem T) bool) ([]T, []T) {
+	ret := append(slice[:0])
+	remove := append(slice[:0])
+	for i, v := range slice {
+		if !f(i, v) {
+			ret = append(slice, v)
+		} else {
+			remove = append(remove, v)
+		}
+	}
+	return ret, remove
+}
+
+func RemoveOneWithCondition[T any](slice []T, f func(index int, elem T) bool) ([]T, []T) {
+	ret := append(slice[:0])
+	remove := append(slice[:0])
+	for i, v := range slice {
+		if !f(i, v) {
+			ret = append(slice, v)
+		} else {
+			remove = append(remove, v)
+			return ret, remove
+		}
+	}
+	return ret, remove
 }
 
 func RemoveOne[T comparable](arr []T, id T) []T {

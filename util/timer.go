@@ -54,7 +54,7 @@ type Timer struct {
 	OnDestroy       func(now int64)
 	_state          TimerState
 	_type           TimerType
-	_scheduleTasks  map[interface{}]interface{} //map[int]*ScheduleTask
+	_scheduleTasks  map[TaskID]*ScheduleTask //map[int]*ScheduleTask
 	_ticks          int
 	_taskIdGen      TaskID
 	_sign           chan<- int
@@ -80,7 +80,7 @@ func (t *Timer) GetPrevInterval() int64 {
 	return t._prevInterval
 }
 
-func CreateTimer(updateTime int64, timeScale float32,sign chan <- int) *Timer {
+func CreateTimer(updateTime int64, timeScale float32, sign chan<- int) *Timer {
 	startTime := time.Now().UnixNano() / time.Millisecond.Nanoseconds()
 	return &Timer{
 		_ticker:         nil,
@@ -100,7 +100,7 @@ func CreateTimer(updateTime int64, timeScale float32,sign chan <- int) *Timer {
 		OnDestroy:       nil,
 		_state:          TIMER_STOP,
 		_type:           TIMER_SYNC,
-		_scheduleTasks:  map[interface{}]interface{}{},
+		_scheduleTasks:  map[TaskID]*ScheduleTask{},
 		_ticks:          0,
 		_taskIdGen:      0,
 		_sign:           sign,
@@ -117,7 +117,7 @@ func (t *Timer) setOffset(offset int64) {
 	t._timeOffset = offset
 }
 
-func (t *Timer) tickerUpdate(){
+func (t *Timer) tickerUpdate() {
 	t._lastUpdateTime = t.Now()
 	t._ticker = time.NewTicker(time.Duration(t._updateTime * time.Millisecond.Nanoseconds()))
 Loop:
@@ -136,24 +136,24 @@ Loop:
 	t._state = TIMER_STOP
 }
 
-func ( t *Timer) update(){
+func (t *Timer) update() {
 	if t._state == TIMER_ONSTOP {
 		t.Stop()
 		return
 	}
 	t._lastUpdateTime = t.Now()
-	if t._updateTime<=t._prevInterval {
+	if t._updateTime <= t._prevInterval {
 		t.instantUpdate()
 		t.update()
 	} else {
-		time.Sleep(time.Duration((t._updateTime-t._prevInterval)* time.Millisecond.Nanoseconds()))
+		time.Sleep(time.Duration((t._updateTime - t._prevInterval) * time.Millisecond.Nanoseconds()))
 		t.instantUpdate()
 		t.update()
 	}
 }
 
 func (t *Timer) Start() {
-	if  t._state != TIMER_STOP {
+	if t._state != TIMER_STOP {
 		fmt.Print("Timer is Exist")
 		return
 	}
@@ -171,7 +171,7 @@ func (t *Timer) Resume() {
 
 func (t *Timer) Stop() {
 	t._state = TIMER_ONSTOP
-	t._sign <-0
+	t._sign <- 0
 }
 
 func (t *Timer) Reset() {
@@ -189,7 +189,7 @@ func (t *Timer) instantUpdate() {
 	t._runningTime += interval
 	t._prevInterval = interval
 	t._lastUpdateTime = now
-	t.activeSchedule(t._prevInterval,t._runningTime)
+	t.activeSchedule(t._prevInterval, t._runningTime)
 	if t.OnUpdate != nil {
 		t.OnUpdate(t._prevInterval, t._runningTime)
 	}
@@ -198,25 +198,24 @@ func (t *Timer) instantUpdate() {
 	}
 }
 
-func (t *Timer) createTask(name string,interval int64,count int,task func(int64,int64),startTime int64)*ScheduleTask {
+func (t *Timer) createTask(name string, interval int64, count int, task func(int64, int64), startTime int64) *ScheduleTask {
 	return &ScheduleTask{
-		name:name,
-		interval:interval,
-		activeTime:0,
-		startTime:startTime,
-		lastActiveTime:startTime,
-		task:task,
-		count:count,
-		id:t._taskIdGen,
+		name:           name,
+		interval:       interval,
+		activeTime:     0,
+		startTime:      startTime,
+		lastActiveTime: startTime,
+		task:           task,
+		count:          count,
+		id:             t._taskIdGen,
 	}
 }
 
 func (t *Timer) activeSchedule(interval int64, now int64) {
 	taskQueue := make([]interface{}, 0)
 	removeTask := make([]TaskID, 0)
-	for _, taskInterface := range t._scheduleTasks {
+	for _, task := range t._scheduleTasks {
 		for {
-			task := taskInterface.(*ScheduleTask)
 			//退出条件
 			//如果任务的时间间隔大于当前时间减去上一次任务的间隔
 			//或者任务的计数小于等于0
@@ -255,8 +254,7 @@ func (t *Timer) activeSchedule(interval int64, now int64) {
 }
 
 func (t *Timer) getTaskIdByName(name string) *ScheduleTask {
-	for _, taskInterface := range t._scheduleTasks {
-		task := taskInterface.(*ScheduleTask)
+	for _, task := range t._scheduleTasks {
 		if task.name == name {
 			return task
 		}
@@ -264,36 +262,36 @@ func (t *Timer) getTaskIdByName(name string) *ScheduleTask {
 	return nil
 }
 
-func (t *Timer) Schedule(name string,interval int64,count int,task func(int64,int64),delay int64,startTime int64) {
-	if startTime==0 {
-		startTime = t._runningTime+delay
+func (t *Timer) Schedule(name string, interval int64, count int, task func(int64, int64), delay int64, startTime int64) {
+	if startTime == 0 {
+		startTime = t._runningTime + delay
 		delay = 0
 	}
-	if name=="" {
+	if name == "" {
 		uuidv1 := uuid.NewV1()
 		name = uuidv1.String()
 	}
 	t._taskIdGen++
-	if t.getTaskIdByName(name)!=nil {
+	if t.getTaskIdByName(name) != nil {
 		panic("exist task name")
 	}
-	newTask := t.createTask(name,interval,count,task,startTime)
+	newTask := t.createTask(name, interval, count, task, startTime)
 	t._scheduleTasks[t._taskIdGen] = newTask
 }
 
 func (t *Timer) Unschedule(task interface{}) {
 	switch task.(type) {
 	case TaskID:
-		RemoveMapWithCondition(t._scheduleTasks, func(key interface{}, elem interface{}) bool {
+		RemoveMapWithCondition(t._scheduleTasks, func(key TaskID, elem *ScheduleTask) bool {
 			return key == task
 		})
 	case string:
-		RemoveMapWithCondition(t._scheduleTasks, func(key interface{}, elem interface{}) bool {
-			taskA := elem.(*ScheduleTask)
+		RemoveMapWithCondition(t._scheduleTasks, func(key TaskID, elem *ScheduleTask) bool {
+			taskA := elem
 			return taskA.name == task.(string)
 		})
 	case *ScheduleTask:
-		RemoveMapElement(t._scheduleTasks, task)
+		RemoveMapElement(t._scheduleTasks, task.(*ScheduleTask))
 	}
 }
 
