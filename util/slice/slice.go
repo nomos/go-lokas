@@ -36,11 +36,12 @@ func RemoveDuplicate[T comparable](arr []T) []T {
 
 func Remove[T comparable](arr []T, a ...T) []T {
 	ret := []T{}
-	for _, v := range a {
+	for _, v := range arr {
 		found := false
-		for _, r := range arr {
+		for _, r := range a {
 			if v == r {
 				found = true
+				break
 			}
 		}
 		if !found {
