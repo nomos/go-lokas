@@ -24,8 +24,8 @@ const (
 
 type Key string
 
-func (this Key) Assemble(args... interface{})string{
-	return fmt.Sprintf(string(this),args...)
+func (this Key) Assemble(args ...interface{}) string {
+	return fmt.Sprintf(string(this), args...)
 }
 
 type ServiceType int
@@ -67,7 +67,7 @@ type IProcess interface {
 	Stop() error                             //stop process
 	PId() util.ProcessId                     //PId
 	GetId() util.ID                          //PId to snowflake
-	Type()string
+	Type() string
 	GenId() util.ID                                             //gen snowflake Id,goroutine safe
 	GetLogger() *log.ComposeLogger                              //get process logger
 	GetMongo() *qmgo.Database                                   //get mongo client
@@ -77,13 +77,13 @@ type IProcess interface {
 	Config() IConfig                                            //get config
 	GameId() string                                             //get game id
 	ServerId() int32                                            //get server id
-	GameServerId()string                                        //get game and server id
+	GameServerId() string                                       //get game and server id
 	Version() string                                            //get version
 }
 
 //IProxy universal module interface for connection
 type IProxy interface {
-	Send(id util.ProcessId,msg *protocol.RouteMessage)error
+	Send(id util.ProcessId, msg *protocol.RouteMessage) error
 }
 
 // IActorContainer container for IActor
@@ -97,8 +97,8 @@ type IActorContainer interface {
 }
 
 type IActorInfo interface {
-	GetId()util.ID
-	PId()util.ProcessId
+	GetId() util.ID
+	PId() util.ProcessId
 	Type() string
 }
 
@@ -107,46 +107,46 @@ type IActor interface {
 	IEntity
 	IProxy
 	IModule
-	PId()util.ProcessId
+	PId() util.ProcessId
 	ReceiveMessage(msg *protocol.RouteMessage)
 	OnMessage(msg *protocol.RouteMessage)
 	SendMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error
 	Call(actorId util.ID, req protocol.ISerializable) (protocol.ISerializable, error)
-	GetLeaseId() (clientv3.LeaseID,bool, error)
+	GetLeaseId() (clientv3.LeaseID, bool, error)
 	Update(dt time.Duration, now time.Time)
 }
 
 // IEntity entity of ecs system,container of IComponent
 type IEntity interface {
 	events.EventEmmiter
-	Dirty()bool
+	Dirty() bool
 	SetDirty(bool)
-	Get(t protocol.BINARY_TAG)IComponent
-	GetOrCreate(t protocol.BINARY_TAG)IComponent
+	Get(t protocol.BINARY_TAG) IComponent
+	GetOrCreate(t protocol.BINARY_TAG) IComponent
 	Add(c IComponent)
-	Remove(t protocol.BINARY_TAG)IComponent
+	Remove(t protocol.BINARY_TAG) IComponent
 	RemoveAll()
 	SetId(id util.ID)
-	GetId()util.ID
-	Components()map[protocol.BINARY_TAG]IComponent
+	GetId() util.ID
+	Components() map[protocol.BINARY_TAG]IComponent
 }
 
 // IComponentPool pool for IComponent
 type IComponentPool interface {
 	Recycle(comp IComponent)
 	Get() IComponent
-	Create(args...interface{}) IComponent
+	Create(args ...interface{}) IComponent
 	Destroy()
 }
 
 // IComponent base component of protocol
 type IComponent interface {
 	protocol.ISerializable
-	GetEntity()IEntity
+	GetEntity() IEntity
 	SetDirty(d bool)
 	Dirty() bool
 	SetRuntime(engine IRuntime)
-	GetRuntime()IRuntime
+	GetRuntime() IRuntime
 	SetEntity(e IEntity)
 	OnAdd(e IEntity, r IRuntime)
 	OnRemove(e IEntity, r IRuntime)
@@ -157,22 +157,22 @@ type IComponent interface {
 
 // IRuntime interface for ecs runtime
 type IRuntime interface {
-	Init(updateTime int64,timeScale float32,server bool)
-	GetContext(name string)interface{}
-	SetContext(name string,value interface{})
-	GetEntity(util.ID)IEntity
-	CurrentTick()int64
+	Init(updateTime int64, timeScale float32, server bool)
+	GetContext(name string) interface{}
+	SetContext(name string, value interface{})
+	GetEntity(util.ID) IEntity
+	CurrentTick() int64
 	Start()
 	Stop()
-	RunningTime()int64
-	GetTimeScale()float32
+	RunningTime() int64
+	GetTimeScale() float32
 	SetTimeScale(scale float32)
-	RegisterComponent(name string,c IComponent)
-	RegisterSingleton(name string,c IComponent)
-	GetComponentType(name string)reflect.Type
-	IsSyncAble(compName string)bool
-	CreateEntity()IEntity
-	IsServer()bool
+	RegisterComponent(name string, c IComponent)
+	RegisterSingleton(name string, c IComponent)
+	GetComponentType(name string) reflect.Type
+	IsSyncAble(compName string) bool
+	CreateEntity() IEntity
+	IsServer() bool
 	//private
 	MarkDirtyEntity(e IEntity)
 }
@@ -198,13 +198,13 @@ type IModule interface {
 
 // IRegistry interface for global registration
 type IRegistry interface {
-	GetProcessIdByActor(actorId util.ID)(util.ProcessId,error)
+	GetProcessIdByActor(actorId util.ID) (util.ProcessId, error)
 	RegisterActors() error
 	RegisterActorRemote(actor IActor) error
-	UnregisterActorRemote(actor IActor)error
+	UnregisterActorRemote(actor IActor) error
 	RegisterActorLocal(actor IActor) error
-	UnregisterActorLocal(actor IActor)error
-	GetActorIdsByTypeAndServerId(serverId int32,typ string)[]util.ID
+	UnregisterActorLocal(actor IActor) error
+	GetActorIdsByTypeAndServerId(serverId int32, typ string) []util.ID
 }
 
 //IRouter interface for router
@@ -218,19 +218,19 @@ type IContext interface {
 	GetIdType(key string) util.ID
 	GetProcessIdType(key string) util.ProcessId
 	GetString(key string) string
-	GetInt(key string)int
-	GetBool(key string)bool
-	GetInt32(key string)int32
-	GetInt64(key string)int64
-	GetFloat32(key string)float32
-	GetFloat64(key string)float64
+	GetInt(key string) int
+	GetBool(key string) bool
+	GetInt32(key string) int32
+	GetInt64(key string) int64
+	GetFloat32(key string) float32
+	GetFloat64(key string) float64
 	Set(key string, value interface{})
 }
 
 type ITaskPipeLine interface {
 	Name() string
 	SetName(s string)
-	Idx()int
+	Idx() int
 	SetIdx(int)
 	GetContext() IContext
 	SetContext(context IContext)
@@ -238,17 +238,17 @@ type ITaskPipeLine interface {
 	GetPrev() ITaskPipeLine
 	GetNext() ITaskPipeLine
 	GetSibling(idx int) ITaskPipeLine
-	GetChildren()[]ITaskPipeLine
+	GetChildren() []ITaskPipeLine
 	GetChildById(idx int) ITaskPipeLine
 	GetChildByName(s string) ITaskPipeLine
-	Add(flow ITaskPipeLine)ITaskPipeLine
-	Insert(flow ITaskPipeLine, idx int)ITaskPipeLine
-	Remove(flow ITaskPipeLine)ITaskPipeLine
-	RemoveAt(idx int)ITaskPipeLine
-	Execute()*promise.Promise
+	Add(flow ITaskPipeLine) ITaskPipeLine
+	Insert(flow ITaskPipeLine, idx int) ITaskPipeLine
+	Remove(flow ITaskPipeLine) ITaskPipeLine
+	RemoveAt(idx int) ITaskPipeLine
+	Execute() *promise.Promise
 	SetInput(context IContext)
-	GetInput()IContext
-	SetExecFunc(f func()(IContext,err error))
+	GetInput() IContext
+	SetExecFunc(f func() (IContext, err error))
 }
 
 type IConfig interface {
@@ -268,6 +268,7 @@ type IConfig interface {
 	GetStringMapString(key string) map[string]string
 	GetStringMapStringSlice(key string) map[string][]string
 	GetIntSlice(key string) []int
+	GetInt32Slice(key string) []int32
 	GetSizeInBytes(key string) uint
 	GetStringSlice(key string) []string
 	GetTime(key string) time.Time
@@ -296,7 +297,7 @@ type INetClient interface {
 	Disconnect(bool) *promise.Promise
 	Request(req interface{}) *promise.Promise
 	SetMessageHandler(handler func(msg *protocol.BinaryMessage))
-	GetContext(uint32)IReqContext
+	GetContext(uint32) IReqContext
 	Connected() bool
 	OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise
 	OnRecv(conn IConn, data []byte)
@@ -359,27 +360,26 @@ type IModel interface {
 	Serialize(a IProcess) error
 }
 
-
 type IAvatar interface {
 	IActor
 	IAvatarSession
-	SendEvent(serializable protocol.ISerializable)error
+	SendEvent(serializable protocol.ISerializable) error
 }
 
 type IAvatarSession interface {
-	GetGameId()string
-	GetServerId()int32
-	GetGateId()util.ID
-	GetUserName()string
+	GetGameId() string
+	GetServerId() int32
+	GetGateId() util.ID
+	GetUserName() string
 	GetUserId() util.ID
-	GetId()util.ID
+	GetId() util.ID
 }
 
 type IGameHandler interface {
-	GetSerializer() func(avatar IActor,process IProcess)error
-	GetDeserializer() func(avatar IActor,process IProcess)error
-	GetUpdater() func(avatar IActor,process IProcess)error
-	GetMsgDelegator() func(avatar IActor, actorId util.ID, transId uint32, msg protocol.ISerializable)(protocol.ISerializable, error)
+	GetSerializer() func(avatar IActor, process IProcess) error
+	GetDeserializer() func(avatar IActor, process IProcess) error
+	GetUpdater() func(avatar IActor, process IProcess) error
+	GetMsgDelegator() func(avatar IActor, actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error)
 }
 
 // IConn interface for a connection, either a client connection or server accepted connection

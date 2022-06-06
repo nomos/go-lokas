@@ -10,9 +10,9 @@ import (
 )
 
 func (this *Generator) LoadModelFolder(p ...string) *promise.Promise {
-	this.ModelPath = p
+	this.ModelPaths = p
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-		err := this.LoadModels(p...)
+		err := this.LoadModels(p)
 		if err != nil {
 			reject(err)
 			return
@@ -21,12 +21,12 @@ func (this *Generator) LoadModelFolder(p ...string) *promise.Promise {
 	})
 }
 
-func (this *Generator) LoadModels(models ...string) error {
+func (this *Generator) LoadModels(p []string) error {
 	this.GetLogger().Info("LoadModels")
 	var err error
 	var innerErr error
-	for _, p := range models {
-		_, err = util.WalkDirFilesWithFunc(p, func(filePath string, file os.FileInfo) bool {
+	for _, v := range p {
+		_, err = util.WalkDirFilesWithFunc(v, func(filePath string, file os.FileInfo) bool {
 			if path.Ext(filePath) == ".model" {
 				this.GetLogger().Infof("filePath", filePath)
 				file := NewModelFile(this)

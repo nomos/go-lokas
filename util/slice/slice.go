@@ -34,6 +34,26 @@ func RemoveDuplicate[T comparable](arr []T) []T {
 	return ret
 }
 
+type Number interface {
+	uint8 | int8 | uint16 | int16 | uint32 | int32 | uint64 | int64 | int | float32 | float64
+}
+
+type Signed interface {
+	int8 | int16 | int32 | int64 | int | float32 | float64
+}
+
+type Float interface {
+	float32 | float64
+}
+
+func NumberConvert[T1, T2 Number](arr []T1) []T2 {
+	ret := []T2{}
+	for _, v := range arr {
+		ret = append(ret, T2(v))
+	}
+	return ret
+}
+
 func Remove[T comparable](arr []T, a ...T) []T {
 	ret := []T{}
 	for _, v := range arr {

@@ -50,7 +50,7 @@ type Generator struct {
 	GoPath     string
 	TsPath     string
 	ProtoPath  string
-	ModelPath  []string
+	ModelPaths []string
 	CsPath     string
 
 	Proto2GoCmdLinExec func(pack, protoPath, GoPath string) error

@@ -437,8 +437,7 @@ func (this *Generator) generateModel2TsEnums() error {
 	//strs += "\n"
 	for _, enum := range this.ModelEnumObjects {
 		name := stringutil.SplitCamelCaseLowerSnake(enum.EnumName)
-		err := ioutil.WriteFile(path.Join(this.TsPath,
-			enum.TsPackage+"_"+"enum_"+name+".ts"), []byte(stringutil.TrimEnd(enum.TsString(this))), 0644)
+		err := ioutil.WriteFile(path.Join(this.TsPath, enum.TsPackage+"_"+"enum_"+name+".ts"), []byte(stringutil.TrimEnd(enum.TsString(this))), 0644)
 		if err != nil {
 			this.GetLogger().Error(err.Error())
 			return err

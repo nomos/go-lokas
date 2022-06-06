@@ -8,6 +8,7 @@ import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/util"
+	"github.com/nomos/go-lokas/util/slice"
 	"github.com/spf13/viper"
 	"os"
 	"path"
@@ -77,7 +78,7 @@ func NewSubAppConfig(name string, parent *AppConfig, conf *viper.Viper) *AppConf
 	ret.name = name
 	ret.root = name
 	ret.parent = parent
-	if conf!=nil {
+	if conf != nil {
 		ret.Viper = conf.Sub(name)
 	}
 	return ret
@@ -245,6 +246,9 @@ func (this *AppConfig) GetIntSlice(key string) []int {
 		return this.parent.GetIntSlice(key)
 	}
 	return this.Viper.GetIntSlice(key)
+}
+func (this *AppConfig) GetInt32Slice(key string) []int32 {
+	return slice.NumberConvert[int, int32](this.GetIntSlice(key))
 }
 func (this *AppConfig) GetSizeInBytes(key string) uint {
 	if this.parent != nil {

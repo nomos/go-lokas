@@ -9,7 +9,33 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 )
+
+var fileMap = map[string]int64{}
+
+func IsFileModified(filePath string) bool {
+	fileInfo, err := os.Stat(filePath)
+	changed := false
+	if err != nil {
+		log.Error("file cant stat")
+		return false
+	}
+	if v, ok := fileMap[filePath]; ok {
+		if v < fileInfo.ModTime().Unix() {
+			changed = true
+			currentTime := time.Now()
+			err := os.Chtimes(filePath, currentTime, fileInfo.ModTime())
+			if err != nil {
+				panic("Error touching file" + filePath)
+			}
+			fileMap[filePath] = fileInfo.ModTime().Unix()
+		}
+	} else {
+		fileMap[filePath] = fileInfo.ModTime().Unix()
+	}
+	return changed
+}
 
 func PathExists(path string) (bool, error) {
 	_, err := os.Stat(path)
@@ -32,7 +58,7 @@ func substr(s string, pos, length int) string {
 }
 
 func GetParentDirectory(dir string) string {
-	dir = strings.ReplaceAll(dir,`\`,"/")
+	dir = strings.ReplaceAll(dir, `\`, "/")
 	return substr(dir, 0, strings.LastIndex(dir, "/"))
 }
 
@@ -44,18 +70,17 @@ func GetCurrentDirectory() string {
 	return strings.Replace(dir, "\\", "/", -1)
 }
 
-
 type WalkDirFunc func(filePath string, file os.FileInfo) bool
 
-func CreateFile(filePath string,perms... int)  error  {
+func CreateFile(filePath string, perms ...int) error {
 	perm := 0644
-	if len(perms)>0 {
+	if len(perms) > 0 {
 		perm = perms[0]
 	}
 	dirPath := path.Dir(filePath)
 	if !IsFileExist(dirPath) {
 		err := os.MkdirAll(dirPath, os.ModePerm)
-		if err!= nil {
+		if err != nil {
 			return err
 		}
 		_, err = os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(perm))
@@ -75,15 +100,15 @@ func IsFileExist(path string) bool {
 	return true
 }
 
-func IsFileWithExt(p string,ext string) bool {
-	return ext==path.Ext(p)
+func IsFileWithExt(p string, ext string) bool {
+	return ext == path.Ext(p)
 }
 
-func FilterFileWithExt(files []string,ext... string)[]string {
-	ret:=make([]string,0)
-	for _,file:=range files {
-		for _,v:=range ext {
-			if v==path.Ext(file) {
+func FilterFileWithExt(files []string, ext ...string) []string {
+	ret := make([]string, 0)
+	for _, file := range files {
+		for _, v := range ext {
+			if v == path.Ext(file) {
 				ret = append(ret, file)
 			}
 		}
@@ -91,9 +116,9 @@ func FilterFileWithExt(files []string,ext... string)[]string {
 	return ret
 }
 
-func FilterFileWithFunc(files []string,f func(string)bool)[]string {
-	ret:=make([]string,0)
-	for _,file:=range files {
+func FilterFileWithFunc(files []string, f func(string) bool) []string {
+	ret := make([]string, 0)
+	for _, file := range files {
 		if f(file) {
 			ret = append(ret, file)
 		}
@@ -111,19 +136,19 @@ func WalkDirWithFunc(dirPath string, walkFunc WalkDirFunc, recursive bool) ([]st
 	return walkDir(dirPath, ret, 3, walkFunc, recursive)
 }
 
-func FindFile(dirPath string,name string,recursive bool)string {
-	ret:=""
+func FindFile(dirPath string, name string, recursive bool) string {
+	ret := ""
 	WalkDirFilesWithFunc(dirPath, func(filePath string, file os.FileInfo) bool {
 		if file.Name() == name {
 			ret = filePath
 			return true
 		}
 		return false
-	},recursive)
+	}, recursive)
 	return ret
 }
 
-func WalkDirFiles(dirPath string, recursive bool) ([]string, error){
+func WalkDirFiles(dirPath string, recursive bool) ([]string, error) {
 	ret := make([]string, 0)
 	return walkDir(dirPath, ret, 1, nil, recursive)
 }
@@ -179,14 +204,13 @@ func walkDir(dirPath string, files []string, typ int, walkFunc WalkDirFunc, recu
 	return files, nil
 }
 
-
-func LoadJson (path string,v interface{}) {
-	data,err := ioutil.ReadFile(path)
-	if err!=nil {
+func LoadJson(path string, v interface{}) {
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
 		return
 	}
-	err = json.Unmarshal(data,v)
-	if err!=nil {
+	err = json.Unmarshal(data, v)
+	if err != nil {
 		return
 	}
 }
