@@ -9,10 +9,10 @@ import (
 	"strconv"
 )
 
-func (this *Generator) LoadModelFolder(p string) *promise.Promise {
+func (this *Generator) LoadModelFolder(p ...string) *promise.Promise {
 	this.ModelPath = p
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-		err := this.LoadModels(p)
+		err := this.LoadModels(p...)
 		if err != nil {
 			reject(err)
 			return
@@ -21,28 +21,30 @@ func (this *Generator) LoadModelFolder(p string) *promise.Promise {
 	})
 }
 
-func (this *Generator) LoadModels(p string) error {
+func (this *Generator) LoadModels(models ...string) error {
 	this.GetLogger().Info("LoadModels")
 	var err error
 	var innerErr error
-	_,err=util.WalkDirFilesWithFunc(p, func(filePath string, file os.FileInfo) bool {
-		if path.Ext(filePath) == ".model" {
-			this.GetLogger().Infof("filePath", filePath)
-			file := NewModelFile(this)
-			_, innerErr = file.Load(filePath).Await()
-			if innerErr != nil {
-				this.GetLogger().Error(err.Error())
-				return true
+	for _, p := range models {
+		_, err = util.WalkDirFilesWithFunc(p, func(filePath string, file os.FileInfo) bool {
+			if path.Ext(filePath) == ".model" {
+				this.GetLogger().Infof("filePath", filePath)
+				file := NewModelFile(this)
+				_, innerErr = file.Load(filePath).Await()
+				if innerErr != nil {
+					this.GetLogger().Error(err.Error())
+					return true
+				}
+				_, innerErr = file.Parse().Await()
+				if innerErr != nil {
+					this.GetLogger().Error(err.Error())
+					return true
+				}
+				this.Models[filePath] = file
 			}
-			_, innerErr = file.Parse().Await()
-			if innerErr != nil {
-				this.GetLogger().Error(err.Error())
-				return true
-			}
-			this.Models[filePath] = file
-		}
-		return false
-	}, true)
+			return false
+		}, true)
+	}
 	if err != nil {
 		this.GetLogger().Error(err.Error())
 		return err
@@ -51,11 +53,11 @@ func (this *Generator) LoadModels(p string) error {
 		this.GetLogger().Error(innerErr.Error())
 		return innerErr
 	}
-	this.GetLogger().Infof("load "+strconv.Itoa(len(this.Models))+" models")
+	this.GetLogger().Infof("load " + strconv.Itoa(len(this.Models)) + " models")
 	return nil
 }
 
-func (this *Generator) processModelObjects() error{
+func (this *Generator) processModelObjects() error {
 	ret := make([]*ModelClassObject, 0)
 	for _, file := range this.Models {
 		objects := file.(*ModelFile).ProcessModels()
@@ -64,7 +66,7 @@ func (this *Generator) processModelObjects() error{
 			for _, addedObj := range ret {
 				if addedObj.ClassName == toAddObj.ClassName {
 					foundSame = true
-					panic("duplicated class:"+addedObj.ClassName)
+					panic("duplicated class:" + addedObj.ClassName)
 					break
 				}
 			}
@@ -76,8 +78,8 @@ func (this *Generator) processModelObjects() error{
 	}
 	this.ModelClassObjects = ret
 	defer func() {
-		r:=recover()
-		if err,ok:=r.(error);ok {
+		r := recover()
+		if err, ok := r.(error); ok {
 			this.GetLogger().Error(err.Error())
 		}
 	}()
@@ -94,7 +96,7 @@ func (this *Generator) processModelObjects() error{
 		}
 	}
 	this.ModelIdsObjects = ret2
-	ret3 := make([]*ModelEnumObject,0)
+	ret3 := make([]*ModelEnumObject, 0)
 	for _, file := range this.Models {
 		objects := file.(*ModelFile).ProcessEnums()
 		for _, obj := range objects {
@@ -112,10 +114,10 @@ func (this *Generator) processModelObjects() error{
 		}
 	}
 	this.ModelEnumObjects = ret3
-	for idx,ids:=range this.ModelIdsObjects {
-		for _,v:=range this.ModelClassObjects {
-			this.GetLogger().Infof(ids.Name,v.ClassName)
-			if ids.Name==v.ClassName {
+	for idx, ids := range this.ModelIdsObjects {
+		for _, v := range this.ModelClassObjects {
+			this.GetLogger().Infof(ids.Name, v.ClassName)
+			if ids.Name == v.ClassName {
 				v.TagId = BINARY_TAG(idx)
 				ids.ClassObj = v
 			}
@@ -130,58 +132,58 @@ func (this *Generator) processModelObjects() error{
 	return nil
 }
 
-func (this *Generator) processModelPackages()error{
-	err:=this.processModelObjects()
+func (this *Generator) processModelPackages() error {
+	err := this.processModelObjects()
 	if err != nil {
 		this.GetLogger().Error(err.Error())
 		return err
 	}
-	for _,m:=range this.Models {
-		f:=m.(*ModelFile)
-		pack:=f.ProcessPackages()
-		p:=this.ModelPackages[pack.PackageName]
-		if p!=nil {
-			if p.GoPackageName!=pack.GoPackageName {
+	for _, m := range this.Models {
+		f := m.(*ModelFile)
+		pack := f.ProcessPackages()
+		p := this.ModelPackages[pack.PackageName]
+		if p != nil {
+			if p.GoPackageName != pack.GoPackageName {
 				return errors.New("wrong go package")
 			}
-			if p.CsPackageName!=pack.CsPackageName {
+			if p.CsPackageName != pack.CsPackageName {
 				return errors.New("wrong cs package")
 			}
-			if p.TsPackageName!=pack.TsPackageName {
+			if p.TsPackageName != pack.TsPackageName {
 				return errors.New("wrong ts package")
 			}
 		}
-		this.ModelPackages[pack.PackageName]= pack
+		this.ModelPackages[pack.PackageName] = pack
 	}
-	for _,m:=range this.Models {
-		f:=m.(*ModelFile)
-		ids:=f.ProcessIds()
-		errs:=f.ProcessErrors()
-		imports:=f.ProcessImports()
-		importPacks:=[]*ModelPackageObject{}
-		for _,p:=range imports {
-			pa,ok:=this.ModelPackages[p]
+	for _, m := range this.Models {
+		f := m.(*ModelFile)
+		ids := f.ProcessIds()
+		errs := f.ProcessErrors()
+		imports := f.ProcessImports()
+		importPacks := []*ModelPackageObject{}
+		for _, p := range imports {
+			pa, ok := this.ModelPackages[p]
 			if !ok {
 				this.GetLogger().Error(err.Error())
-				return errors.New("cant found pack name:"+p)
+				return errors.New("cant found pack name:" + p)
 			}
 			importPacks = append(importPacks, pa)
 
 		}
-		for _,e:=range errs {
+		for _, e := range errs {
 			this.ModelErrorObjects[e.ErrorId] = e
 		}
-		for _,v:=range ids {
-			pack :=this.ModelPackages[v.PackageName]
-			if pack==nil {
-				return errors.New("package not found:"+v.PackageName)
+		for _, v := range ids {
+			pack := this.ModelPackages[v.PackageName]
+			if pack == nil {
+				return errors.New("package not found:" + v.PackageName)
 			}
 			pack.Ids[BINARY_TAG(v.Id)] = v
 		}
-		for _,v:=range errs {
-			pack :=this.ModelPackages[v.PackageName]
-			if pack==nil {
-				return errors.New("package not found:"+v.PackageName)
+		for _, v := range errs {
+			pack := this.ModelPackages[v.PackageName]
+			if pack == nil {
+				return errors.New("package not found:" + v.PackageName)
 			}
 			pack.Errors[v.ErrorId] = v
 		}

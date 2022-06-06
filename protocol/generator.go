@@ -21,8 +21,8 @@ type GeneratorOption struct {
 }
 
 type Generator struct {
-	logger log.ILogger
-	CsCamelCase bool
+	logger            log.ILogger
+	CsCamelCase       bool
 	Models            map[string]GeneratorFile
 	GoModels          map[string]GeneratorFile
 	Protos            map[string]GeneratorFile
@@ -33,10 +33,10 @@ type Generator struct {
 	GoEnumObjects     []*GoEnumObject
 	ProtoMsgObjects   []*ProtoMsgObject
 	ModelClassObjects []*ModelClassObject
-	ModelEnumObjects []*ModelEnumObject
-	ModelIdsObjects map[uint16]*ModelId
+	ModelEnumObjects  []*ModelEnumObject
+	ModelIdsObjects   map[uint16]*ModelId
 	ModelErrorObjects map[int]*ModelError
-	ModelPackages map[string]*ModelPackageObject
+	ModelPackages     map[string]*ModelPackageObject
 
 	TsModels       []*TsModelFile
 	TsIds          *TsIdsFile
@@ -46,29 +46,28 @@ type Generator struct {
 
 	//Schemas []*ModelClassObject
 
-	Individual   bool
-	GoPath       string
-	TsPath       string
-	ProtoPath    string
-	ModelPath    string
-	CsPath       string
+	Individual bool
+	GoPath     string
+	TsPath     string
+	ProtoPath  string
+	ModelPath  []string
+	CsPath     string
 
 	Proto2GoCmdLinExec func(pack, protoPath, GoPath string) error
 	Proto2TsCmdLinExec func(pack, protoPath, GoPath string) error
 }
 
 func NewGenerator() *Generator {
-	ret := &Generator{
-	}
+	ret := &Generator{}
 	ret.Clear()
 	return ret
 }
 
-func (this *Generator) SetLogger(logger log.ILogger){
+func (this *Generator) SetLogger(logger log.ILogger) {
 	this.logger = logger
 }
 
-func (this *Generator) GetLogger()log.ILogger {
+func (this *Generator) GetLogger() log.ILogger {
 	if util.IsNil(this.logger) {
 		return log.DefaultLogger()
 	}
@@ -83,16 +82,16 @@ func (this *Generator) SetProto2TsCmdLine(f func(pack, protoPath, TsPath string)
 	this.Proto2TsCmdLinExec = f
 }
 
-func (this *Generator) GetErrorName(id int)string{
-	e,ok:=this.ModelErrorObjects[id]
+func (this *Generator) GetErrorName(id int) string {
+	e, ok := this.ModelErrorObjects[id]
 	if ok {
 		return e.ErrorName
 	}
 	return ""
 }
 
-func (this *Generator) IsErrorName(s string)bool{
-	for _,v:=range this.ModelErrorObjects {
+func (this *Generator) IsErrorName(s string) bool {
+	for _, v := range this.ModelErrorObjects {
 		if v.ErrorName == s {
 			return true
 		}
@@ -119,8 +118,8 @@ func (this *Generator) Clear() {
 	this.ModelPackages = make(map[string]*ModelPackageObject)
 }
 
-func (this *Generator) GetModelByName(s string)*ModelClassObject{
-	for _,v:=range this.ModelClassObjects {
+func (this *Generator) GetModelByName(s string) *ModelClassObject {
+	for _, v := range this.ModelClassObjects {
 		if v.ClassName == s {
 			return v
 		}
@@ -128,8 +127,8 @@ func (this *Generator) GetModelByName(s string)*ModelClassObject{
 	return nil
 }
 
-func (this *Generator) GetEnumByName(s string)*ModelEnumObject{
-	for _,v:=range this.ModelEnumObjects {
+func (this *Generator) GetEnumByName(s string) *ModelEnumObject {
+	for _, v := range this.ModelEnumObjects {
 		if v.EnumName == s {
 			return v
 		}
@@ -141,13 +140,11 @@ func (this *Generator) SetOption(opt GeneratorOption) {
 
 }
 
-func (this *Generator) IsEnum(s string)bool{
-	for _,v:=range this.ModelEnumObjects {
+func (this *Generator) IsEnum(s string) bool {
+	for _, v := range this.ModelEnumObjects {
 		if v.EnumName == s {
 			return true
 		}
 	}
 	return false
 }
-
-

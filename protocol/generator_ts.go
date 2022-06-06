@@ -54,7 +54,7 @@ func (this *Generator) LoadTsFolder(p string) *promise.Promise {
 }
 
 func (this *Generator) LoadTsIds(p string) error {
-	p=strings.ReplaceAll(p,"\\","/")
+	p = strings.ReplaceAll(p, "\\", "/")
 	baseName := path.Base(p)
 	this.TsPath = p
 	idsPath := util.FindFile(p, baseName+"_ids.ts", false)
@@ -85,7 +85,7 @@ func (this *Generator) LoadGo2TsModels(p string) error {
 			return false
 		}
 		fileName := path.Base(filePath)
-		if fileName==baseName + "_ids.ts"||strings.HasPrefix(fileName,"enum_") {
+		if fileName == baseName+"_ids.ts" || strings.HasPrefix(fileName, "enum_") {
 			return false
 		}
 		_, err = this.LoadAndParseTsFile(filePath)
@@ -131,7 +131,7 @@ func (this *Generator) generateModel2TsIds() error {
 		strs += obj.String()
 	}
 
-	packName:=""
+	packName := ""
 	for _, p := range this.ModelPackages {
 		if p.TsPackageName == "" {
 			continue
@@ -152,16 +152,16 @@ func (this *Generator) generateModel2TsIds() error {
 		return errIds[i].ErrorId < errIds[j].ErrorId
 	})
 	strs += "\n"
-	strs += "export namespace "+packName+" {"
+	strs += "export namespace " + packName + " {"
 
 	for _, id := range errIds {
-		strs+="\n"
+		strs += "\n"
 		strs += id.TsString(this)
 	}
-	strs+="\n"
-	strs+="}\n\n"
+	strs += "\n"
+	strs += "}\n\n"
 	strs += "(function () {\n"
-	strs += "\t"+`if (window["CC_EDITOR"]) {`+"\n"
+	strs += "\t" + `if (window["CC_EDITOR"]) {` + "\n"
 	strs += "\t\treturn;\n"
 	strs += "\t}\n"
 	ids := []*ModelId{}
@@ -201,7 +201,7 @@ func (this *Generator) generateModel2TsClasses() error {
 	for i := len(this.ModelClassObjects) - 1; i >= 0; i-- {
 		schema := this.ModelClassObjects[i]
 		tsFile := this.getTsModelFileByModel(schema)
-		if tsFile!=nil {
+		if tsFile != nil {
 			tsFile.Package = schema.TsPackage
 			tsClass := this.getTsClassByName(schema.ClassName)
 			if tsClass != nil {
@@ -223,7 +223,7 @@ func (this *Generator) generateModel2TsClasses() error {
 		for _, impo := range imports {
 			impo.RemoveLineType(LINE_EMPTY)
 		}
-		if len(imports) == 0  {
+		if len(imports) == 0 {
 			imports := NewTsImportObject(modelFile)
 			modelFile.InsertObject(0, imports)
 		}
@@ -272,20 +272,19 @@ func (this *Generator) regenTsClass(schema *ModelClassObject, tsClass *TsClassOb
 	this.GetLogger().Info(tsClass.String())
 }
 
-
 func (this *Generator) regenTsClassField(schema *ModelClassObject, tsClass *TsClassObject) {
 	for _, body := range schema.Fields {
 		member := tsClass.GetClassMember(body.Name)
 		if member != nil {
 			if member.IsPublic {
-				if strings.ReplaceAll(strings.TrimSpace(member.Type)," ","")=="Uint8Array" &&body.TsPublicType(this)=="number[]" {
+				if strings.ReplaceAll(strings.TrimSpace(member.Type), " ", "") == "Uint8Array" && body.TsPublicType(this) == "number[]" {
 					continue
 				}
-				if strings.ReplaceAll(strings.TrimSpace(member.Type)," ","") != strings.TrimSpace(body.TsPublicType(this)) {
-					this.GetLogger().Warnf("ADSASDASDSDADSDS",member.Type, body.TsPublicType(this), member.Name)
+				if strings.ReplaceAll(strings.TrimSpace(member.Type), " ", "") != strings.TrimSpace(body.TsPublicType(this)) {
+					this.GetLogger().Warnf("ADSASDASDSDADSDS", member.Type, body.TsPublicType(this), member.Name)
 
 				}
-				if strings.ReplaceAll(strings.TrimSpace(member.Type)," ","") == strings.TrimSpace(body.TsPublicType(this)) {
+				if strings.ReplaceAll(strings.TrimSpace(member.Type), " ", "") == strings.TrimSpace(body.TsPublicType(this)) {
 					continue
 				}
 				member.Line.Text = body.TsPublicString(this)
@@ -305,7 +304,7 @@ func (this *Generator) genTsClassOther(schema *ModelClassObject, tsClass *TsClas
 	tsClass.AddLine(&LineText{
 		Obj:      tsClass,
 		LineNum:  0,
-		Text:     schema.ToTsClassHeader(this,tsClass),
+		Text:     schema.ToTsClassHeader(this, tsClass),
 		LineType: 0,
 	}, LINE_TS_CLASS_HEADER)
 	for _, field := range schema.Fields {
@@ -357,7 +356,7 @@ func (this *Generator) genTsClassDefine(schema *ModelClassObject, tsClass *TsCla
 			Text:     schema.TsDefineStart(this),
 			LineType: LINE_TS_DEFINE_START,
 		})
-		bodyTexts := schema.TsDefineLines(this,tsClass)
+		bodyTexts := schema.TsDefineLines(this, tsClass)
 		for _, bodyText := range bodyTexts {
 			line = tsClass.InsertAfter(&LineText{
 				Obj:      tsClass,
@@ -407,7 +406,7 @@ func (this *Generator) getTsModelFileByModel(schema *ModelClassObject) *TsModelF
 	return file
 }
 
-func (this *Generator) processTsClassObjects(){
+func (this *Generator) processTsClassObjects() {
 	ret := make([]*TsClassObject, 0)
 	for _, file := range this.TsModels {
 		objects := file.ProcessClasses()
@@ -437,8 +436,9 @@ func (this *Generator) generateModel2TsEnums() error {
 	//}
 	//strs += "\n"
 	for _, enum := range this.ModelEnumObjects {
-		name:=stringutil.SplitCamelCaseLowerSnake(enum.EnumName)
-		err := ioutil.WriteFile(path.Join(this.TsPath,"enum_"+name+".ts"), []byte(stringutil.TrimEnd(enum.TsString(this))), 0644)
+		name := stringutil.SplitCamelCaseLowerSnake(enum.EnumName)
+		err := ioutil.WriteFile(path.Join(this.TsPath,
+			enum.TsPackage+"_"+"enum_"+name+".ts"), []byte(stringutil.TrimEnd(enum.TsString(this))), 0644)
 		if err != nil {
 			this.GetLogger().Error(err.Error())
 			return err
