@@ -6,11 +6,19 @@ import (
 )
 
 type Number interface {
-	uint8 | int8 | uint16 | int16 | uint32 | int32 | uint64 | int64 | int | float32 | float64
+	Signed | UnSigned
+}
+
+type SignedInt interface {
+	int8 | int16 | int32 | int64 | int
 }
 
 type Signed interface {
-	int8 | int16 | int32 | int64 | int | float32 | float64
+	SignedInt | Float
+}
+
+type UnSigned interface {
+	uint8 | uint16 | uint32 | uint64 | uint
 }
 
 type Float interface {
@@ -22,6 +30,13 @@ func Ternary[T any](cond bool, a T, b T) T {
 		return a
 	}
 	return b
+}
+
+func Abs[T Signed](a T) T {
+	if a < 0 {
+		return -a
+	}
+	return a
 }
 
 func Pow[T Number](x, y T) T {
@@ -47,8 +62,8 @@ func Min[T Number](x, y T) T {
 	return y
 }
 
-func Lerp[T Number](t float64, a, b T) T {
-	return T(float64(a) + t*float64(b-a))
+func Lerp[T Number, T1 Float](t T1, a, b T) T {
+	return T(float64(a) + float64(t)*float64(b-a))
 }
 
 func Range[T Number](start, end T) []T {
