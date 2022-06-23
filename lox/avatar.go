@@ -75,7 +75,7 @@ func (this *Avatar) Deserialize(a lokas.IProcess) error {
 }
 
 func (this *Avatar) Initialize(a lokas.IProcess) error {
-	return this.Deserializer(this, a)
+	return this.Initializer(this, a)
 }
 
 func (this *Avatar) Serialize(a lokas.IProcess) error {
