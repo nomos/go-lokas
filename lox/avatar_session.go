@@ -34,6 +34,10 @@ type AvatarSession struct {
 	onSessionClosed  func()
 }
 
+func (this *AvatarSession) Initialize(a lokas.IProcess) error {
+	return nil
+}
+
 func NewAvatarSession(id util.ID) *AvatarSession {
 	ret := &AvatarSession{}
 	ret.Id = id
@@ -48,10 +52,9 @@ func (this *AvatarSession) SetOnSessionClosed(f func()) {
 	this.onSessionClosed = f
 }
 
-
-func (this *AvatarSession) ChangeUserName(a lokas.IProcess,name string)error {
+func (this *AvatarSession) ChangeUserName(a lokas.IProcess, name string) error {
 	this.UserName = name
-	err:=this.Serialize(a)
+	err := this.Serialize(a)
 	if err != nil {
 		log.Error(err.Error())
 		return err

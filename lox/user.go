@@ -14,19 +14,19 @@ import (
 
 var _ lokas.IModel = (*User)(nil)
 
-func UserId(user *User)zap.Field{
-	return zap.Int64("user_id",user.Id.Int64())
+func UserId(user *User) zap.Field {
+	return zap.Int64("user_id", user.Id.Int64())
 }
-func UserRefreshToken(user *User)zap.Field{
-	return zap.String("refresh_token",user.RefreshToken)
-}
-
-func UserToken(user *User)zap.Field{
-	return zap.String("token",user.Token)
+func UserRefreshToken(user *User) zap.Field {
+	return zap.String("refresh_token", user.RefreshToken)
 }
 
-func LogUserInfo(user *User)log.ZapFields{
-	ret:=log.ZapFields{}
+func UserToken(user *User) zap.Field {
+	return zap.String("token", user.Token)
+}
+
+func LogUserInfo(user *User) log.ZapFields {
+	ret := log.ZapFields{}
 	ret = ret.Append(UserId(user))
 	ret = ret.Append(flog.UserName(user.UserName))
 	ret = ret.Append(UserToken(user))
@@ -35,17 +35,21 @@ func LogUserInfo(user *User)log.ZapFields{
 }
 
 type User struct {
-	Id      util.ID `bson:"_id"`
-	Role    uint32
-	Avatars map[string]util.ID
+	Id           util.ID `bson:"_id"`
+	Role         uint32
+	Avatars      map[string]util.ID
 	AgentsParams map[string]string
-	Token string
+	Token        string
 	RefreshToken string
-	UserName string
-	Password string
+	UserName     string
+	Password     string
 }
 
-func (this *User) GetId()util.ID{
+func (this *User) Initialize(a lokas.IProcess) error {
+	return nil
+}
+
+func (this *User) GetId() util.ID {
 	return this.Id
 }
 
@@ -57,33 +61,33 @@ func (this *User) Serialize(a lokas.IProcess) error {
 	panic("implement me")
 }
 
-func (this *User) SimpleUser()*User{
+func (this *User) SimpleUser() *User {
 	return &User{
-		Id:        this.Id,
-		Role:      this.Role,
+		Id:   this.Id,
+		Role: this.Role,
 	}
 }
 
-func (this *User) GetServerInfo(s string)(string,int32){
-	sarr:=strings.Split(s,"_")
-	gameId:=sarr[0]
-	serverId,_:=strconv.Atoi(sarr[1])
-	return gameId,int32(serverId)
+func (this *User) GetServerInfo(s string) (string, int32) {
+	sarr := strings.Split(s, "_")
+	gameId := sarr[0]
+	serverId, _ := strconv.Atoi(sarr[1])
+	return gameId, int32(serverId)
 }
 
-func (this *User) HasAvatarByServer(gameId string,serverId int32)(bool,util.ID){
-	for k,v:=range this.Avatars {
-		gid,sid:=this.GetServerInfo(k)
-		if gameId==gid&&serverId==sid {
-			return true,v
+func (this *User) HasAvatarByServer(gameId string, serverId int32) (bool, util.ID) {
+	for k, v := range this.Avatars {
+		gid, sid := this.GetServerInfo(k)
+		if gameId == gid && serverId == sid {
+			return true, v
 		}
 	}
-	return false,0
+	return false, 0
 }
 
-func (this *User) HasAvatarById(id util.ID)bool{
-	for _,v:=range this.Avatars {
-		if v==id {
+func (this *User) HasAvatarById(id util.ID) bool {
+	for _, v := range this.Avatars {
+		if v == id {
 			return true
 		}
 	}
@@ -93,33 +97,33 @@ func (this *User) HasAvatarById(id util.ID)bool{
 type ClaimUser struct {
 	Create time.Time
 	Expire int64
-	User *User
+	User   *User
 }
 
-func (this* ClaimUser) Valid() error {
-	expires:= this.Create.Add(time.Duration(this.Expire)).Before(time.Now())
+func (this *ClaimUser) Valid() error {
+	expires := this.Create.Add(time.Duration(this.Expire)).Before(time.Now())
 	if expires {
 		return protocol.ERR_TOKEN_EXPIRED
 	}
 	return nil
 }
 
-func (this* ClaimUser) Marshal()([]byte,error) {
+func (this *ClaimUser) Marshal() ([]byte, error) {
 	return protocol.MarshalBinary(this)
 }
 
-func (this* ClaimUser) Unmarshal(v []byte)error {
-	return protocol.Unmarshal(v,this)
+func (this *ClaimUser) Unmarshal(v []byte) error {
+	return protocol.Unmarshal(v, this)
 }
 
-func (this *ClaimUser) SetUser(user interface{}){
+func (this *ClaimUser) SetUser(user interface{}) {
 	this.User = user.(*User)
 }
 
-func (this *ClaimUser) GetUser()interface{} {
+func (this *ClaimUser) GetUser() interface{} {
 	return this.User
 }
 
-func CreateUser()interface{} {
+func CreateUser() interface{} {
 	return &User{}
 }
