@@ -91,6 +91,7 @@ func (this *PassiveSession) StartMessagePump() {
 	this.MsgChan = make(chan *protocol.RouteMessage, 100)
 	this.doneClient = make(chan struct{})
 	this.doneServer = make(chan struct{})
+
 	go func() {
 		defer func() {
 			r := recover()
@@ -102,104 +103,7 @@ func (this *PassiveSession) StartMessagePump() {
 				}
 			}
 		}()
-		//ClientSideLoop
-	CLIENT_LOOP:
-		for {
-			select {
-			case <-this.ticker.C:
-				if this.OnUpdateFunc != nil && this.Verified {
-					this.OnUpdateFunc()
-				}
-				//ClientSide MessageLoop
-			case data := <-this.Messages:
-				cmdId := protocol.GetCmdId16(data)
-				if !this.Verified && cmdId != protocol.TAG_HandShake {
-					var msg []byte
-					msg, err := protocol.MarshalMessage(0, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
-					if err != nil {
-						log.Error(err.Error())
-						this.Conn.Wait()
-						this.Conn.Close()
-						return
-					}
-					log.Errorf("Auth Failed", cmdId)
-					this.Conn.Write(msg)
-					this.Conn.Wait()
-					this.Conn.Close()
-					return
-				}
-				msg, err := protocol.UnmarshalMessage(data, this.Protocol)
-				if err != nil {
-					log.Error("unmarshal client message error",
-						zap.Any("cmdId", cmdId),
-					)
-					msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
-					_, err := this.Conn.Write(msg)
-					if err != nil {
-						log.Error(err.Error())
-					}
-					this.Conn.Close()
-					break CLIENT_LOOP
-				}
-				if cmdId == protocol.TAG_HandShake {
-					var err error
-					if this.AuthFunc != nil {
-						err = this.AuthFunc(msg.Body.(*protocol.HandShake).Data)
-					}
-					if err != nil {
-						log.Error(err.Error())
-						msg, err := protocol.MarshalMessage(msg.TransId, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
-						if err != nil {
-							log.Error(err.Error())
-							this.Conn.Wait()
-							this.Conn.Close()
-							return
-						}
-						log.Errorf("Auth Failed", cmdId)
-						this.Conn.Write(msg)
-						this.Conn.Wait()
-						this.Conn.Close()
-						break CLIENT_LOOP
-					}
-					_, err = this.Conn.Write(data)
-					if err != nil {
-						log.Error(err.Error())
-						this.Conn.Close()
-						break CLIENT_LOOP
-					}
-					this.Verified = true
-					continue
-				}
-				if cmdId == protocol.TAG_Ping {
-					//ping:=msg.Body.(*Protocol.Ping)
-					//log.Info("receive ping",zap.Int64("client_session_id",this.GetId().Int64()))
-					pong := &protocol.Pong{Time: time.Now()}
-					data, err := protocol.MarshalMessage(msg.TransId, pong, this.Protocol)
-					if err != nil {
-						log.Error(err.Error())
-						this.Conn.Wait()
-						this.Conn.Close()
-						break CLIENT_LOOP
-					}
-					_, err = this.Conn.Write(data)
-					//log.Info("send ping",zap.Int64("client_session_id",this.GetId().Int64()))
-					if err != nil {
-						log.Error(err.Error())
-						this.Conn.Close()
-						break CLIENT_LOOP
-					}
-					continue
-				}
-				if this.ClientMsgHandler != nil {
-					this.ClientMsgHandler(msg)
-				} else {
-					log.Error("no msg handler found")
-				}
-			case <-this.doneClient:
-				this.closeSession()
-				break CLIENT_LOOP
-			}
-		}
+		this.clientLoop()
 		close(this.doneClient)
 		this.doneClient = nil
 		close(this.Messages)
@@ -216,21 +120,120 @@ func (this *PassiveSession) StartMessagePump() {
 				}
 			}
 		}()
-	SERVER_LOOP:
-		for {
-			select {
-			//ServerSideMsgLoop
-			case rMsg := <-this.MsgChan:
-				this.OnMessage(rMsg)
-			case <-this.doneServer:
-				break SERVER_LOOP
-			}
-		}
+		this.inLoop()
 		close(this.MsgChan)
 		this.MsgChan = nil
 		close(this.doneServer)
 		this.doneServer = nil
 	}()
+}
+func (this *PassiveSession) clientLoop() {
+	for {
+		select {
+		case <-this.ticker.C:
+			if this.OnUpdateFunc != nil && this.Verified {
+				this.OnUpdateFunc()
+			}
+		case data := <-this.Messages:
+			cmdId := protocol.GetCmdId16(data)
+			if !this.Verified && cmdId != protocol.TAG_HandShake {
+				var msg []byte
+				msg, err := protocol.MarshalMessage(0, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
+				if err != nil {
+					log.Error(err.Error())
+					this.Conn.Wait()
+					this.Conn.Close()
+					return
+				}
+				log.Errorf("Auth Failed", cmdId)
+				this.Conn.Write(msg)
+				this.Conn.Wait()
+				this.Conn.Close()
+				return
+			}
+			msg, err := protocol.UnmarshalMessage(data, this.Protocol)
+			if err != nil {
+				log.Error("unmarshal client message error",
+					zap.Any("cmdId", cmdId),
+				)
+				msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
+				_, err := this.Conn.Write(msg)
+				if err != nil {
+					log.Error(err.Error())
+				}
+				this.Conn.Close()
+				return
+			}
+			if cmdId == protocol.TAG_HandShake {
+				var err error
+				if this.AuthFunc != nil {
+					err = this.AuthFunc(msg.Body.(*protocol.HandShake).Data)
+				}
+				if err != nil {
+					log.Error(err.Error())
+					msg, err := protocol.MarshalMessage(msg.TransId, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
+					if err != nil {
+						log.Error(err.Error())
+						this.Conn.Wait()
+						this.Conn.Close()
+						return
+					}
+					log.Errorf("Auth Failed", cmdId)
+					this.Conn.Write(msg)
+					this.Conn.Wait()
+					this.Conn.Close()
+					return
+				}
+				_, err = this.Conn.Write(data)
+				if err != nil {
+					log.Error(err.Error())
+					this.Conn.Close()
+					return
+				}
+				this.Verified = true
+				continue
+			}
+			if cmdId == protocol.TAG_Ping {
+				//ping:=msg.Body.(*Protocol.Ping)
+				//log.Info("receive ping",zap.Int64("client_session_id",this.GetId().Int64()))
+				pong := &protocol.Pong{Time: time.Now()}
+				data, err := protocol.MarshalMessage(msg.TransId, pong, this.Protocol)
+				if err != nil {
+					log.Error(err.Error())
+					this.Conn.Wait()
+					this.Conn.Close()
+					return
+				}
+				_, err = this.Conn.Write(data)
+				//log.Info("send ping",zap.Int64("client_session_id",this.GetId().Int64()))
+				if err != nil {
+					log.Error(err.Error())
+					this.Conn.Close()
+					return
+				}
+				continue
+			}
+			if this.ClientMsgHandler != nil {
+				this.ClientMsgHandler(msg)
+			} else {
+				log.Error("no msg handler found")
+			}
+		case <-this.doneClient:
+			this.closeSession()
+			return
+		}
+	}
+}
+
+func (this *PassiveSession) inLoop() {
+	for {
+		select {
+		case rMsg := <-this.MsgChan:
+			this.OnMessage(rMsg)
+		case <-this.doneServer:
+			return
+		}
+	}
 }
 
 func (this *PassiveSession) OnMessage(msg *protocol.RouteMessage) {

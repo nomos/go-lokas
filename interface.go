@@ -357,6 +357,7 @@ type ISessionManager interface {
 type IModel interface {
 	GetId() util.ID
 	Deserialize(a IProcess) error
+	Initialize(a IProcess) error
 	Serialize(a IProcess) error
 }
 
@@ -376,6 +377,7 @@ type IAvatarSession interface {
 }
 
 type IGameHandler interface {
+	GetInitializer() func(avatar IActor, process IProcess) error
 	GetSerializer() func(avatar IActor, process IProcess) error
 	GetDeserializer() func(avatar IActor, process IProcess) error
 	GetUpdater() func(avatar IActor, process IProcess) error

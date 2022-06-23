@@ -56,7 +56,7 @@ func init() {
 	system_ts_types[TAG_Float] = "number"
 	system_ts_types[TAG_Double] = "number"
 	system_ts_types[TAG_String] = "string"
-	system_ts_types[TAG_BoolArray] = "bool[]"
+	system_ts_types[TAG_BoolArray] = "boolean[]"
 	system_ts_types[TAG_ByteArray] = "number[]"
 	system_ts_types[TAG_ShortArray] = "number[]"
 	system_ts_types[TAG_UShortArray] = "number[]"

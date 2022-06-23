@@ -11,11 +11,11 @@ import (
 
 var _ lokas.IModel = (*Avatar)(nil)
 
-func NewAvatar(id util.ID,handler lokas.IGameHandler,manager *AvatarManager) *Avatar {
+func NewAvatar(id util.ID, handler lokas.IGameHandler, manager *AvatarManager) *Avatar {
 	ret := &Avatar{
-		Actor:        NewActor(),
+		Actor:         NewActor(),
 		AvatarSession: NewAvatarSession(id),
-		manager: manager,
+		manager:       manager,
 	}
 	ret.SetType("Avatar")
 	ret.SetId(id)
@@ -23,6 +23,7 @@ func NewAvatar(id util.ID,handler lokas.IGameHandler,manager *AvatarManager) *Av
 	ret.OnUpdateFunc = ret.OnUpdate
 	ret.Serializer = handler.GetSerializer()
 	ret.Deserializer = handler.GetDeserializer()
+	ret.Initializer = handler.GetInitializer()
 	ret.Updater = handler.GetUpdater()
 	ret.MsgDelegator = handler.GetMsgDelegator()
 	return ret
@@ -33,11 +34,12 @@ var _ lokas.IActor = (*Avatar)(nil)
 type Avatar struct {
 	*Actor
 	*AvatarSession
-	manager *AvatarManager
-	Serializer func(avatar lokas.IActor,process lokas.IProcess)error
-	Deserializer func(avatar lokas.IActor,process lokas.IProcess)error
-	Updater      func(avatar lokas.IActor,process lokas.IProcess)error
-	MsgDelegator func(avatar lokas.IActor, actorId util.ID, transId uint32, msg protocol.ISerializable)(protocol.ISerializable, error)
+	manager      *AvatarManager
+	Serializer   func(avatar lokas.IActor, process lokas.IProcess) error
+	Initializer  func(avatar lokas.IActor, process lokas.IProcess) error
+	Deserializer func(avatar lokas.IActor, process lokas.IProcess) error
+	Updater      func(avatar lokas.IActor, process lokas.IProcess) error
+	MsgDelegator func(avatar lokas.IActor, actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error)
 }
 
 func (this *Avatar) SendEvent(msg protocol.ISerializable) error {
@@ -65,15 +67,19 @@ func (this *Avatar) handleMsg(actorId util.ID, transId uint32, msg protocol.ISer
 		log.Error(err.Error())
 		return nil, err
 	}
-	return this.MsgDelegator(this,actorId,transId,msg)
+	return this.MsgDelegator(this, actorId, transId, msg)
 }
 
 func (this *Avatar) Deserialize(a lokas.IProcess) error {
-	return this.Deserializer(this,a)
+	return this.Deserializer(this, a)
+}
+
+func (this *Avatar) Initialize(a lokas.IProcess) error {
+	return this.Deserializer(this, a)
 }
 
 func (this *Avatar) Serialize(a lokas.IProcess) error {
-	return this.Serializer(this,a)
+	return this.Serializer(this, a)
 }
 
 func (this *Avatar) Load(conf lokas.IConfig) error {
@@ -97,26 +103,26 @@ func (this *Avatar) OnUpdate() {
 		}
 	}()
 	this.GetProcess().RegisterActorRemote(this)
-	this.Updater(this,this.GetProcess())
+	this.Updater(this, this.GetProcess())
 	if this.Dirty() {
 		this.Serialize(this.GetProcess())
 	}
 }
 
 func (this *Avatar) Start() error {
-	err:=this.AvatarSession.Deserialize(this.GetProcess())
+	err := this.AvatarSession.Deserialize(this.GetProcess())
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	if this.AvatarSession.UserName==""||this.AvatarSession.GameId=="" {
-		err=this.AvatarSession.FetchData(this.GetProcess())
+	if this.AvatarSession.UserName == "" || this.AvatarSession.GameId == "" {
+		err = this.AvatarSession.FetchData(this.GetProcess())
 		if err != nil {
 			log.Error(err.Error())
 			return err
 		}
 	}
-	err=this.AvatarSession.Serialize(this.GetProcess())
+	err = this.AvatarSession.Serialize(this.GetProcess())
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -138,7 +144,7 @@ func (this *Avatar) Stop() error {
 	this.Actor.Stop()
 	this.Dirty()
 	log.Warn("save player state", flog.AvatarId(this.GetId()))
-	err:=this.Serialize(this.GetProcess())
+	err := this.Serialize(this.GetProcess())
 	if err != nil {
 		log.Error(err.Error())
 		return err
