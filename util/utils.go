@@ -28,6 +28,15 @@ func ExecPath() (string, error) {
 	return dir, nil
 }
 
+func CurrentPath() (string, error) {
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Error(err.Error())
+		return "", err
+	}
+	return strings.Replace(dir, "\\", "/", -1), nil
+}
+
 func Ternary[T any](expr bool, whenTrue, whenFalse T) T {
 	if expr == true {
 		return whenTrue
