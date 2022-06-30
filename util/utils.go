@@ -25,6 +25,9 @@ func ExecPath() (string, error) {
 		dir = strings.Join(s[:len(s)-3], "/")
 		log.Warnf(dir)
 	}
+	if runtime.GOOS == "windows" {
+		dir = strings.Replace(dir, "\\", "/", -1)
+	}
 	return dir, nil
 }
 
