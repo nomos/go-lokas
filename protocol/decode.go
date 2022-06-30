@@ -52,7 +52,9 @@ func UnmarshalJsonMessage(data []byte) (*BinaryMessage, error) {
 		log.Error(err.Error())
 		return nil, err
 	}
-	err = json.Unmarshal(bodyData, body)
+	dec := json.NewDecoder(bytes.NewBuffer(bodyData))
+	dec.UseNumber()
+	err = dec.Decode(body)
 	if err != nil {
 		log.Error(err.Error())
 		return nil, err

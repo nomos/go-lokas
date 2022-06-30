@@ -24,29 +24,29 @@ import (
 )
 
 type ShellSession struct {
-	ssh *SshClient
-	cmd *shell.ShellCommand
-	writer io.Writer
+	ssh       *SshClient
+	cmd       *shell.ShellCommand
+	writer    io.Writer
 	sysWriter io.Writer
 }
 
-func (this *ShellSession) SetWriter(writer io.Writer){
+func (this *ShellSession) SetWriter(writer io.Writer) {
 	this.writer = writer
 }
 
-func (this *ShellSession) SetCmd(cmd *shell.ShellCommand){
+func (this *ShellSession) SetCmd(cmd *shell.ShellCommand) {
 	this.cmd = cmd
 }
 
-func (this *ShellSession) Run(cmd string,isExpect bool)*promise.Promise {
+func (this *ShellSession) Run(cmd string, isExpect bool) *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		if this.cmd == nil {
-			this.cmd = shell.New(true,cmd,isExpect)
+			this.cmd = shell.New(true, cmd, isExpect)
 			this.cmd.SetWriter(this.ssh)
 		} else {
 			this.cmd.Set(cmd)
 		}
-		err:=this.Start()
+		err := this.Start()
 		if err != nil {
 			log.Error(err.Error())
 			reject(err)
@@ -56,15 +56,15 @@ func (this *ShellSession) Run(cmd string,isExpect bool)*promise.Promise {
 	})
 }
 
-func (this *ShellSession) Start()error{
-	if this.cmd!= nil {
-		err:=this.cmd.Start()
+func (this *ShellSession) Start() error {
+	if this.cmd != nil {
+		err := this.cmd.Start()
 		if err != nil {
 			this.ssh.Error(err.Error())
 			return err
 		}
 
-		err=this.cmd.Wait()
+		err = this.cmd.Wait()
 		if err != nil {
 			this.ssh.Error(err.Error())
 			return err
@@ -81,23 +81,23 @@ type StringWriter interface {
 type SshClient struct {
 	*log.ComposeLogger
 	events.EventEmmiter
-	client         *ssh.Client
-	sftp           *sftp.Client
-	sftps          []*sftp.Client
-	sessions		[]*ssh.Session
-	shellSessions   []*ShellSession
-	addr           string
-	User           string
-	password       string
+	client              *ssh.Client
+	sftp                *sftp.Client
+	sftps               []*sftp.Client
+	sessions            []*ssh.Session
+	shellSessions       []*ShellSession
+	addr                string
+	User                string
+	password            string
 	defaultShellSession *ShellSession
-	defaultSession *ssh.Session
-	done           chan struct{}
-	connected      bool
-	sftpMutex      sync.Mutex
-	stringWriter StringWriter
+	defaultSession      *ssh.Session
+	done                chan struct{}
+	connected           bool
+	sftpMutex           sync.Mutex
+	stringWriter        StringWriter
 }
 
-func NewSshClient(user, password, addr string,console bool) *SshClient {
+func NewSshClient(user, password, addr string, console bool) *SshClient {
 	ret := &SshClient{
 		EventEmmiter: events.New(),
 		addr:         addr,
@@ -105,21 +105,21 @@ func NewSshClient(user, password, addr string,console bool) *SshClient {
 		password:     password,
 		connected:    false,
 		sftps:        make([]*sftp.Client, 0),
-		sessions: make([]*ssh.Session,0),
+		sessions:     make([]*ssh.Session, 0),
 	}
 	ret.defaultShellSession = ret.NewShellSession()
 	if console {
-		ret.ComposeLogger = log.NewComposeLogger(true,log.ConsoleConfig(""),1)
+		ret.ComposeLogger = log.NewComposeLogger(true, log.ConsoleConfig(""), 1)
 	} else {
-		ret.ComposeLogger = log.NewComposeLogger(true,log.DefaultConfig(""),1)
+		ret.ComposeLogger = log.NewComposeLogger(true, log.DefaultConfig(""), 1)
 	}
 	return ret
 }
 
-func (this *SshClient) NewShellSession()*ShellSession{
-	ret:=&ShellSession{
-		ssh:    this,
-		cmd:    nil,
+func (this *SshClient) NewShellSession() *ShellSession {
+	ret := &ShellSession{
+		ssh:       this,
+		cmd:       nil,
 		sysWriter: this,
 	}
 	this.shellSessions = append(this.shellSessions, ret)
@@ -130,10 +130,10 @@ func (this *SshClient) Clear() {
 
 }
 
-func (this *SshClient) Write(p []byte)(int,error) {
+func (this *SshClient) Write(p []byte) (int, error) {
 	this.Info(string(p))
 	this.stringWriter.WriteString(string(p))
-	return 0,nil
+	return 0, nil
 }
 
 func (this *SshClient) SetStringWriter(writer StringWriter) {
@@ -146,10 +146,9 @@ func (this *SshClient) SetAddr(user, password, addr string) {
 	this.password = password
 }
 
-func (this *SshClient) GetConnStr()string {
-	return this.User+"@"+this.addr
+func (this *SshClient) GetConnStr() string {
+	return this.User + "@" + this.addr
 }
-
 
 func (this *SshClient) ClearSftpClients() {
 	for _, c := range this.sftps {
@@ -206,7 +205,7 @@ func (this *SshClient) Connect() *promise.Promise {
 			reject(err)
 			return
 		}
-		this.sftp,err = this.createSftp()
+		this.sftp, err = this.createSftp()
 		if err != nil {
 			reject(err)
 			return
@@ -217,7 +216,7 @@ func (this *SshClient) Connect() *promise.Promise {
 	})
 }
 
-func (this *SshClient) IsConnect()bool {
+func (this *SshClient) IsConnect() bool {
 	return this.connected
 }
 
@@ -233,16 +232,13 @@ func (this *SshClient) Disconnect() *promise.Promise {
 			reject(err)
 			return
 		}
-		for _,session:=range this.sessions {
+		for _, session := range this.sessions {
 			log.Warnf("CLOSE Session")
-			if session!=nil {
-				err:=session.Close()
-				if err != nil {
-					log.Error(err.Error())
-				}
+			if session != nil {
+				session.Close()
 			}
 		}
-		this.sessions = make([]*ssh.Session,0)
+		this.sessions = make([]*ssh.Session, 0)
 		err = this.client.Close()
 		if err != nil {
 			reject(err)
@@ -253,10 +249,10 @@ func (this *SshClient) Disconnect() *promise.Promise {
 	})
 }
 
-func (this *SshClient) runShellCmd(cmd string,expect bool) *promise.Promise {
+func (this *SshClient) runShellCmd(cmd string, expect bool) *promise.Promise {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		go func() {
-			_,err:=this.defaultShellSession.Run(cmd,expect).Await()
+			_, err := this.defaultShellSession.Run(cmd, expect).Await()
 			if err != nil {
 				reject(err)
 				return
@@ -266,12 +262,12 @@ func (this *SshClient) runShellCmd(cmd string,expect bool) *promise.Promise {
 	})
 }
 
-func (this *SshClient) RunShellCmd(cmd string,expect bool) *promise.Promise {
-	return this.runShellCmd(cmd,expect)
+func (this *SshClient) RunShellCmd(cmd string, expect bool) *promise.Promise {
+	return this.runShellCmd(cmd, expect)
 }
 
 func (this *SshClient) RunShellCmdPwd() *promise.Promise {
-	return this.runShellCmd("pwd",false)
+	return this.runShellCmd("pwd", false)
 }
 
 func (this *SshClient) runCmd(cmd string, pwd bool) *promise.Promise {
@@ -281,7 +277,7 @@ func (this *SshClient) runCmd(cmd string, pwd bool) *promise.Promise {
 			reject(err)
 			return
 		}
-		this.sessions = append(this.sessions,session)
+		this.sessions = append(this.sessions, session)
 		if pwd {
 			this.readPump(session, "pwd", true)
 			err = session.Run("pwd")
@@ -291,7 +287,7 @@ func (this *SshClient) runCmd(cmd string, pwd bool) *promise.Promise {
 			}
 			resolve(nil)
 		} else {
-			log.Warnf("runCmd", zap.String("cmd",cmd))
+			log.Warnf("runCmd", zap.String("cmd", cmd))
 			this.readPump(session, cmd, false)
 			err = session.Run(cmd)
 			if err != nil {
@@ -304,7 +300,7 @@ func (this *SshClient) runCmd(cmd string, pwd bool) *promise.Promise {
 }
 
 func (this *SshClient) RunCmd(cmd string) *promise.Promise {
-	return this.runCmd(cmd, false).Then(func( interface{}) interface{} {
+	return this.runCmd(cmd, false).Then(func(interface{}) interface{} {
 		return this.RunCmdPwd()
 	})
 }
@@ -337,12 +333,12 @@ func (this *SshClient) readPump(session *ssh.Session, cmd string, pwd bool) {
 				if ok := scanner.Scan(); ok {
 					text := scanner.Text()
 					if pwd {
-						this.WriteConsole(zapcore.Entry{},[]byte(text))
+						this.WriteConsole(zapcore.Entry{}, []byte(text))
 					} else {
-						this.WriteConsole(zapcore.Entry{},[]byte(text))
+						this.WriteConsole(zapcore.Entry{}, []byte(text))
 					}
 				} else {
-					log.Info("onSessionClose",zap.Any("session",session))
+					log.Info("onSessionClose", zap.Any("session", session))
 					return
 				}
 			}
@@ -540,7 +536,7 @@ func (this *SshClient) uploadFile(localFilePath string, remotePath string) error
 		return err
 	}
 	dstFile, err := this.sftp.Create(path.Join(remotePath, remoteFileName))
-	log.Warnf("distFile",zap.Reflect("dstFile",dstFile))
+	log.Warnf("distFile", zap.Reflect("dstFile", dstFile))
 	if err != nil {
 		this.Error(fmt.Sprintf("sftpClient.OnCreate error : %s", path.Join(remotePath, remoteFileName)))
 		this.Error(err.Error())
@@ -556,7 +552,7 @@ func (this *SshClient) uploadFile(localFilePath string, remotePath string) error
 		return err
 	}
 	dstFile.Write(ff)
-	this.Info(localFilePath + "  copy file to remote "+path.Join(remotePath, remoteFileName)+" finished!")
+	this.Info(localFilePath + "  copy file to remote " + path.Join(remotePath, remoteFileName) + " finished!")
 	return nil
 }
 
@@ -581,31 +577,31 @@ func (this *SshClient) uploadDirectory(localPath string, remotePath string) erro
 			this.uploadFile(path.Join(localPath, backupDir.Name()), remotePath)
 		}
 	}
-	this.Info(localPath + "  copy directory to remote "+remotePath+" finished!")
+	this.Info(localPath + "  copy directory to remote " + remotePath + " finished!")
 	return nil
 }
 
-func (this *SshClient) Gzip(files []*os.File, dest string) error{
+func (this *SshClient) Gzip(files []*os.File, dest string) error {
 	return gzip.Compress(files, dest)
 }
 
-func (this *SshClient) Zip(files []*os.File, dest string) error{
+func (this *SshClient) Zip(files []*os.File, dest string) error {
 	return gzip.Compress(files, dest)
 }
 
-func (this *SshClient) UnZip(file, dest string) error{
+func (this *SshClient) UnZip(file, dest string) error {
 	return zip.DeCompress(file, dest)
 }
 
-func (this *SshClient) UnGzip(file, dest string) error{
+func (this *SshClient) UnGzip(file, dest string) error {
 	return gzip.DeCompress(file, dest)
 }
 
-func (this *SshClient)getDir(path string) string {
+func (this *SshClient) getDir(path string) string {
 	return this.subString(path, 0, strings.LastIndex(path, "/"))
 }
 
-func (this *SshClient)subString(str string, start, end int) string {
+func (this *SshClient) subString(str string, start, end int) string {
 	rs := []rune(str)
 	length := len(rs)
 
