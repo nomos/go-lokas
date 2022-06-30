@@ -177,7 +177,8 @@ func walkDir(dirPath string, files []string, typ int, walkFunc WalkDirFunc, recu
 	// 如果是文件夹，进行递归处理
 	for _, fi := range read {
 		if fi.IsDir() { // 判断是否是文件夹
-			fullDir := dirPath + "/" + fi.Name() //构造新的路径
+			fullDir := path.Join(dirPath, fi.Name()) //构造新的路径
+			fullDir = strings.ReplaceAll(fullDir, `\\`, `/`)
 			if typ>>1&1 == 1 {
 				files = append(files, fullDir) //追加路径
 				if walkFunc != nil {
@@ -190,7 +191,8 @@ func walkDir(dirPath string, files []string, typ int, walkFunc WalkDirFunc, recu
 				files, _ = walkDir(fullDir, files, typ, walkFunc, recursive) //文件夹递归
 			}
 		} else {
-			fullDir := dirPath + "/" + fi.Name() //构造新的路径
+			fullDir := path.Join(dirPath, fi.Name()) //构造新的路径
+			fullDir = strings.ReplaceAll(fullDir, `\\`, `/`)
 			if typ>>0&1 == 1 {
 				files = append(files, fullDir) //追加路径
 				if walkFunc != nil {
