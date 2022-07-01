@@ -10,6 +10,7 @@ import (
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/network/redisclient"
 	"github.com/nomos/go-lokas/util"
+	"github.com/nomos/go-lokas/util/slice"
 	"github.com/nomos/qmgo"
 	"go.uber.org/zap"
 	"strconv"
@@ -27,8 +28,8 @@ func Instance() *Process {
 		if _processInstance == nil {
 			_processInstance = &Process{
 				modulesMap:     map[string]util.ID{},
-				modules:        map[string]lokas.IModule{},
-				modulesCreator: map[string]lokas.IModuleCtor{},
+				modules:        []lokas.IModule{},
+				modulesCreator: []lokas.IModuleCtor{},
 			}
 		}
 	})
@@ -45,8 +46,8 @@ type Process struct {
 	lokas.IRouter
 	lokas.IProxy
 	modulesMap     map[string]util.ID
-	modules        map[string]lokas.IModule
-	modulesCreator map[string]lokas.IModuleCtor
+	modules        []lokas.IModule
+	modulesCreator []lokas.IModuleCtor
 	id             util.ProcessId
 	idNode         *util.Snowflake
 	mongo          *qmgo.Database
@@ -118,11 +119,11 @@ func (this *Process) SaveModuleRegistry() error {
 }
 
 func (this *Process) RegisterModule(creator lokas.IModuleCtor) {
-	this.modulesCreator[creator.Type()] = creator
+	this.modulesCreator = append(this.modulesCreator, creator)
 }
 
 func (this *Process) Add(mod lokas.IModule) lokas.IModule {
-	this.modules[mod.Type()] = mod
+	this.modules = append(this.modules, mod)
 	mod.SetProcess(this)
 	return mod
 }
@@ -131,9 +132,18 @@ func (this *Process) Config() lokas.IConfig {
 	return this.config
 }
 
+func (this *Process) getModuleByType(name string) lokas.IModule {
+	for _, v := range this.modules {
+		if v.Type() == name {
+			return v
+		}
+	}
+	return nil
+}
+
 func (this *Process) LoadMod(name string, conf lokas.IConfig) error {
 	log.Info("loading ", zap.String("module", name))
-	mod := this.modules[name]
+	mod := this.getModuleByType(name)
 	if mod == nil {
 		mod = this.createMod(name)
 		this.Add(mod)
@@ -152,7 +162,7 @@ func (this *Process) LoadMod(name string, conf lokas.IConfig) error {
 }
 
 func (this *Process) UnloadMod(name string) error {
-	mod := this.modules[name]
+	mod := this.getModuleByType(name)
 	if mod == nil {
 		log.Error("module is not exist", zap.String("mod name", name))
 		return nil
@@ -165,12 +175,26 @@ func (this *Process) UnloadMod(name string) error {
 		log.Error(err.Error())
 		return err
 	}
-	delete(this.modules, name)
+	this.modules, _ = slice.RemoveWithCondition(this.modules, func(i int, t lokas.IModule) bool {
+		if t.Type() == name {
+			return true
+		}
+		return false
+	})
+	return nil
+}
+
+func (this *Process) getModuleCreatorByType(name string) lokas.IModuleCtor {
+	for _, v := range this.modulesCreator {
+		if v.Type() == name {
+			return v
+		}
+	}
 	return nil
 }
 
 func (this *Process) createMod(name string) lokas.IModule {
-	creator := this.modulesCreator[name]
+	creator := this.getModuleCreatorByType(name)
 	if creator == nil {
 		log.Panic("module not exist", zap.String("mod name", name))
 	}
@@ -236,7 +260,7 @@ func (this *Process) StopAllModule() error {
 }
 
 func (this *Process) Get(name string) lokas.IModule {
-	return this.modules[name]
+	return this.getModuleByType(name)
 }
 
 func (this *Process) GlobalMutex(key string, ttl int) (*etcdclient.Mutex, error) {
