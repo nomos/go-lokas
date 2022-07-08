@@ -33,15 +33,15 @@ func WithMsgHandler(msgHandler func(msg *protocol.BinaryMessage)) SessionOption 
 	}
 }
 
-func NewProxySession(conn lokas.IConn, id util.ID, manager *ProxySessionManager,passive bool, opts ...SessionOption) *ProxySession {
+func NewProxySession(conn lokas.IConn, id util.ID, manager *ProxySessionManager, passive bool, opts ...SessionOption) *ProxySession {
 	s := &ProxySession{
-		Actor:NewActor(),
+		Actor:    NewActor(),
 		Messages: make(chan []byte, 100),
 		Conn:     conn,
-		passive: passive,
+		passive:  passive,
 		manager:  manager,
-		timeout: TimeOut,
-		ticker: time.NewTicker(UpdateTime),
+		timeout:  TimeOut,
+		ticker:   time.NewTicker(UpdateTime),
 	}
 	for _, o := range opts {
 		o(s)
@@ -56,18 +56,18 @@ type ProxySession struct {
 	Verified    bool
 	Messages    chan []byte
 	Conn        lokas.IConn
-	Protocol protocol.TYPE
-	passive     bool				//是否为被动连接
+	Protocol    protocol.TYPE
+	passive     bool //是否为被动连接
 	manager     *ProxySessionManager
 	done        chan struct{}
 	OnCloseFunc func(conn lokas.IConn)
 	OnOpenFunc  func(conn lokas.IConn)
-	OnVerified 	func(success bool)
+	OnVerified  func(success bool)
 	MsgHandler  func(msg *protocol.BinaryMessage)
 	AuthFunc    func(data []byte) error
 	timeout     time.Duration
 	pingIndex   uint32
-	ticker *time.Ticker
+	ticker      *time.Ticker
 }
 
 func (this *ProxySession) SendMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
@@ -75,19 +75,19 @@ func (this *ProxySession) SendMessage(actorId util.ID, transId uint32, msg proto
 }
 
 func (this *ProxySession) Type() string {
-	panic("implement me")
+	return "ProxySession"
 }
 
 func (this *ProxySession) Update(dt time.Duration, now time.Time) {
-	panic("implement me")
+
 }
 
 func (this *ProxySession) GetProcess() lokas.IProcess {
-	panic("implement me")
+	return this.process
 }
 
 func (this *ProxySession) SetProcess(process lokas.IProcess) {
-	panic("implement me")
+	this.process = process
 }
 
 func (this *ProxySession) OnCreate() error {
@@ -157,118 +157,118 @@ func (this *ProxySession) handleMsg(msg *protocol.BinaryMessage) {
 	}
 }
 
-func (this *ProxySession) startMessagePumpPassive(){
-	this.MsgChan = make(chan *protocol.RouteMessage,100)
+func (this *ProxySession) startMessagePumpPassive() {
+	this.MsgChan = make(chan *protocol.RouteMessage, 100)
 	this.done = make(chan struct{})
 	go func() {
 		defer func() {
-			r:=recover()
-			if r!=nil {
-				if e,ok:=r.(error);ok {
+			r := recover()
+			if r != nil {
+				if e, ok := r.(error); ok {
 					log.Errorf(e.Error())
 					log.Error("客户端协议出错")
 					this.Conn.Close()
 				}
 			}
 		}()
-		LOOP:
-			for {
-				select {
-				case <-this.ticker.C:
-					if this.OnUpdateFunc!=nil&&this.Verified {
-						this.OnUpdateFunc()
-					}
-				case rMsg := <-this.MsgChan:
-					this.OnMessage(rMsg)
-				case data := <-this.Messages:
-					cmdId := protocol.GetCmdId16(data)
-					//第一个包必须是握手包
-					if !this.Verified && cmdId != protocol.TAG_HandShake {
-						msg,_:=protocol.MarshalMessage(0,protocol.NewError(protocol.ERR_AUTH_FAILED),this.Protocol)
-						log.Errorf("Auth Failed", cmdId)
-						_,err:=this.Conn.Write(msg)
-						if err != nil {
-							log.Error(err.Error())
-							this.Conn.Close()
-							break LOOP
-						}
-						this.Conn.Wait()
-						this.Conn.Close()
-						break LOOP
-					}
-					msg, err := protocol.UnmarshalMessage(data,this.Protocol)
+	LOOP:
+		for {
+			select {
+			case <-this.ticker.C:
+				if this.OnUpdateFunc != nil && this.Verified {
+					this.OnUpdateFunc()
+				}
+			case rMsg := <-this.MsgChan:
+				this.OnMessage(rMsg)
+			case data := <-this.Messages:
+				cmdId := protocol.GetCmdId16(data)
+				//第一个包必须是握手包
+				if !this.Verified && cmdId != protocol.TAG_HandShake {
+					msg, _ := protocol.MarshalMessage(0, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
+					log.Errorf("Auth Failed", cmdId)
+					_, err := this.Conn.Write(msg)
 					if err != nil {
-						log.Error("unmarshal client message error",
-							zap.Any("cmdId", cmdId),
-						)
-						msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
-						_,err:=this.Conn.Write(msg)
-						if err != nil {
-							log.Error(err.Error())
-							this.Conn.Close()
-							break LOOP
-						}
-						this.Conn.Wait()
+						log.Error(err.Error())
 						this.Conn.Close()
 						break LOOP
 					}
-					if cmdId == protocol.TAG_HandShake {
-						var err error
-						if this.AuthFunc!= nil {
-							err = this.AuthFunc(msg.Body.(*protocol.HandShake).Data)
-						}
-						if err != nil {
-							log.Error(err.Error())
-							msg,_:=protocol.MarshalMessage(msg.TransId,protocol.NewError(protocol.ERR_AUTH_FAILED),this.Protocol)
-							log.Errorf("Auth Failed", cmdId)
-							_,err:=this.Conn.Write(msg)
-							if err != nil {
-								log.Error(err.Error())
-								this.Conn.Close()
-								break LOOP
-							}
-							this.Conn.Wait()
-							this.Conn.Close()
-							break LOOP
-						}
-						_, err = this.Conn.Write(data)
-						if err != nil {
-							log.Error(err.Error())
-							this.Conn.Close()
-							break LOOP
-						}
-						this.Verified = true
-						continue
-					}
-					if cmdId == protocol.TAG_Ping {
-						//ping:=msg.Body.(*Protocol.Ping)
-						pong:=&protocol.Pong{Time: time.Now()}
-						data,err:=protocol.MarshalMessage(msg.TransId,pong,this.Protocol)
-						_,err =this.Conn.Write(data)
-						if err != nil {
-							log.Error(err.Error())
-							this.Conn.Close()
-							break LOOP
-						}
-						continue
-					}
-				case <-this.done:
+					this.Conn.Wait()
 					this.Conn.Close()
-					this.closeSession()
 					break LOOP
 				}
+				msg, err := protocol.UnmarshalMessage(data, this.Protocol)
+				if err != nil {
+					log.Error("unmarshal client message error",
+						zap.Any("cmdId", cmdId),
+					)
+					msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
+					_, err := this.Conn.Write(msg)
+					if err != nil {
+						log.Error(err.Error())
+						this.Conn.Close()
+						break LOOP
+					}
+					this.Conn.Wait()
+					this.Conn.Close()
+					break LOOP
+				}
+				if cmdId == protocol.TAG_HandShake {
+					var err error
+					if this.AuthFunc != nil {
+						err = this.AuthFunc(msg.Body.(*protocol.HandShake).Data)
+					}
+					if err != nil {
+						log.Error(err.Error())
+						msg, _ := protocol.MarshalMessage(msg.TransId, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
+						log.Errorf("Auth Failed", cmdId)
+						_, err := this.Conn.Write(msg)
+						if err != nil {
+							log.Error(err.Error())
+							this.Conn.Close()
+							break LOOP
+						}
+						this.Conn.Wait()
+						this.Conn.Close()
+						break LOOP
+					}
+					_, err = this.Conn.Write(data)
+					if err != nil {
+						log.Error(err.Error())
+						this.Conn.Close()
+						break LOOP
+					}
+					this.Verified = true
+					continue
+				}
+				if cmdId == protocol.TAG_Ping {
+					//ping:=msg.Body.(*Protocol.Ping)
+					pong := &protocol.Pong{Time: time.Now()}
+					data, err := protocol.MarshalMessage(msg.TransId, pong, this.Protocol)
+					_, err = this.Conn.Write(data)
+					if err != nil {
+						log.Error(err.Error())
+						this.Conn.Close()
+						break LOOP
+					}
+					continue
+				}
+			case <-this.done:
+				this.Conn.Close()
+				this.closeSession()
+				break LOOP
 			}
+		}
 	}()
 }
 
-func (this *ProxySession) startMessagePumpActive(){
-	this.MsgChan = make(chan *protocol.RouteMessage,100)
+func (this *ProxySession) startMessagePumpActive() {
+	this.MsgChan = make(chan *protocol.RouteMessage, 100)
 	this.done = make(chan struct{})
 	go func() {
 		defer func() {
-			r:=recover()
-			if r!=nil {
-				if e,ok:=r.(error);ok {
+			r := recover()
+			if r != nil {
+				if e, ok := r.(error); ok {
 					log.Errorf(e.Error())
 					log.Error("客户端协议出错")
 					this.Conn.Close()
@@ -287,13 +287,13 @@ func (this *ProxySession) startMessagePumpActive(){
 			case <-this.ticker.C:
 				ping := &protocol.Ping{Time: time.Now()}
 				this.pingIndex++
-				data, _ := protocol.MarshalMessage(this.pingIndex, ping,this.Protocol)
+				data, _ := protocol.MarshalMessage(this.pingIndex, ping, this.Protocol)
 				_, err := this.Conn.Write(data)
 				if err != nil {
 					log.Error(err.Error())
 					return
 				}
-				if this.OnUpdateFunc!=nil&&this.Verified {
+				if this.OnUpdateFunc != nil && this.Verified {
 					this.OnUpdateFunc()
 				}
 			case rMsg := <-this.MsgChan:
@@ -302,9 +302,9 @@ func (this *ProxySession) startMessagePumpActive(){
 				cmdId := protocol.GetCmdId16(data)
 				//第一个包必须是握手包
 				if !this.Verified && cmdId != protocol.TAG_HandShake {
-					msg,_:=protocol.MarshalMessage(0,protocol.NewError(protocol.ERR_AUTH_FAILED),this.Protocol)
+					msg, _ := protocol.MarshalMessage(0, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
 					log.Errorf("Auth Failed", cmdId)
-					_,err:=this.Conn.Write(msg)
+					_, err := this.Conn.Write(msg)
 					if err != nil {
 						log.Error(err.Error())
 						this.Conn.Close()
@@ -314,13 +314,13 @@ func (this *ProxySession) startMessagePumpActive(){
 					this.Conn.Close()
 					break LOOP
 				}
-				msg, err := protocol.UnmarshalMessage(data,this.Protocol)
+				msg, err := protocol.UnmarshalMessage(data, this.Protocol)
 				if err != nil {
 					log.Error("unmarshal client message error",
 						zap.Any("cmdId", cmdId),
 					)
 					msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
-					_,err:=this.Conn.Write(msg)
+					_, err := this.Conn.Write(msg)
 					if err != nil {
 						log.Error(err.Error())
 						this.Conn.Close()
@@ -332,14 +332,14 @@ func (this *ProxySession) startMessagePumpActive(){
 				}
 				if cmdId == protocol.TAG_HandShake {
 					var err error
-					if this.AuthFunc!= nil {
+					if this.AuthFunc != nil {
 						err = this.AuthFunc(msg.Body.(*protocol.HandShake).Data)
 					}
 					if err != nil {
 						log.Error(err.Error())
-						msg,_:=protocol.MarshalMessage(msg.TransId,protocol.NewError(protocol.ERR_AUTH_FAILED),this.Protocol)
+						msg, _ := protocol.MarshalMessage(msg.TransId, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
 						log.Errorf("Auth Failed", cmdId)
-						_,err:=this.Conn.Write(msg)
+						_, err := this.Conn.Write(msg)
 						if err != nil {
 							log.Error(err.Error())
 							this.Conn.Close()
@@ -365,7 +365,7 @@ func (this *ProxySession) startMessagePumpActive(){
 				}
 				this.handleMsg(msg)
 			case <-this.done:
-				log.Warn("closing",flog.FuncInfo(this,"start")...)
+				log.Warn("closing", flog.FuncInfo(this, "start")...)
 				this.Conn.Close()
 				this.closeSession()
 				break LOOP

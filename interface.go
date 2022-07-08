@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network/etcdclient"
+	"github.com/nomos/go-lokas/network/ossclient"
 	"github.com/nomos/go-lokas/network/redisclient"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
@@ -73,6 +74,7 @@ type IProcess interface {
 	GetMongo() *qmgo.Database                                   //get mongo client
 	GetRedis() *redisclient.Client                              //get redis client
 	GetEtcd() *etcdclient.Client                                //get etcd client
+	GetOss() *ossclient.Client                                  //get etcd client
 	GlobalMutex(key string, ttl int) (*etcdclient.Mutex, error) //create a distributed global mutex based on etcd
 	Config() IConfig                                            //get config
 	GameId() string                                             //get game id

@@ -280,8 +280,11 @@ func (this *Generator) regenTsClassField(schema *ModelClassObject, tsClass *TsCl
 				if strings.ReplaceAll(strings.TrimSpace(member.Type), " ", "") == "Uint8Array" && body.TsPublicType(this) == "number[]" {
 					continue
 				}
+				if strings.ReplaceAll(strings.TrimSpace(member.Type), " ", "") == "string[]" && body.TsPublicType(this) == "number[]" {
+					continue
+				}
 				if strings.ReplaceAll(strings.TrimSpace(member.Type), " ", "") != strings.TrimSpace(body.TsPublicType(this)) {
-					this.GetLogger().Warnf("ADSASDASDSDADSDS", member.Type, body.TsPublicType(this), member.Name)
+					this.GetLogger().Warnf("Replace Type", member.Type, body.TsPublicType(this), member.Name)
 
 				}
 				if strings.ReplaceAll(strings.TrimSpace(member.Type), " ", "") == strings.TrimSpace(body.TsPublicType(this)) {

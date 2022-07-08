@@ -8,6 +8,7 @@ import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/network/etcdclient"
+	"github.com/nomos/go-lokas/network/ossclient"
 	"github.com/nomos/go-lokas/network/redisclient"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/slice"
@@ -52,6 +53,7 @@ type Process struct {
 	idNode         *util.Snowflake
 	mongo          *qmgo.Database
 	etcd           *etcdclient.Client
+	oss            *ossclient.Client
 	redis          *redisclient.Client
 	config         lokas.IConfig
 	gameId         string
@@ -305,6 +307,12 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 		log.Error(err.Error())
 		return err
 	}
+	err = this.loadOss(config.GetDb("oss").(OssConfig))
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
 	this.idNode, _ = util.NewSnowflake(int64(config.GetProcessId()))
 	err = this.LoadModuleRegistry()
 
@@ -358,6 +366,23 @@ func (this *Process) loadEtcd(config EtcdConfig) error {
 	return nil
 }
 
+func (this *Process) loadOss(config OssConfig) error {
+	if config.EndPoint == "" {
+		return nil
+	}
+	t := ossclient.MINIO
+	if config.OssType == "aliyun" {
+		t = ossclient.ALIYUN_OSS
+	}
+	var err error
+	this.oss, err = ossclient.NewClient(t, config.EndPoint, config.AccessId, config.AccessSecret)
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	return nil
+}
+
 func (this *Process) Start() error {
 	err := this.StartAllModule()
 	if err != nil {
@@ -402,4 +427,8 @@ func (this *Process) GetRedis() *redisclient.Client {
 
 func (this *Process) GetEtcd() *etcdclient.Client {
 	return this.etcd
+}
+
+func (this *Process) GetOss() *ossclient.Client {
+	return this.oss
 }

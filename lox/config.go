@@ -308,6 +308,7 @@ type DefaultConfig struct {
 	Mongo     MongoConfig     `mapstructure:"-"`
 	Mysql     MysqlConfig     `mapstructure:"-"`
 	Redis     RedisConfig     `mapstructure:"-"`
+	Oss       OssConfig       `mapstructure:"-"`
 	Mods      []lokas.IConfig `mapstructure:"-"`
 	Modules   []string        `mapstructure:"modules"`
 }
@@ -322,6 +323,8 @@ func (this *DefaultConfig) GetDb(t string) interface{} {
 		return this.Redis
 	case "etcd":
 		return this.Etcd
+	case "oss":
+		return this.Oss
 	default:
 		log.Panicf("unrecognized db type", t)
 	}
@@ -338,6 +341,13 @@ type MongoConfig struct {
 
 type EtcdConfig struct {
 	EndPoints []string `mapstructure:"endpoints"`
+}
+
+type OssConfig struct {
+	OssType      string `mapstructure:"osstype"`
+	EndPoint     string `mapstructure:"endpoint"`
+	AccessId     string `mapstructure:"user"`
+	AccessSecret string `mapstructure:"password"`
 }
 
 type MysqlConfig struct {
@@ -408,6 +418,17 @@ func (this *DefaultConfig) loadInner() error {
 		log.Error(err.Error())
 		return err
 	}
+	if !util.IsNil(this.Viper.Get("db.oss")) {
+		err = this.Viper.UnmarshalKey("db.oss", &this.Oss)
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
+	} else {
+
+		log.Warn("oss config not exist")
+	}
+
 	err = this.Viper.UnmarshalKey("db.etcd", &this.Etcd)
 	if err != nil {
 		log.Error(err.Error())
