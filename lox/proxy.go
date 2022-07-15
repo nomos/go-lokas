@@ -169,7 +169,7 @@ func (this *Proxy) checkIsConnected(id util.ProcessId) bool {
 
 func (this *Proxy) connect(id util.ProcessId, addr string) (*ProxySession, error) {
 	selfId := this.GetProcess().PId()
-	mu, err := this.GetProcess().GlobalMutex(getIdMutexKey(selfId, id), 15)
+	mu, err := this.GetProcess().GlobalMutex(getIdMutexKey(selfId, id), 20)
 	if err != nil {
 		log.Error(err.Error())
 		return nil, err

@@ -152,7 +152,6 @@ func (this *Process) LoadMod(name string, conf lokas.IConfig) error {
 	}
 	err := mod.Load(conf)
 	if err != nil {
-		log.Error(err.Error())
 		return err
 	}
 	if _, ok := mod.(lokas.IActor); ok {
