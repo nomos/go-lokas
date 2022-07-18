@@ -1,8 +1,9 @@
 package timer
 
 import (
-	"fmt"
+	"log"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -16,17 +17,49 @@ type timeHandler struct {
 
 func (t *timeHandler) After(delay time.Duration, cb func(...interface{})) TimeNoder {
 
-	tn := t.wheel.After(delay, cb)
+	// tn := t.wheel.After(delay, cb)
 
-	t.noders.Store(&tn, 1)
+	jiffies := atomic.LoadUint64(&t.wheel.jiffies)
+
+	expire := delay/(time.Millisecond*10) + time.Duration(jiffies)
+
+	node := &timeNode{
+		expire: uint64(expire),
+
+		callback: cb,
+
+		handler: t,
+	}
+
+	tn := t.wheel.add(node, jiffies)
+
+	t.noders.Store(tn, 1)
 
 	return tn
 }
 
 func (t *timeHandler) Schedule(interval time.Duration, cb func(...interface{})) TimeNoder {
-	tn := t.wheel.Schedule(interval, cb)
+	// tn := t.wheel.Schedule(interval, cb)
 
-	t.noders.Store(&tn, 1)
+	jiffies := atomic.LoadUint64(&t.wheel.jiffies)
+
+	expire := getExpire(interval, jiffies)
+
+	node := &timeNode{
+		userExpire: interval,
+		expire:     uint64(expire),
+		callback:   cb,
+		isSchedule: true,
+
+		delay:    uint64(0),
+		interval: uint64(interval),
+		loop:     0,
+		handler:  t,
+	}
+
+	tn := t.wheel.add(node, jiffies)
+
+	t.noders.Store(tn, 1)
 
 	return tn
 }
@@ -39,14 +72,14 @@ func (t *timeHandler) DelSelf() {
 
 	// delete time event
 	t.noders.Range(func(key, value any) bool {
-		node := key.(timeNode)
+		node := key.(*timeNode)
 		node.Stop()
 		return true
 	})
 
 	// close channel
-	close(t.eventChan)
-	t.eventChan = nil
+	// close(t.eventChan)
+	// t.eventChan = nil
 
 	// delete wheel handler map
 	t.wheel.handlers.Delete(t.key)
@@ -63,5 +96,5 @@ func (t *timeHandler) PrintDebug() {
 		return true
 	})
 
-	fmt.Println("handler info, key:", t.key, " nodeCnt:", i)
+	log.Println("handler info, key:", t.key, " nodeCnt:", i)
 }

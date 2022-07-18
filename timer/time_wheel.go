@@ -282,16 +282,18 @@ func (t *timeWheel) moveAndExec() {
 		val := (*timeNode)(pos.Entry(offset))
 		head.Del(pos)
 
+		if !val.isSchedule {
+			val.handler.noders.Delete(val)
+		}
+
 		if atomic.LoadUint32(&val.stop) == haveStop {
 			return
 		}
 
-		// val.callback()
-		// t.timeEvent <- val.value
-
-		// val.handler.eventChan <- val.callback
-
-		val.handler.eventChan <- val.callback
+		msg := &TimeEventMsg{
+			cb: val.callback,
+		}
+		val.handler.eventChan <- msg
 
 		if val.isSchedule {
 			jiffies := t.jiffies
@@ -302,9 +304,6 @@ func (t *timeWheel) moveAndExec() {
 			t.add(val, jiffies)
 		}
 
-		if !val.isSchedule {
-			val.handler.noders.Delete(val)
-		}
 	})
 
 }

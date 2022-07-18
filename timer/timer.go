@@ -5,7 +5,8 @@ import (
 	"time"
 )
 
-type TypeEventChan func(...interface{})
+// type TypeEventChan func(...interface{})
+type TypeEventChan interface{}
 
 // 定时器接口
 type Timer interface {
@@ -50,6 +51,12 @@ type TimeHandler interface {
 	PrintDebug()
 }
 
+type TimeEventMsg struct {
+	cb func(...interface{})
+	a  int
+	b  string
+}
+
 var once sync.Once
 var ins Timer
 
@@ -70,4 +77,8 @@ func Instance() Timer {
 
 func GetHandler(key string) TimeHandler {
 	return Instance().GetHandler(key)
+}
+
+func Stop() {
+	Instance().Stop()
 }
