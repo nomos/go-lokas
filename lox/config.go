@@ -311,6 +311,7 @@ type DefaultConfig struct {
 	Oss       OssConfig       `mapstructure:"-"`
 	Mods      []lokas.IConfig `mapstructure:"-"`
 	Modules   []string        `mapstructure:"modules"`
+	DockerCLI DockerConfig    `mapstructure:"docker"`
 }
 
 func (this *DefaultConfig) GetDb(t string) interface{} {
@@ -329,6 +330,11 @@ func (this *DefaultConfig) GetDb(t string) interface{} {
 		log.Panicf("unrecognized db type", t)
 	}
 	return nil
+}
+
+type DockerConfig struct {
+	Endpoint string
+	CertPath string
 }
 
 type MongoConfig struct {
@@ -493,4 +499,8 @@ func (this *DefaultConfig) GetProcessIdType(key string) util.ProcessId {
 
 func (this *DefaultConfig) GetAllSub() []lokas.IConfig {
 	return this.Mods
+}
+
+func (this *DefaultConfig) GetDockerCLI() interface{} {
+	return this.DockerCLI
 }

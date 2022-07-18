@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/network/dockerclient"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/network/ossclient"
 	"github.com/nomos/go-lokas/network/redisclient"
@@ -75,6 +76,7 @@ type IProcess interface {
 	GetRedis() *redisclient.Client                              //get redis client
 	GetEtcd() *etcdclient.Client                                //get etcd client
 	GetOss() *ossclient.Client                                  //get etcd client
+	GetDocker() (*dockerclient.TLSClient, error)                //get docker client
 	GlobalMutex(key string, ttl int) (*etcdclient.Mutex, error) //create a distributed global mutex based on etcd
 	Config() IConfig                                            //get config
 	GameId() string                                             //get game id
@@ -289,6 +291,7 @@ type IProcessConfig interface {
 	GetVersion() string
 	GetDb(string) interface{}
 	GetAllSub() []IConfig //get all config for sub modules
+	GetDockerCLI() interface{}
 }
 
 //INetClient interface for client

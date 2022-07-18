@@ -7,6 +7,7 @@ import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
+	"github.com/nomos/go-lokas/network/dockerclient"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/network/ossclient"
 	"github.com/nomos/go-lokas/network/redisclient"
@@ -55,6 +56,7 @@ type Process struct {
 	etcd           *etcdclient.Client
 	oss            *ossclient.Client
 	redis          *redisclient.Client
+	docker         *dockerclient.TLSClient
 	config         lokas.IConfig
 	gameId         string
 	serverId       int32
@@ -311,6 +313,7 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 		log.Error(err.Error())
 		return err
 	}
+	err = this.loadDockerCLI(config.GetDockerCLI().(DockerConfig))
 
 	this.idNode, _ = util.NewSnowflake(int64(config.GetProcessId()))
 	err = this.LoadModuleRegistry()
@@ -382,6 +385,19 @@ func (this *Process) loadOss(config OssConfig) error {
 	return nil
 }
 
+func (this *Process) loadDockerCLI(config DockerConfig) error {
+	if config.Endpoint == "" || config.CertPath == "" {
+		return nil
+	}
+	var err error
+	this.docker, err = dockerclient.NewTLSClient(config.Endpoint, config.CertPath)
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	return nil
+}
+
 func (this *Process) Start() error {
 	err := this.StartAllModule()
 	if err != nil {
@@ -430,4 +446,11 @@ func (this *Process) GetEtcd() *etcdclient.Client {
 
 func (this *Process) GetOss() *ossclient.Client {
 	return this.oss
+}
+
+func (this *Process) GetDocker() (*dockerclient.TLSClient, error) {
+	if this.docker == nil {
+		return nil, errors.New("invalid endpoint, certPath")
+	}
+	return this.docker, nil
 }
