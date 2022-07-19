@@ -10,20 +10,10 @@ import (
 	"net/http"
 )
 
-type ACCESS_LEVEL protocol.Enum
-
-const (
-	ACCESS_LEVEL_NONE protocol.Enum = iota
-	ACCESS_LEVEL_READ
-	ACCESS_LEVEL_WRITE
-	ACCESS_LEVEL_CREATE
-	ACCESS_LEVEL_DELETE
-)
-
 type ResponseWriter interface {
 	http.ResponseWriter
 	http.Flusher
-	SetAcl(level ACCESS_LEVEL)
+
 	Status() int
 
 	Written() bool
@@ -79,20 +69,11 @@ func NewResponseWriter(this http.ResponseWriter) ResponseWriter {
 
 type responseWriter struct {
 	http.ResponseWriter
-	acl         ACCESS_LEVEL
 	status      int
 	size        int
 	msg         map[string]interface{}
 	context     map[string]interface{}
 	beforeFuncs []beforeFunc
-}
-
-func (this *responseWriter) SetAcl(level ACCESS_LEVEL) {
-	this.acl = level
-}
-
-func (this *responseWriter) Acl() ACCESS_LEVEL {
-	return this.acl
 }
 
 func (this *responseWriter) WriteHeader(s int) {
