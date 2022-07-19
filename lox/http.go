@@ -103,21 +103,6 @@ func (this *Http) CreateHandlerFunc(f rox.Handler) func(http.ResponseWriter, *ht
 	}
 }
 
-func (this *Http) HandleFuncWithAcl(path string, f rox.Handler, level rox.ACCESS_LEVEL) *rox.Route {
-	if ro := this.subRouters[path]; ro != nil {
-		return ro.HandleFunc("", func(writer http.ResponseWriter, request *http.Request) {
-			w := writer.(rox.ResponseWriter)
-			w.SetAcl(level)
-			f(w, request, this.GetProcess())
-		})
-	}
-	return this.httpServer.Router.HandleFunc(path, func(writer http.ResponseWriter, request *http.Request) {
-		w := writer.(rox.ResponseWriter)
-		w.SetAcl(level)
-		f(w, request, this.GetProcess())
-	})
-}
-
 func (this *Http) HandleFunc(path string, f rox.Handler) *rox.Route {
 	if ro := this.subRouters[path]; ro != nil {
 		return ro.HandleFunc("", func(writer http.ResponseWriter, request *http.Request) {
