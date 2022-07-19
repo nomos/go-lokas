@@ -8,14 +8,14 @@ import (
 )
 
 type timeHandler struct {
-	key       string
+	key       uint64
 	eventChan chan TypeEventChan
 
 	wheel  *timeWheel
 	noders sync.Map
 }
 
-func (t *timeHandler) After(delay time.Duration, cb func(...interface{})) TimeNoder {
+func (t *timeHandler) After(delay time.Duration, cb func()) TimeNoder {
 
 	// tn := t.wheel.After(delay, cb)
 
@@ -38,7 +38,7 @@ func (t *timeHandler) After(delay time.Duration, cb func(...interface{})) TimeNo
 	return tn
 }
 
-func (t *timeHandler) Schedule(interval time.Duration, cb func(...interface{})) TimeNoder {
+func (t *timeHandler) Schedule(interval time.Duration, cb func()) TimeNoder {
 	// tn := t.wheel.Schedule(interval, cb)
 
 	jiffies := atomic.LoadUint64(&t.wheel.jiffies)
@@ -71,20 +71,24 @@ func (t *timeHandler) EventChan() <-chan TypeEventChan {
 func (t *timeHandler) DelSelf() {
 
 	// delete time event
-	t.noders.Range(func(key, value any) bool {
-		node := key.(*timeNode)
-		node.Stop()
-		return true
-	})
+	t.Stop()
 
 	// close channel
-	// close(t.eventChan)
-	// t.eventChan = nil
+	close(t.eventChan)
+	t.eventChan = nil
 
 	// delete wheel handler map
 	t.wheel.handlers.Delete(t.key)
 	t.wheel = nil
 
+}
+
+func (t *timeHandler) Stop() {
+	t.noders.Range(func(key, value any) bool {
+		node := key.(*timeNode)
+		node.Stop()
+		return true
+	})
 }
 
 func (t *timeHandler) PrintDebug() {

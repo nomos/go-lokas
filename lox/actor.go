@@ -2,22 +2,24 @@ package lox
 
 import (
 	"context"
+	"sync"
+	"time"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/ecs"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/protocol"
+	"github.com/nomos/go-lokas/timer"
 	"github.com/nomos/go-lokas/util"
-	"go.etcd.io/etcd/client/v3"
-	"sync"
-	"time"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 const (
-	TimeOut            = time.Second * 15
-	UpdateTime = time.Second*15
-	LeaseDuration int64 = 23
+	TimeOut                  = time.Second * 15
+	UpdateTime               = time.Second * 15
+	LeaseDuration      int64 = 23
 	LeaseRenewDuration int64 = 15
 )
 
@@ -25,13 +27,13 @@ const (
 
 var _ lokas.IActor = (*Actor)(nil)
 
-
 func NewActor() *Actor {
 	ret := &Actor{
 		IEntity:     ecs.CreateEntity(),
 		ReqContexts: make(map[uint32]lokas.IReqContext),
 		Timer:       time.NewTicker(UpdateTime),
 		Timeout:     TimeOut,
+		TimeHandler: timer.NewHandler(),
 	}
 	ret.SetType("Actor")
 	return ret
@@ -39,23 +41,24 @@ func NewActor() *Actor {
 
 type Actor struct {
 	lokas.IEntity
-	typeString string
-	process lokas.IProcess
-	idGen       uint32
-	leaseId  clientv3.LeaseID
-	MsgChan chan *protocol.RouteMessage
-	ReplyChan chan *protocol.RouteMessage
-	ReqContexts map[uint32]lokas.IReqContext
-	Timeout  time.Duration
-	CtxMutex sync.Mutex
-	Timer    *time.Ticker
-	DoneChan chan struct{}
+	typeString   string
+	process      lokas.IProcess
+	idGen        uint32
+	leaseId      clientv3.LeaseID
+	MsgChan      chan *protocol.RouteMessage
+	ReplyChan    chan *protocol.RouteMessage
+	ReqContexts  map[uint32]lokas.IReqContext
+	Timeout      time.Duration
+	CtxMutex     sync.Mutex
+	Timer        *time.Ticker
+	DoneChan     chan struct{}
 	OnUpdateFunc func()
-	MsgHandler  func(actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error)
+	MsgHandler   func(actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error)
+	TimeHandler  timer.TimeHandler
 }
 
 func (this *Actor) Send(id util.ProcessId, msg *protocol.RouteMessage) error {
-	return this.process.Send(id,msg)
+	return this.process.Send(id, msg)
 }
 
 func (this *Actor) Load(conf lokas.IConfig) error {
@@ -83,54 +86,54 @@ func (this *Actor) OnStop() error {
 	return nil
 }
 
-func (this *Actor) Type()string{
+func (this *Actor) Type() string {
 	return this.typeString
 }
 
-func (this *Actor) SetType(s string){
+func (this *Actor) SetType(s string) {
 	this.typeString = s
 }
 
 //return leaseId,(bool)is registered,error
-func (this *Actor) GetLeaseId() (clientv3.LeaseID,bool, error) {
+func (this *Actor) GetLeaseId() (clientv3.LeaseID, bool, error) {
 	c := this.process.GetEtcd()
-	if this.leaseId!= 0 {
-		resToLive,err:= c.Lease.TimeToLive(context.Background(),this.leaseId)
+	if this.leaseId != 0 {
+		resToLive, err := c.Lease.TimeToLive(context.Background(), this.leaseId)
 		if err != nil {
 			log.Error(err.Error())
-			return 0,false,err
+			return 0, false, err
 		}
 		//if lease id is expired,create a new lease id
-		if resToLive.TTL<=0 {
+		if resToLive.TTL <= 0 {
 			res, err := c.Lease.Grant(context.Background(), LeaseDuration)
 			if err != nil {
 				log.Error(err.Error())
-				return 0,false, err
+				return 0, false, err
 			}
 			this.leaseId = res.ID
-			return this.leaseId,false, nil
+			return this.leaseId, false, nil
 		}
-		if resToLive.TTL<LeaseRenewDuration {
-			_,err := c.Lease.KeepAliveOnce(context.Background(),this.leaseId)
+		if resToLive.TTL < LeaseRenewDuration {
+			_, err := c.Lease.KeepAliveOnce(context.Background(), this.leaseId)
 			if err != nil {
 				log.Error(err.Error())
-				return 0,false,err
+				return 0, false, err
 			}
 		}
-		return this.leaseId,true,nil
+		return this.leaseId, true, nil
 	}
 
 	res, err := c.Lease.Grant(context.Background(), LeaseDuration)
 	if err != nil {
 		log.Error(err.Error())
-		return 0,false, err
+		return 0, false, err
 	}
 	this.leaseId = res.ID
-	return this.leaseId,false, nil
+	return this.leaseId, false, nil
 }
 
 func (this *Actor) Update(dt time.Duration, now time.Time) {
-	if this.OnUpdateFunc!=nil {
+	if this.OnUpdateFunc != nil {
 		this.OnUpdateFunc()
 	}
 }
@@ -148,14 +151,18 @@ func (this *Actor) StartMessagePump() {
 	this.MsgChan = make(chan *protocol.RouteMessage, 100)
 	this.ReplyChan = make(chan *protocol.RouteMessage, 100)
 	this.DoneChan = make(chan struct{})
+
 	go func() {
-		MSG_LOOP:
+	MSG_LOOP:
 		for {
 			select {
 			case <-this.Timer.C:
-				this.Update(0,time.Now())
+				this.Update(0, time.Now())
 			case rMsg := <-this.MsgChan:
 				this.OnMessage(rMsg)
+			case msg := <-this.TimeHandler.EventChan():
+				out := msg.(*timer.TimeEventMsg)
+				out.Callback()
 			case <-this.DoneChan:
 				break MSG_LOOP
 			}
@@ -164,6 +171,9 @@ func (this *Actor) StartMessagePump() {
 		this.MsgChan = nil
 		close(this.DoneChan)
 		this.DoneChan = nil
+
+		this.TimeHandler.DelSelf()
+		this.TimeHandler = nil
 	}()
 	go func() {
 	REP_LOOP:
@@ -209,8 +219,8 @@ func (this *Actor) removeContext(transId uint32) {
 	delete(this.ReqContexts, transId)
 }
 
-func (this *Actor) PId()util.ProcessId{
-	if this.process==nil {
+func (this *Actor) PId() util.ProcessId {
+	if this.process == nil {
 		return 0
 	}
 	return this.process.PId()
@@ -238,7 +248,7 @@ func (this *Actor) HookReceive(msg *protocol.RouteMessage) *protocol.RouteMessag
 }
 
 func (this *Actor) HandleMsg(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
-	id,err:=msg.GetId()
+	id, err := msg.GetId()
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -246,13 +256,13 @@ func (this *Actor) HandleMsg(actorId util.ID, transId uint32, msg protocol.ISeri
 	if id == protocol.TAG_Error {
 		log.Warn("Actor:handleMsg:errmsg",
 			flog.ActorInfo(this).
-			Concat(flog.ErrorInfo(msg.(*protocol.ErrMsg))).
-			Concat(flog.MsgInfo(msg)).
-			Append(flog.FromActorId(actorId)).
-			Append(flog.TransId(transId))...
+				Concat(flog.ErrorInfo(msg.(*protocol.ErrMsg))).
+				Concat(flog.MsgInfo(msg)).
+				Append(flog.FromActorId(actorId)).
+				Append(flog.TransId(transId))...,
 		)
 	} else {
-		log.Info("Actor:handleMsg",flog.ActorReceiveMsgInfo(this,msg,transId,actorId)...)
+		log.Info("Actor:handleMsg", flog.ActorReceiveMsgInfo(this, msg, transId, actorId)...)
 	}
 	if this.MsgHandler != nil {
 		resp, err := this.MsgHandler(actorId, transId, msg)
@@ -262,19 +272,19 @@ func (this *Actor) HandleMsg(actorId util.ID, transId uint32, msg protocol.ISeri
 				return protocol.ERR_ACTOR_NOT_FOUND
 			}
 			if uerr, ok := err.(protocol.IError); ok {
-				if transId!=0 {
+				if transId != 0 {
 					this.SendReply(actorId, transId, protocol.NewErrorMsg(int32(uerr.ErrCode()), uerr.Error()))
 				}
 			} else {
-				if transId!=0 {
+				if transId != 0 {
 					this.SendReply(actorId, transId, protocol.ERR_INTERNAL_ERROR.NewErrMsg())
 				}
 			}
 			return err
 		}
 		if resp != nil {
-			if transId!=0 {
-				err:=this.SendReply(actorId, transId, resp)
+			if transId != 0 {
+				err := this.SendReply(actorId, transId, resp)
 				if err != nil {
 					log.Error(err.Error())
 					return err
@@ -290,36 +300,36 @@ func (this *Actor) OnMessage(msg *protocol.RouteMessage) {
 		this.HookReceive(msg)
 		return
 	}
-	if msg != nil&&msg.Req {
-		err:=this.HandleMsg(msg.FromActor, msg.TransId, msg.Body)
+	if msg != nil && msg.Req {
+		err := this.HandleMsg(msg.FromActor, msg.TransId, msg.Body)
 		if err != nil {
 			log.Error("Actor:OnMessage:Error",
-				flog.ActorReceiveMsgInfo(this,msg.Body,msg.TransId,msg.FromActor).
-				Append(flog.Error(err))...
+				flog.ActorReceiveMsgInfo(this, msg.Body, msg.TransId, msg.FromActor).
+					Append(flog.Error(err))...,
 			)
 		}
 	}
 }
 
 func (this *Actor) SendReply(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
-	_,err:=msg.GetId()
+	_, err := msg.GetId()
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	log.Info("Actor:SendReply",flog.ActorSendMsgInfo(this,msg,transId,actorId)...)
+	log.Info("Actor:SendReply", flog.ActorSendMsgInfo(this, msg, transId, actorId)...)
 	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, false)
 	this.process.RouteMsg(routeMsg)
 	return nil
 }
 
 func (this *Actor) SendMessage(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
-	_,err:=msg.GetId()
+	_, err := msg.GetId()
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	log.Info("Actor:SendMessage",flog.ActorSendMsgInfo(this,msg,transId,actorId)...)
+	log.Info("Actor:SendMessage", flog.ActorSendMsgInfo(this, msg, transId, actorId)...)
 	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, true)
 	this.process.RouteMsg(routeMsg)
 	return nil
@@ -329,16 +339,16 @@ func (this *Actor) Call(actorId util.ID, req protocol.ISerializable) (protocol.I
 	ctx := network.NewDefaultContextWithTimeout(context.TODO(), this.genId(), this.Timeout)
 	transId := ctx.GetTransId()
 	this.addContext(transId, ctx)
-	err:=this.SendMessage(actorId, transId, req)
+	err := this.SendMessage(actorId, transId, req)
 	if err != nil {
 		log.Error(err.Error())
-		return nil,err
+		return nil, err
 	}
 	select {
 	case <-ctx.Done():
 		switch ctx.Err() {
 		case context.DeadlineExceeded:
-			log.Warn("DeadlineExceeded",flog.ActorSendMsgInfo(this,req,transId,actorId)...)
+			log.Warn("DeadlineExceeded", flog.ActorSendMsgInfo(this, req, transId, actorId)...)
 			this.removeContext(transId)
 			return nil, protocol.ERR_RPC_TIMEOUT
 		default:

@@ -14,8 +14,8 @@ type InputValue struct {
 
 func TestNewTimer(t *testing.T) {
 
-	handler1 := GetHandler("h1")
-	handler2 := GetHandler("h2")
+	handler1 := NewHandler()
+	handler2 := NewHandler()
 
 	log.Printf("handler init completed")
 
@@ -25,7 +25,7 @@ func TestNewTimer(t *testing.T) {
 			case data := <-handler1.EventChan():
 
 				msg := data.(*TimeEventMsg)
-				msg.cb()
+				msg.Callback()
 			}
 		}
 	}()
@@ -35,23 +35,23 @@ func TestNewTimer(t *testing.T) {
 			select {
 			case data := <-handler2.EventChan():
 				msg := data.(*TimeEventMsg)
-				msg.cb()
+				msg.Callback()
 			}
 		}
 	}()
 
 	handler1.PrintDebug()
-	// handler2.PrintDebug()
+	handler2.PrintDebug()
 
-	handler1.After(15*time.Second, func(...interface{}) {
+	handler1.After(15*time.Second, func() {
 		log.Println("handler1 event1  cb")
 	})
 
-	handler1.Schedule(1*time.Second, func(params ...interface{}) {
+	handler1.Schedule(1*time.Second, func() {
 		log.Println("handler1 event2 cb")
 	})
 
-	handler2.Schedule(2*time.Second, func(i ...interface{}) {
+	handler2.Schedule(2*time.Second, func() {
 		log.Println("handler2 event1 cb")
 	})
 
@@ -59,9 +59,9 @@ func TestNewTimer(t *testing.T) {
 	time.Sleep(5 * time.Second)
 	handler1.PrintDebug()
 	// handler2.PrintDebug()
-	handler1.DelSelf()
+	handler1.Stop()
 	// Stop()
-	log.Println("handler1 del")
+	log.Println("handler1 stop")
 	handler1.PrintDebug()
 
 	time.Sleep(5 * time.Second)

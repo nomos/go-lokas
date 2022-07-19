@@ -46,6 +46,8 @@ type timeWheel struct {
 	// timeEvent chan interface{}
 
 	handlers sync.Map
+
+	handlerSeq uint64
 }
 
 func newTimeWheel() *timeWheel {
@@ -53,8 +55,9 @@ func newTimeWheel() *timeWheel {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	t := &timeWheel{
-		ctx:    ctx,
-		cancel: cancel,
+		ctx:        ctx,
+		cancel:     cancel,
+		handlerSeq: 0,
 	}
 
 	t.init()
@@ -167,52 +170,52 @@ func getExpire(expire time.Duration, jiffies uint64) time.Duration {
 // 	return t.add(node, jiffies)
 // }
 
-func (t *timeWheel) After(delay time.Duration, cb func(...interface{})) TimeNoder {
-	jiffies := atomic.LoadUint64(&t.jiffies)
+// func (t *timeWheel) After(delay time.Duration, cb func()) TimeNoder {
+// 	jiffies := atomic.LoadUint64(&t.jiffies)
 
-	expire := delay/(time.Millisecond*10) + time.Duration(jiffies)
+// 	expire := delay/(time.Millisecond*10) + time.Duration(jiffies)
 
-	node := &timeNode{
-		expire: uint64(expire),
+// 	node := &timeNode{
+// 		expire: uint64(expire),
 
-		callback: cb,
-	}
+// 		callback: cb,
+// 	}
 
-	return t.add(node, jiffies)
-}
+// 	return t.add(node, jiffies)
+// }
 
-func (t *timeWheel) Schedule(interval time.Duration, cb func(...interface{})) TimeNoder {
-	jiffies := atomic.LoadUint64(&t.jiffies)
+// func (t *timeWheel) Schedule(interval time.Duration, cb func()) TimeNoder {
+// 	jiffies := atomic.LoadUint64(&t.jiffies)
 
-	expire := getExpire(interval, jiffies)
+// 	expire := getExpire(interval, jiffies)
 
-	node := &timeNode{
-		userExpire: interval,
-		expire:     uint64(expire),
-		callback:   cb,
-		isSchedule: true,
+// 	node := &timeNode{
+// 		userExpire: interval,
+// 		expire:     uint64(expire),
+// 		callback:   cb,
+// 		isSchedule: true,
 
-		delay:    uint64(0),
-		interval: uint64(interval),
-		loop:     0,
-	}
+// 		delay:    uint64(0),
+// 		interval: uint64(interval),
+// 		loop:     0,
+// 	}
 
-	return t.add(node, jiffies)
-}
+// 	return t.add(node, jiffies)
+// }
 
 func (t *timeWheel) Stop() {
 	t.cancel()
 }
 
-func (t *timeWheel) GetHandler(key string) TimeHandler {
+func (t *timeWheel) NewHandler() TimeHandler {
 
 	th := &timeHandler{
-		key:       key,
+		key:       atomic.AddUint64(&t.handlerSeq, 1),
 		eventChan: make(chan TypeEventChan),
 		wheel:     t,
 	}
 
-	value, _ := t.handlers.LoadOrStore(key, th)
+	value, _ := t.handlers.LoadOrStore(th.key, th)
 
 	return value.(TimeHandler)
 }
@@ -291,7 +294,7 @@ func (t *timeWheel) moveAndExec() {
 		}
 
 		msg := &TimeEventMsg{
-			cb: val.callback,
+			Callback: val.callback,
 		}
 		val.handler.eventChan <- msg
 

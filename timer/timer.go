@@ -31,7 +31,7 @@ type Timer interface {
 
 	// TimeEventChan() <-chan interface{}
 
-	GetHandler(key string) TimeHandler
+	NewHandler() TimeHandler
 }
 
 // 停止单个定时器
@@ -42,19 +42,21 @@ type TimeNoder interface {
 type TimeHandler interface {
 	EventChan() <-chan TypeEventChan
 
-	After(delay time.Duration, cb func(...interface{})) TimeNoder
+	After(delay time.Duration, cb func()) TimeNoder
 
-	Schedule(interval time.Duration, cb func(...interface{})) TimeNoder
+	Schedule(interval time.Duration, cb func()) TimeNoder
 
+	// 停止所有定时器
+	Stop()
+
+	// 删除handler
 	DelSelf()
 
 	PrintDebug()
 }
 
 type TimeEventMsg struct {
-	cb func(...interface{})
-	a  int
-	b  string
+	Callback func()
 }
 
 var once sync.Once
@@ -75,8 +77,8 @@ func Instance() Timer {
 	return ins
 }
 
-func GetHandler(key string) TimeHandler {
-	return Instance().GetHandler(key)
+func NewHandler() TimeHandler {
+	return Instance().NewHandler()
 }
 
 func Stop() {
