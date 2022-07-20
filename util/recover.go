@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"errors"
 	"github.com/nomos/go-lokas/log"
 	"runtime"
@@ -19,6 +20,8 @@ func Recover(r interface{}, all bool) error {
 	}
 	buf := make([]byte, 1<<14)
 	runtime.Stack(buf, all)
+	buf = bytes.ReplaceAll(buf, []byte{0}, []byte{32})
+	buf = bytes.TrimSpace(buf)
 	log.Error(string(buf))
 	return err
 }
