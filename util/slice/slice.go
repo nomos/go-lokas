@@ -159,7 +159,7 @@ func RemoveWithCondition[T any](slice []T, f func(index int, elem T) bool) ([]T,
 	remove := append(slice[:0])
 	for i, v := range slice {
 		if !f(i, v) {
-			ret = append(slice, v)
+			ret = append(ret, v)
 		} else {
 			remove = append(remove, v)
 		}
