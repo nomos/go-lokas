@@ -138,6 +138,10 @@ func (this *Actor) Update(dt time.Duration, now time.Time) {
 	}
 }
 
+func (this *Actor) GetTimeHandler() timer.TimeHandler {
+	return this.TimeHandler
+}
+
 func (this *Actor) GetProcess() lokas.IProcess {
 	return this.process
 }

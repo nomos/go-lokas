@@ -3,20 +3,22 @@ package lokas
 import (
 	"context"
 	"fmt"
+	"net"
+	"reflect"
+	"time"
+
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network/dockerclient"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/network/ossclient"
 	"github.com/nomos/go-lokas/network/redisclient"
 	"github.com/nomos/go-lokas/protocol"
+	"github.com/nomos/go-lokas/timer"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/events"
 	"github.com/nomos/go-lokas/util/promise"
 	"github.com/nomos/qmgo"
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"net"
-	"reflect"
-	"time"
 )
 
 const (
@@ -118,6 +120,7 @@ type IActor interface {
 	Call(actorId util.ID, req protocol.ISerializable) (protocol.ISerializable, error)
 	GetLeaseId() (clientv3.LeaseID, bool, error)
 	Update(dt time.Duration, now time.Time)
+	GetTimeHandler() timer.TimeHandler
 }
 
 // IEntity entity of ecs system,container of IComponent
