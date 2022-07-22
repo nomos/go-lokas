@@ -20,8 +20,9 @@ func Recover(r interface{}, all bool) error {
 	}
 	buf := make([]byte, 1<<14)
 	runtime.Stack(buf, all)
-	buf = bytes.ReplaceAll(buf, []byte{0}, []byte{32})
-	buf = bytes.TrimSpace(buf)
+	buf = bytes.TrimRightFunc(buf, func(r rune) bool {
+		return r == 0
+	})
 	log.Error(string(buf))
 	return err
 }
