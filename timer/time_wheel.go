@@ -294,7 +294,8 @@ func (t *timeWheel) moveAndExec() {
 		}
 
 		msg := &TimeEventMsg{
-			Callback: val.callback,
+			Callback:  val.callback,
+			TimeNoder: val,
 		}
 		val.handler.eventChan <- msg
 

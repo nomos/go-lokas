@@ -15,7 +15,7 @@ type timeHandler struct {
 	noders sync.Map
 }
 
-func (t *timeHandler) After(delay time.Duration, cb func()) TimeNoder {
+func (t *timeHandler) After(delay time.Duration, cb func(TimeNoder)) TimeNoder {
 
 	// tn := t.wheel.After(delay, cb)
 
@@ -28,7 +28,10 @@ func (t *timeHandler) After(delay time.Duration, cb func()) TimeNoder {
 
 		callback: cb,
 
-		handler: t,
+		delay:    uint64(delay),
+		interval: uint64(0),
+		loop:     0,
+		handler:  t,
 	}
 
 	tn := t.wheel.add(node, jiffies)
@@ -38,7 +41,7 @@ func (t *timeHandler) After(delay time.Duration, cb func()) TimeNoder {
 	return tn
 }
 
-func (t *timeHandler) Schedule(interval time.Duration, cb func()) TimeNoder {
+func (t *timeHandler) Schedule(interval time.Duration, cb func(TimeNoder)) TimeNoder {
 	// tn := t.wheel.Schedule(interval, cb)
 
 	jiffies := atomic.LoadUint64(&t.wheel.jiffies)

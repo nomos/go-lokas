@@ -166,7 +166,7 @@ func (this *Actor) StartMessagePump() {
 				this.OnMessage(rMsg)
 			case msg := <-this.TimeHandler.EventChan():
 				out := msg.(*timer.TimeEventMsg)
-				out.Callback()
+				out.Callback(out.TimeNoder)
 			case <-this.DoneChan:
 				break MSG_LOOP
 			}
