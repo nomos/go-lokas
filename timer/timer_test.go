@@ -59,7 +59,7 @@ func TestNewTimer(t *testing.T) {
 	time.Sleep(5 * time.Second)
 	handler1.PrintDebug()
 	// handler2.PrintDebug()
-	handler1.Stop()
+	handler1.StopTimer()
 	// Stop()
 	log.Println("handler1 stop")
 	handler1.PrintDebug()

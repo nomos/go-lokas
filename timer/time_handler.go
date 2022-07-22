@@ -68,10 +68,10 @@ func (t *timeHandler) EventChan() <-chan TypeEventChan {
 	return t.eventChan
 }
 
-func (t *timeHandler) DelSelf() {
+func (t *timeHandler) DelTimer() {
 
 	// delete time event
-	t.Stop()
+	t.StopTimer()
 
 	// close channel
 	close(t.eventChan)
@@ -83,7 +83,7 @@ func (t *timeHandler) DelSelf() {
 
 }
 
-func (t *timeHandler) Stop() {
+func (t *timeHandler) StopTimer() {
 	t.noders.Range(func(key, value any) bool {
 		node := key.(*timeNode)
 		node.Stop()

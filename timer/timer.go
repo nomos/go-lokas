@@ -47,10 +47,10 @@ type TimeHandler interface {
 	Schedule(interval time.Duration, cb func()) TimeNoder
 
 	// 停止所有定时器
-	Stop()
+	StopTimer()
 
 	// 删除handler
-	DelSelf()
+	DelTimer()
 
 	PrintDebug()
 }

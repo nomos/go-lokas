@@ -113,6 +113,7 @@ type IActor interface {
 	IEntity
 	IProxy
 	IModule
+	timer.TimeHandler
 	PId() util.ProcessId
 	ReceiveMessage(msg *protocol.RouteMessage)
 	OnMessage(msg *protocol.RouteMessage)
@@ -120,7 +121,6 @@ type IActor interface {
 	Call(actorId util.ID, req protocol.ISerializable) (protocol.ISerializable, error)
 	GetLeaseId() (clientv3.LeaseID, bool, error)
 	Update(dt time.Duration, now time.Time)
-	GetTimeHandler() timer.TimeHandler
 }
 
 // IEntity entity of ecs system,container of IComponent

@@ -41,6 +41,7 @@ func NewActor() *Actor {
 
 type Actor struct {
 	lokas.IEntity
+	timer.TimeHandler
 	typeString   string
 	process      lokas.IProcess
 	idGen        uint32
@@ -54,7 +55,6 @@ type Actor struct {
 	DoneChan     chan struct{}
 	OnUpdateFunc func()
 	MsgHandler   func(actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error)
-	TimeHandler  timer.TimeHandler
 }
 
 func (this *Actor) Send(id util.ProcessId, msg *protocol.RouteMessage) error {
@@ -138,9 +138,9 @@ func (this *Actor) Update(dt time.Duration, now time.Time) {
 	}
 }
 
-func (this *Actor) GetTimeHandler() timer.TimeHandler {
-	return this.TimeHandler
-}
+// func (this *Actor) GetTimeHandler() timer.TimeHandler {
+// 	return this.TimeHandler
+// }
 
 func (this *Actor) GetProcess() lokas.IProcess {
 	return this.process
@@ -176,7 +176,7 @@ func (this *Actor) StartMessagePump() {
 		close(this.DoneChan)
 		this.DoneChan = nil
 
-		this.TimeHandler.DelSelf()
+		this.TimeHandler.DelTimer()
 		this.TimeHandler = nil
 	}()
 	go func() {
