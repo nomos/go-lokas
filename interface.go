@@ -42,7 +42,23 @@ const (
 	//stateless  do not have local state
 	SERVICE_STATELESS
 	SERVICE_SERVER
+	SERVICE_LOGIN ServiceType = 101
+	SERVICE_GATE  ServiceType = 102
+	SERVICE_GAME  ServiceType = 103
 )
+
+func (s *ServiceType) toString() string {
+	switch {
+	case *s == SERVICE_LOGIN:
+		return "login"
+	case *s == SERVICE_GATE:
+		return "gate"
+	case *s == SERVICE_GAME:
+		return "game"
+	default:
+		return "unknow"
+	}
+}
 
 type ActorState int //Actor health state
 

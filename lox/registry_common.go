@@ -1,17 +1,18 @@
 package lox
 
 import (
+	"sync"
+	"time"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	"sync"
-	"time"
 )
 
 func NewCommonRegistry() *CommonRegistry {
 	ret := &CommonRegistry{
 		Processes:      map[util.ProcessId]*ProcessRegistry{},
-		Service:        map[protocol.BINARY_TAG]*ServiceRegistry{},
+		Service:        map[lokas.ServiceType]map[uint16]*ServiceRegistry{},
 		Actors:         map[util.ID]*ActorRegistry{},
 		ActorsByType:   map[string][]util.ID{},
 		ActorsByServer: map[int32][]util.ID{},
@@ -22,7 +23,7 @@ func NewCommonRegistry() *CommonRegistry {
 
 type CommonRegistry struct {
 	Processes      map[util.ProcessId]*ProcessRegistry
-	Service        map[protocol.BINARY_TAG]*ServiceRegistry
+	Service        map[lokas.ServiceType]map[uint16]*ServiceRegistry
 	Actors         map[util.ID]*ActorRegistry
 	ActorsByType   map[string][]util.ID
 	ActorsByServer map[int32][]util.ID
@@ -121,23 +122,47 @@ func (this *CommonRegistry) RemoveProcess(id util.ProcessId) {
 func (this *CommonRegistry) AddService(service *ServiceRegistry) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
-	this.Service[service.Id] = service
+	this.Service[service.ServiceType][service.ServiceId] = service
 }
 
-func (this *CommonRegistry) RemoveService(id protocol.BINARY_TAG) {
+// func (this *CommonRegistry) RemoveService(id protocol.BINARY_TAG) {
+// 	this.mu.Lock()
+// 	defer this.mu.Unlock()
+// 	delete(this.Service, id)
+// }
+
+func (this *CommonRegistry) RemoveService(serviceType lokas.ServiceType, serviceId uint16) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
-	delete(this.Service, id)
+	delete(this.Service[serviceType], serviceId)
 }
 
+// service
 type ServiceRegistry struct {
-	Id          protocol.BINARY_TAG
+	Id          uint32
 	ServiceType lokas.ServiceType
-	GameId      string
-	Version     string
-	ServerId    uint32
-	Weights     map[util.ID]int
-	Ts          time.Time
+	ServiceId   uint16
+	// GameId      string
+	Host     string
+	Port     uint32
+	Version  string
+	Cnt      uint32
+	CreateAt time.Time
+	// Weights map[util.ID]int
+	// Ts time.Time
+}
+
+func NewServiceRegistry(serviceType lokas.ServiceType, serviceId uint16) *ServiceRegistry {
+	return &ServiceRegistry{
+		Id:          uint32(serviceId) * 100,
+		ServiceType: serviceType,
+		ServiceId:   serviceId,
+		Host:        "",
+		Port:        0,
+		Version:     "",
+		Cnt:         0,
+		CreateAt:    time.Time{},
+	}
 }
 
 type ActorRegistry struct {

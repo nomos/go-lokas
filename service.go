@@ -7,8 +7,10 @@ import (
 
 //Service the registry for service details
 type Service struct {
-	Id       protocol.BINARY_TAG //service Id
+	Id        protocol.BINARY_TAG //service Id
 	ProcessId util.ProcessId      //server Id
-	ActorId  util.ID             //actor Id
-	Type     ServiceType         //rpc pub/sub stateless
+	ActorId   util.ID             //actor Id
+	Type      ServiceType         //rpc pub/sub stateless
+	Host      string
+	Port      int
 }

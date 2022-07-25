@@ -3,17 +3,18 @@ package lox
 import (
 	"context"
 	"encoding/json"
+	"regexp"
+	"strconv"
+	"time"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"go.etcd.io/etcd/api/v3/mvccpb"
-	"go.etcd.io/etcd/client/v3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.uber.org/zap"
-	"regexp"
-	"strconv"
-	"time"
 )
 
 var _ lokas.IModule = &Registry{}
@@ -295,6 +296,20 @@ func (this *Registry) startUpdateRemoteProcessInfo() error {
 		}
 		close(this.processWatchCloseChan)
 	}()
+	return nil
+}
+
+func (this *Registry) startUpdateRemoteService() error {
+	log.Info("start", flog.FuncInfo(this, "startUpdateRemoteService")...)
+	etcdClient := this.GetProcess().GetEtcd()
+	resp, err := etcdClient.Get(context.TODO(), "/services/", clientv3.WithPrefix())
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+	for _, v := range resp.Kvs {
+
+	}
 	return nil
 }
 
