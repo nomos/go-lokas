@@ -12,7 +12,7 @@ import (
 func NewCommonRegistry() *CommonRegistry {
 	ret := &CommonRegistry{
 		Processes:      map[util.ProcessId]*ProcessRegistry{},
-		Service:        map[string]map[uint16]*ServiceRegistry{},
+		Services:       map[string]map[uint16]*ServiceRegistry{},
 		Actors:         map[util.ID]*ActorRegistry{},
 		ActorsByType:   map[string][]util.ID{},
 		ActorsByServer: map[int32][]util.ID{},
@@ -23,7 +23,7 @@ func NewCommonRegistry() *CommonRegistry {
 
 type CommonRegistry struct {
 	Processes      map[util.ProcessId]*ProcessRegistry
-	Service        map[string]map[uint16]*ServiceRegistry
+	Services       map[string]map[uint16]*ServiceRegistry
 	Actors         map[util.ID]*ActorRegistry
 	ActorsByType   map[string][]util.ID
 	ActorsByServer map[int32][]util.ID
@@ -122,13 +122,14 @@ func (this *CommonRegistry) RemoveProcess(id util.ProcessId) {
 func (this *CommonRegistry) AddService(service *ServiceRegistry) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
-	this.Service[service.ServiceType][service.ServiceId] = service
+
+	this.Services[service.ServiceType][service.ServiceId] = service
 }
 
 func (this *CommonRegistry) RemoveService(serviceType string, serviceId uint16) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
-	delete(this.Service[serviceType], serviceId)
+	delete(this.Services[serviceType], serviceId)
 }
 
 // service

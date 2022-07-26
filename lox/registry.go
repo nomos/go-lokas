@@ -170,10 +170,10 @@ func (this *Registry) Type() string {
 func (this *Registry) Load(conf lokas.IConfig) error {
 	this.startUpdateRemoteActorInfo()
 	this.startUpdateRemoteProcessInfo()
-	err := this.startUpdateRemoteService()
-	if err != nil {
-		return err
-	}
+	// err := this.startUpdateRemoteService()
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
