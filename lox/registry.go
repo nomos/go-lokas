@@ -26,6 +26,7 @@ type Registry struct {
 	GlobalRegistry        *CommonRegistry //local actor&service registry
 	actorWatchCloseChan   chan struct{}
 	processWatchCloseChan chan struct{}
+	serviceWatchCloseChan chan struct{}
 
 	timer   *time.Ticker
 	done    chan struct{}
@@ -169,6 +170,10 @@ func (this *Registry) Type() string {
 func (this *Registry) Load(conf lokas.IConfig) error {
 	this.startUpdateRemoteActorInfo()
 	this.startUpdateRemoteProcessInfo()
+	err := this.startUpdateRemoteService()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -299,17 +304,65 @@ func (this *Registry) startUpdateRemoteProcessInfo() error {
 	return nil
 }
 
-func (this *Registry) startUpdateRemoteService() error {
-	log.Info("start", flog.FuncInfo(this, "startUpdateRemoteService")...)
-	etcdClient := this.GetProcess().GetEtcd()
-	resp, err := etcdClient.Get(context.TODO(), "/services/", clientv3.WithPrefix())
+func (this *Registry) addServiceFromEtcd(kv *mvccpb.KeyValue) error {
+
+	serviceInfo := &ServiceRegistry{}
+	err := json.Unmarshal(kv.Value, serviceInfo)
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	for _, v := range resp.Kvs {
+	this.GlobalRegistry.AddService(serviceInfo)
+	return nil
+}
 
+func (this *Registry) delServiceFromEtcd(kv *mvccpb.KeyValue) error {
+	serviceInfo := &ServiceRegistry{}
+	err := json.Unmarshal(kv.Value, serviceInfo)
+	if err != nil {
+		log.Error(err.Error())
+		return err
 	}
+	this.GlobalRegistry.RemoveService(serviceInfo.ServiceType, serviceInfo.ServiceId)
+	return nil
+}
+
+func (this *Registry) startUpdateRemoteService() error {
+	log.Info("start", flog.FuncInfo(this, "startUpdateRemoteService")...)
+	etcdClient := this.GetProcess().GetEtcd()
+	resp, err := etcdClient.Get(context.TODO(), "/service/", clientv3.WithPrefix())
+	if err != nil {
+		log.Error(err.Error())
+		return err
+	}
+
+	watchChan := etcdClient.Watch(context.TODO(), "/service/", clientv3.WithPrefix(), clientv3.WithRev(resp.Header.Revision))
+
+	for _, v := range resp.Kvs {
+		this.addServiceFromEtcd(v)
+	}
+
+	this.serviceWatchCloseChan = make(chan struct{})
+	go func() {
+	LOOP:
+		for {
+			select {
+			case resp := <-watchChan:
+				for _, v := range resp.Events {
+					switch v.Type {
+					case mvccpb.PUT:
+						this.addServiceFromEtcd(v.Kv)
+					case mvccpb.DELETE:
+						this.delServiceFromEtcd(v.Kv)
+					}
+				}
+			case <-this.serviceWatchCloseChan:
+				break LOOP
+			}
+		}
+		close(this.serviceWatchCloseChan)
+	}()
+
 	return nil
 }
 

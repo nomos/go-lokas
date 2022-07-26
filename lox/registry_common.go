@@ -12,7 +12,7 @@ import (
 func NewCommonRegistry() *CommonRegistry {
 	ret := &CommonRegistry{
 		Processes:      map[util.ProcessId]*ProcessRegistry{},
-		Service:        map[lokas.ServiceType]map[uint16]*ServiceRegistry{},
+		Service:        map[string]map[uint16]*ServiceRegistry{},
 		Actors:         map[util.ID]*ActorRegistry{},
 		ActorsByType:   map[string][]util.ID{},
 		ActorsByServer: map[int32][]util.ID{},
@@ -23,7 +23,7 @@ func NewCommonRegistry() *CommonRegistry {
 
 type CommonRegistry struct {
 	Processes      map[util.ProcessId]*ProcessRegistry
-	Service        map[lokas.ServiceType]map[uint16]*ServiceRegistry
+	Service        map[string]map[uint16]*ServiceRegistry
 	Actors         map[util.ID]*ActorRegistry
 	ActorsByType   map[string][]util.ID
 	ActorsByServer map[int32][]util.ID
@@ -125,13 +125,7 @@ func (this *CommonRegistry) AddService(service *ServiceRegistry) {
 	this.Service[service.ServiceType][service.ServiceId] = service
 }
 
-// func (this *CommonRegistry) RemoveService(id protocol.BINARY_TAG) {
-// 	this.mu.Lock()
-// 	defer this.mu.Unlock()
-// 	delete(this.Service, id)
-// }
-
-func (this *CommonRegistry) RemoveService(serviceType lokas.ServiceType, serviceId uint16) {
+func (this *CommonRegistry) RemoveService(serviceType string, serviceId uint16) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	delete(this.Service[serviceType], serviceId)
@@ -139,22 +133,23 @@ func (this *CommonRegistry) RemoveService(serviceType lokas.ServiceType, service
 
 // service
 type ServiceRegistry struct {
-	Id          uint32
-	ServiceType lokas.ServiceType
+	// Id          uint32
+	ServiceType string
 	ServiceId   uint16
 	// GameId      string
-	Host     string
-	Port     uint32
-	Version  string
-	Cnt      uint32
-	CreateAt time.Time
+	Host      string
+	Port      uint32
+	Version   string
+	Cnt       uint32
+	ProcessId util.ProcessId
+	CreateAt  time.Time
 	// Weights map[util.ID]int
 	// Ts time.Time
 }
 
-func NewServiceRegistry(serviceType lokas.ServiceType, serviceId uint16) *ServiceRegistry {
+func NewServiceRegistry(serviceType string, serviceId uint16) *ServiceRegistry {
 	return &ServiceRegistry{
-		Id:          uint32(serviceId) * 100,
+		// Id:          uint32(serviceId) * 100,
 		ServiceType: serviceType,
 		ServiceId:   serviceId,
 		Host:        "",
