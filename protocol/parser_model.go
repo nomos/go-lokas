@@ -1320,7 +1320,7 @@ func (this *ModelClassFields) TsDefineTags(g *Generator, tsClass *TsClassObject)
 				type2 = t2.TsTagString()
 			}
 			if g.IsEnum(s2) {
-				type1 = stringutil.SplitCamelCaseUpperSnake(s2)
+				type2 = stringutil.SplitCamelCaseUpperSnake(s2)
 			}
 			str += "," + type1 + "," + type2
 		}
@@ -1433,7 +1433,7 @@ func (this *ModelClassFields) TsPublicType(g *Generator) string {
 				type2 = t2.TsTypeString()
 			}
 			if g.IsEnum(s2) {
-				type1 = stringutil.SplitCamelCaseUpperSnake(s2)
+				type2 = stringutil.SplitCamelCaseUpperSnake(s2)
 			}
 			ret = "Map<" + type1 + "," + type2 + "> "
 
