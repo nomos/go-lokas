@@ -1320,7 +1320,7 @@ func (this *ModelClassFields) TsDefineTags(g *Generator, tsClass *TsClassObject)
 				type2 = t2.TsTagString()
 			}
 			if g.IsEnum(s2) {
-				type2 = stringutil.SplitCamelCaseUpperSnake(s2)
+				type2 = "Tag.Int"
 			}
 			str += "," + type1 + "," + type2
 		}
