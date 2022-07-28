@@ -27,6 +27,6 @@ var (
 	ERR_AUTH_FAILED            = protocol.CreateError(1201, "验证失败")
 	ERR_MSG_FORMAT             = protocol.CreateError(1202, "数据格式错误")
 	ERR_PROTOCOL_NOT_FOUND     = protocol.CreateError(1203, "协议未找到")
-	ERR_NAME_EXIST				= protocol.CreateError(1222,"名称重复")
-	ERR_MULTI_DEV_LOG = protocol.CreateError(1204, "multi device login")
+	ERR_NAME_EXIST             = protocol.CreateError(1222, "名称重复")
+	ERR_MULTI_DEV_LOG          = protocol.CreateError(1204, "multi device login")
 )

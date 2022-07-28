@@ -1,15 +1,16 @@
 package tcp
 
 import (
+	"net"
+	"runtime"
+	"strings"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/network/conn"
 	"github.com/nomos/go-lokas/network/internal/hub"
 	"github.com/nomos/go-lokas/util"
-	"net"
-	"runtime"
-	"strings"
 )
 
 type Server struct {
@@ -48,13 +49,13 @@ func (this *Server) serve() {
 		c, err := l.Accept()
 		if err != nil {
 			if nerr, ok := err.(net.Error); ok && nerr.Temporary() {
-				log.Info("tcpserver: temporary Accept() error",flog.Error(err))
+				log.Info("tcpserver: temporary Accept() error", flog.Error(err))
 				runtime.Gosched()
 				continue
 			}
 			// theres no direct way to detect this error because it is not exposed
 			if !strings.Contains(err.Error(), "use of closed network connection") {
-				log.Info("tcpserver: listener.Accept() error",flog.Error(err))
+				log.Info("tcpserver: listener.Accept() error", flog.Error(err))
 			}
 			break
 		}
