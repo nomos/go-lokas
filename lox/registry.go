@@ -3,6 +3,7 @@ package lox
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"regexp"
 	"strconv"
 	"time"
@@ -28,6 +29,8 @@ type Registry struct {
 	processWatchCloseChan chan struct{}
 	serviceWatchCloseChan chan struct{}
 
+	serviceRegisterMgr *ServiceRegisterMgr
+
 	timer   *time.Ticker
 	done    chan struct{}
 	leaseId clientv3.LeaseID
@@ -35,11 +38,16 @@ type Registry struct {
 
 func NewRegistry(process lokas.IProcess) *Registry {
 	ret := &Registry{
-		process:        process,
-		LocalRegistry:  NewCommonRegistry(),
-		GlobalRegistry: NewCommonRegistry(),
+		process:            process,
+		LocalRegistry:      NewCommonRegistry(),
+		GlobalRegistry:     NewCommonRegistry(),
+		serviceRegisterMgr: NewServiceRegisterMgr(process),
 	}
 	return ret
+}
+
+func (this *Registry) GetServerRegisterMgr() lokas.IServiceRegisterMgr {
+	return this.serviceRegisterMgr
 }
 
 func (this *Registry) GetActorIdsByTypeAndServerId(serverId int32, typ string) []util.ID {
@@ -170,10 +178,10 @@ func (this *Registry) Type() string {
 func (this *Registry) Load(conf lokas.IConfig) error {
 	this.startUpdateRemoteActorInfo()
 	this.startUpdateRemoteProcessInfo()
-	// err := this.startUpdateRemoteService()
-	// if err != nil {
-	// 	return err
-	// }
+	err := this.startUpdateRemoteService()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -313,17 +321,37 @@ func (this *Registry) addServiceFromEtcd(kv *mvccpb.KeyValue) error {
 		return err
 	}
 	this.GlobalRegistry.AddService(serviceInfo)
+	log.Infof("update service", log.PrettyStruct(serviceInfo))
 	return nil
 }
 
 func (this *Registry) delServiceFromEtcd(kv *mvccpb.KeyValue) error {
-	serviceInfo := &ServiceRegistry{}
-	err := json.Unmarshal(kv.Value, serviceInfo)
-	if err != nil {
+	// serviceInfo := &ServiceRegistry{}
+	// err := json.Unmarshal(kv.Value, serviceInfo)
+	// if err != nil {
+	// 	log.Error(err.Error())
+	// 	return err
+	// }
+
+	reg := regexp.MustCompile("/service/(?P<type>[a-zA-Z]+)/(?P<id>[0-9]+)")
+	matchs := reg.FindStringSubmatch(string(kv.Key))
+	typIdx := reg.SubexpIndex("type")
+	idIdx := reg.SubexpIndex("id")
+
+	if len(matchs) < idIdx+1 || len(matchs) < typIdx+1 || typIdx < 0 || idIdx < 0 {
+		err := errors.New("etc data invalid")
 		log.Error(err.Error())
 		return err
 	}
-	this.GlobalRegistry.RemoveService(serviceInfo.ServiceType, serviceInfo.ServiceId)
+	serviceType := matchs[typIdx]
+	serviceId, err := strconv.ParseUint(matchs[idIdx], 10, 16)
+	if err != nil {
+		log.Error(err.Error(), zap.String("etcd://service/kv.Key", string(kv.Key)))
+		return err
+	}
+
+	this.GlobalRegistry.RemoveService(serviceType, uint16(serviceId))
+	log.Info("del service", zap.String("serviceType", serviceType), zap.Uint64("serviceId", serviceId))
 	return nil
 }
 

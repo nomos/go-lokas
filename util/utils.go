@@ -2,7 +2,6 @@ package util
 
 import (
 	"bytes"
-	"github.com/nomos/go-lokas/log"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -12,6 +11,8 @@ import (
 	"strings"
 	"syscall"
 	"unsafe"
+
+	"github.com/nomos/go-lokas/log"
 )
 
 func ExecPath() (string, error) {

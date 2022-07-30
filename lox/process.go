@@ -4,6 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"strconv"
+	"sync"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
@@ -15,8 +18,6 @@ import (
 	"github.com/nomos/go-lokas/util/slice"
 	"github.com/nomos/qmgo"
 	"go.uber.org/zap"
-	"strconv"
-	"sync"
 )
 
 var _ lokas.IProcess = &Process{}
@@ -186,6 +187,10 @@ func (this *Process) UnloadMod(name string) error {
 	})
 	return nil
 }
+
+// func (this *Process) GetServerRegisterMgr() *ServiceRegisterMgr {
+// 	return this.Get
+// }
 
 func (this *Process) getModuleCreatorByType(name string) lokas.IModuleCtor {
 	for _, v := range this.modulesCreator {
