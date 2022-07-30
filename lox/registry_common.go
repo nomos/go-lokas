@@ -123,10 +123,6 @@ func (this *CommonRegistry) AddService(service *ServiceRegistry) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 
-	if _, ok := this.Services[service.ServiceType]; !ok {
-		this.Services[service.ServiceType] = make(map[uint16]*ServiceRegistry)
-	}
-
 	this.Services[service.ServiceType][service.ServiceId] = service
 }
 
@@ -151,21 +147,6 @@ type ServiceRegistry struct {
 	// Weights map[util.ID]int
 	// Ts time.Time
 }
-
-// type ServiceInfo struct {
-// 	// Id          uint32
-// 	ServiceType string
-// 	ServiceId   uint16
-// 	// GameId      string
-// 	Host      string
-// 	Port      uint32
-// 	Version   string
-// 	Cnt       uint32
-// 	ProcessId util.ProcessId
-// 	CreateAt  time.Time
-// 	// Weights map[util.ID]int
-// 	// Ts time.Time
-// }
 
 func NewServiceRegistry(serviceType string, serviceId uint16) *ServiceRegistry {
 	return &ServiceRegistry{

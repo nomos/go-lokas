@@ -1,8 +1,6 @@
 package lokas
 
 import (
-	"time"
-
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 )
@@ -15,19 +13,4 @@ type Service struct {
 	Type      ServiceType         //rpc pub/sub stateless
 	Host      string
 	Port      int
-}
-
-type ServiceInfo struct {
-	// Id          uint32
-	ServiceType string
-	ServiceId   uint16
-	// GameId      string
-	Host    string
-	Port    uint16
-	Version string
-	Cnt     uint32
-	// ProcessId util.ProcessId
-	CreateAt time.Time
-	// Weights map[util.ID]int
-	// Ts time.Time
 }

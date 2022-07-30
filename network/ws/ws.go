@@ -1,16 +1,15 @@
 package ws
 
 import (
-	"net/http"
-
 	"github.com/gorilla/websocket"
-	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/network/conn"
 	"github.com/nomos/go-lokas/network/httpserver"
 	"github.com/nomos/go-lokas/network/internal/hub"
 	"github.com/nomos/go-lokas/util"
 	"go.uber.org/zap"
+	"net/http"
 )
 
 type WsServer struct {
@@ -62,7 +61,7 @@ func (this *WsServer) Start(addr string) error {
 func (this *WsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	c, err := this.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Info("wsserver.ServeHTTP upgrade error: %s", zap.String("err", err.Error()))
+		log.Info("wsserver.ServeHTTP upgrade error: %s", zap.String("err",err.Error()))
 		return
 	}
 	conn := conn.NewWsConn(c, this.Context, this.hub)

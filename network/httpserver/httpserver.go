@@ -1,12 +1,11 @@
 package httpserver
 
 import (
+	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/rox"
 	"net"
 	"net/http"
 	"sync"
-
-	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/rox"
 )
 
 type HttpServer struct {

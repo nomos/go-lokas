@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/nomos/go-lokas/log"
-
 	"github.com/nomos/go-lokas/network/dockerclient"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/network/ossclient"
@@ -213,14 +212,6 @@ type IRegistry interface {
 	RegisterActorLocal(actor IActor) error
 	UnregisterActorLocal(actor IActor) error
 	GetActorIdsByTypeAndServerId(serverId int32, typ string) []util.ID
-
-	GetServerRegisterMgr() IServiceRegisterMgr
-}
-
-type IServiceRegisterMgr interface {
-	Register(info *ServiceInfo) error
-	Unregister(serviceType string, serviceId uint16) error
-	UpdateServiceInfo(info *ServiceInfo) error
 }
 
 //IRouter interface for router

@@ -13,14 +13,7 @@ var (
 	ERR_PACKAGE_FORMAT  = CreateError(-3, "wrong packet format")
 	ERR_INTERNAL_ERROR  = CreateError(-4, "internal error")
 	ERR_ACTOR_NOT_FOUND = CreateError(-101, "actor not found")
-	ERR_RPC_FAILED      = CreateError(-102, "rpc failed")
-
-	ERR_ETCD_ERROR = CreateError(-201, "etcd error")
-
-	// service
-	ERR_REGISTER_SERVICE_DUPLICATED   = CreateError(-7001, "service register duplicate")
-	ERR_REGISTER_SERVICE_INFO_INVALID = CreateError(-7002, "service info invalid")
-	ERR_REGISTER_SERVICE_NOT_FOUND    = CreateError(-7003, "service registered not found")
+	ERR_RPC_FAILED = CreateError(-102, "rpc failed")
 
 	//cs error
 	ERR_INTERNAL_SERVER        = CreateError(901, "服务器繁忙")
@@ -82,7 +75,7 @@ func (this *ErrMsg) ErrCode() int {
 	return int(this.Code)
 }
 
-func (this *ErrMsg) Is(err error) bool {
+func (this *ErrMsg) Is(err error)bool {
 	if e, ok := err.(IError); ok {
 		if e.ErrCode() == this.ErrCode() {
 			return true
@@ -100,7 +93,7 @@ func (this *ErrMsg) Marshal() ([]byte, error) {
 }
 
 func (this *ErrMsg) GetId() (BINARY_TAG, error) {
-	return TAG_Error, nil
+	return TAG_Error,nil
 }
 
 func (this *ErrMsg) Serializable() ISerializable {

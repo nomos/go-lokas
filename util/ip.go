@@ -3,7 +3,6 @@ package util
 import (
 	"errors"
 	"net"
-	"strings"
 )
 
 func ExternalIP() (net.IP, error) {
@@ -50,14 +49,4 @@ func GetIpFromAddr(addr net.Addr) net.IP {
 	}
 
 	return ip
-}
-
-func GetPublicIp() string {
-	conn, _ := net.Dial("udp", "8.8.8.8:80")
-	defer conn.Close()
-	localAddr := conn.LocalAddr().String()
-
-	idx := strings.LastIndex(localAddr, ":")
-
-	return localAddr[0:idx]
 }
