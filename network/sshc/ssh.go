@@ -197,18 +197,19 @@ func (this *SshClient) Connect() *promise.Promise {
 			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		})
 		if err != nil {
+			log.Error(err.Error())
 			reject(err)
 			return
 		}
 		this.defaultSession, err = this.client.NewSession()
 		if err != nil {
+			log.Error(err.Error())
 			reject(err)
 			return
 		}
 		this.sftp, err = this.createSftp()
 		if err != nil {
-			reject(err)
-			return
+			log.Error(err.Error())
 		}
 		this.connected = true
 		this.ComposeLogger.Info("Connected")
