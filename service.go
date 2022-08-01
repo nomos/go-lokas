@@ -22,12 +22,9 @@ type ServiceInfo struct {
 	ServiceType string
 	ServiceId   uint16
 	// GameId      string
-	Host    string
-	Port    uint16
-	Version string
-	Cnt     uint32
-	// ProcessId util.ProcessId
+	Host     string
+	Port     uint16
+	Version  string
+	Cnt      int
 	CreateAt time.Time
-	// Weights map[util.ID]int
-	// Ts time.Time
 }

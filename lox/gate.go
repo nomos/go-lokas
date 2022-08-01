@@ -2,9 +2,7 @@ package lox
 
 import (
 	"context"
-	"strconv"
 	"sync"
-	"time"
 
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
@@ -13,7 +11,6 @@ import (
 	"github.com/nomos/go-lokas/network/tcp"
 	"github.com/nomos/go-lokas/network/ws"
 	"github.com/nomos/go-lokas/protocol"
-	"github.com/nomos/go-lokas/util"
 )
 
 type ConnType int
@@ -178,54 +175,6 @@ func (this *Gate) Start() error {
 		return err
 	}
 
-	port, _ := strconv.ParseUint(this.Port, 10, 16)
-	var host string
-	if this.Host == "0.0.0.0" {
-		host = util.GetPublicIp()
-	} else {
-		host = this.Host
-	}
-
-	err = this.GetProcess().GetServerRegisterMgr().Register(&lokas.ServiceInfo{
-		ServiceType: this.Type(),
-		ServiceId:   uint16(this.process.PId()),
-		Host:        host,
-		Port:        uint16(port),
-		Version:     "",
-		Cnt:         uint32(this.server.GetActiveConnNum()),
-		CreateAt:    time.Now(),
-	})
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
-
-	go func() {
-		timer := time.NewTicker(10 * time.Second)
-
-		for {
-			select {
-			case <-timer.C:
-				info := &lokas.ServiceInfo{
-					ServiceType: this.Type(),
-					ServiceId:   uint16(this.process.PId()),
-					Host:        host,
-					Port:        uint16(port),
-					Version:     "",
-					Cnt:         uint32(this.server.GetActiveConnNum()),
-					CreateAt:    time.Now(),
-				}
-				// tmp for test
-				// info.Version = fmt.Sprintf("verver%d", rand.Intn(100))
-				// info.Cnt = uint32(rand.Intn(1000))
-
-				this.GetProcess().GetServerRegisterMgr().UpdateServiceInfo(info)
-			case <-this.Ctx.Done():
-				return
-			}
-		}
-	}()
-
 	this.started = true
 	return nil
 }
@@ -240,4 +189,8 @@ func (this *Gate) Stop() error {
 
 	this.server.Stop()
 	return nil
+}
+
+func (this *Gate) GetServer() lokas.Server {
+	return this.server
 }
