@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/nomos/go-lokas"
@@ -47,7 +48,7 @@ var _ lokas.IActor = (*AvatarManager)(nil)
 type AvatarManager struct {
 	*Actor
 	Avatars   map[util.ID]*Avatar
-	AvatarCnt int
+	AvatarCnt int32
 	Option    lokas.IGameHandler
 	mu        sync.Mutex
 	Ctx       context.Context
@@ -123,7 +124,7 @@ func (this *AvatarManager) CreateAvatar(id util.ID) error {
 	}
 	log.Info("CreateAvatar", flog.AvatarId(id), flog.UserName(avatar.UserName), flog.ServerId(avatar.ServerId))
 	this.Avatars[id] = avatar
-	this.AvatarCnt++
+	atomic.AddInt32(&this.AvatarCnt, 1)
 	this.logRetention(avatar)
 	if err != nil {
 		log.Error(err.Error())
@@ -143,7 +144,7 @@ func (this *AvatarManager) RemoveAvatar(id util.ID) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	delete(this.Avatars, id)
-	this.AvatarCnt--
+	atomic.AddInt32(&this.AvatarCnt, -1)
 }
 
 func (this *AvatarManager) Load(conf lokas.IConfig) error {
