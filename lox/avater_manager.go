@@ -3,6 +3,9 @@ package lox
 import (
 	"context"
 	"errors"
+	"sync"
+	"time"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
@@ -10,8 +13,6 @@ import (
 	"github.com/nomos/go-lokas/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.uber.org/zap"
-	"sync"
-	"time"
 )
 
 type avatarManagerCtor struct {
@@ -27,9 +28,12 @@ func (this avatarManagerCtor) Type() string {
 }
 
 func (this avatarManagerCtor) Create() lokas.IModule {
+	ctx, cancel := context.WithCancel(context.Background())
 	ret := &AvatarManager{
 		Actor:   NewActor(),
 		Avatars: map[util.ID]*Avatar{},
+		Ctx:     ctx,
+		Cancel:  cancel,
 	}
 	ret.SetType(this.Type())
 	ret.OnUpdateFunc = ret.OnUpdate
@@ -42,9 +46,12 @@ var _ lokas.IActor = (*AvatarManager)(nil)
 
 type AvatarManager struct {
 	*Actor
-	Avatars map[util.ID]*Avatar
-	Option  lokas.IGameHandler
-	mu      sync.Mutex
+	Avatars   map[util.ID]*Avatar
+	AvatarCnt int
+	Option    lokas.IGameHandler
+	mu        sync.Mutex
+	Ctx       context.Context
+	Cancel    context.CancelFunc
 }
 
 func (this *AvatarManager) HandleMsg(actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error) {
@@ -116,6 +123,7 @@ func (this *AvatarManager) CreateAvatar(id util.ID) error {
 	}
 	log.Info("CreateAvatar", flog.AvatarId(id), flog.UserName(avatar.UserName), flog.ServerId(avatar.ServerId))
 	this.Avatars[id] = avatar
+	this.AvatarCnt++
 	this.logRetention(avatar)
 	if err != nil {
 		log.Error(err.Error())
@@ -135,6 +143,7 @@ func (this *AvatarManager) RemoveAvatar(id util.ID) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	delete(this.Avatars, id)
+	this.AvatarCnt--
 }
 
 func (this *AvatarManager) Load(conf lokas.IConfig) error {
@@ -158,6 +167,7 @@ func (this *AvatarManager) Stop() error {
 			log.Error(err.Error())
 		}
 	}
+	this.Cancel()
 	if err != nil {
 		log.Error(err.Error())
 		return errors.New("actors stop failed")

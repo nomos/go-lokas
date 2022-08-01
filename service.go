@@ -25,9 +25,7 @@ type ServiceInfo struct {
 	Host    string
 	Port    uint16
 	Version string
-	Cnt     uint32
+	Cnt     int
 	// ProcessId util.ProcessId
 	CreateAt time.Time
-	// Weights map[util.ID]int
-	// Ts time.Time
 }
