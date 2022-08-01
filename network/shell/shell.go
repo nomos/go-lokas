@@ -276,8 +276,12 @@ func (this *ShellCommand) Parse() error {
 		if util.IsDarwin() {
 			this.cmd = exec.Command(cmdprefix, "-c",this.String())
 		} else if util.IsWindows() {
-			cmdprefix = "cmd.exe"
-			this.cmd = exec.Command(cmdprefix, "/C",this.String())
+			if this.Options.UseShell {
+				this.cmd = exec.Command(cmdprefix, "-c",this.String())
+			} else {
+				cmdprefix = "cmd.exe"
+				this.cmd = exec.Command(cmdprefix, "/C",this.String())
+			}
 		}
 		//this.cmd = exec.Command(this.Commands[0].String())
 		//if len(this.Commands)>1 {

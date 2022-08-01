@@ -160,6 +160,9 @@ func (this *Registry) OnStart() error {
 
 func (this *Registry) OnStop() error {
 	log.Info("Registry:OnStop")
+
+	this.serviceRegisterMgr.Stop()
+
 	return nil
 }
 

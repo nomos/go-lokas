@@ -174,7 +174,6 @@ func (this *Gate) Start() error {
 		log.Error(err.Error())
 		return err
 	}
-
 	this.started = true
 	return nil
 }

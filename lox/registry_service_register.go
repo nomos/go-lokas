@@ -136,14 +136,18 @@ func (mgr *ServiceRegisterMgr) Register(info *lokas.ServiceInfo) error {
 	// etcd keep alive
 	go func() {
 		timer := time.NewTicker(2 * time.Second)
+		register.closeChan = make(chan struct{}, 1)
+	LOOP:
 		for {
 			select {
 			case <-timer.C:
 				register.keepAliveEtcd()
 			case <-register.closeChan:
-				return
+				break LOOP
 			}
 		}
+
+		close(register.closeChan)
 	}()
 
 	mgr.mutex.Lock()
@@ -157,8 +161,28 @@ func (mgr *ServiceRegisterMgr) Register(info *lokas.ServiceInfo) error {
 }
 
 func (mgr *ServiceRegisterMgr) Unregister(serviceType string, serviceId uint16) error {
-	// TODO
+
+	register, ok := mgr.findRegisterInfo(serviceType, serviceId)
+	if !ok {
+		return protocol.ERR_REGISTER_SERVICE_NOT_FOUND
+	}
+
+	register.etcdClient.Lease.Revoke(context.TODO(), register.leaseId)
+	register.closeChan <- struct{}{}
+
+	delete(mgr.registerMap[serviceType], serviceId)
+
 	return nil
+}
+
+func (mgr *ServiceRegisterMgr) Stop() {
+	for _, v1 := range mgr.registerMap {
+		for _, v2 := range v1 {
+			v2.etcdClient.Lease.Revoke(context.TODO(), v2.leaseId)
+		}
+	}
+
+	mgr.registerMap = nil
 }
 
 func (mgr *ServiceRegisterMgr) UpdateServiceInfo(info *lokas.ServiceInfo) error {

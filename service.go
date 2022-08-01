@@ -22,9 +22,10 @@ type ServiceInfo struct {
 	ServiceType string
 	ServiceId   uint16
 	// GameId      string
-	Host     string
-	Port     uint16
-	Version  string
-	Cnt      int
+	Host    string
+	Port    uint16
+	Version string
+	Cnt     int
+	// ProcessId util.ProcessId
 	CreateAt time.Time
 }
