@@ -1,6 +1,9 @@
 package lox
 
 import (
+	"context"
+	"sync"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
@@ -8,7 +11,6 @@ import (
 	"github.com/nomos/go-lokas/network/tcp"
 	"github.com/nomos/go-lokas/network/ws"
 	"github.com/nomos/go-lokas/protocol"
-	"sync"
 )
 
 type ConnType int
@@ -45,9 +47,13 @@ var GateCtor = gateCtor{}
 type gateCtor struct{}
 
 func (this gateCtor) Create() lokas.IModule {
+
+	ctx, cancel := context.WithCancel(context.Background())
 	ret := &Gate{
-		Actor:NewActor(),
+		Actor:           NewActor(),
 		ISessionManager: network.NewDefaultSessionManager(true),
+		Ctx:             ctx,
+		Cancel:          cancel,
 	}
 	ret.SetType("Gate")
 	return ret
@@ -67,23 +73,25 @@ type Gate struct {
 	server             lokas.Server
 	started            bool
 	mu                 sync.Mutex
+	Ctx                context.Context
+	Cancel             context.CancelFunc
 }
 
-func (this *Gate) OnStart() error{
+func (this *Gate) OnStart() error {
 	return nil
 }
 
-func (this *Gate) OnStop() error{
+func (this *Gate) OnStop() error {
 	return nil
 }
 
-func (this *Gate) LoadCustom(host,port string,protocolType protocol.TYPE,connType ConnType)error{
+func (this *Gate) LoadCustom(host, port string, protocolType protocol.TYPE, connType ConnType) error {
 	this.Host = host
 	this.Port = port
 	this.Protocol = protocolType
 	this.connType = connType
 	sessionFunc := this.SessionCreator
-	if this.SessionCreatorFunc!= nil {
+	if this.SessionCreatorFunc != nil {
 		sessionFunc = this.SessionCreatorFunc
 	}
 	if this.connType == Websocket {
@@ -111,6 +119,7 @@ func (this *Gate) LoadCustom(host,port string,protocolType protocol.TYPE,connTyp
 		}
 		this.server = tcp.NewServer(context)
 	}
+
 	return nil
 }
 
@@ -126,7 +135,7 @@ func (this *Gate) Load(conf lokas.IConfig) error {
 	this.Protocol = protocol.String2Type(conf.Get("protocol").(string))
 	this.connType = String2ConnType(conf.Get("conn").(string))
 
-	return this.LoadCustom(conf.GetString("host"),conf.GetString("port"),protocol.String2Type(conf.GetString("protocol")),String2ConnType(conf.GetString("conn")))
+	return this.LoadCustom(conf.GetString("host"), conf.GetString("port"), protocol.String2Type(conf.GetString("protocol")), String2ConnType(conf.GetString("conn")))
 }
 
 func (this *Gate) SessionCreator(conn lokas.IConn) lokas.ISession {
@@ -171,9 +180,16 @@ func (this *Gate) Start() error {
 func (this *Gate) Stop() error {
 	this.mu.Lock()
 	defer this.mu.Unlock()
-	this.ISessionManager.Clear()
-	log.Warn("stop",flog.FuncInfo(this,"Stop")...)
+
 	this.started = false
+	this.Cancel()
+	this.ISessionManager.Clear()
+	log.Warn("stop", flog.FuncInfo(this, "Stop")...)
+
 	this.server.Stop()
 	return nil
+}
+
+func (this *Gate) GetServer() lokas.Server {
+	return this.server
 }
