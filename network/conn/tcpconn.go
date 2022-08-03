@@ -26,7 +26,7 @@ type TcpPumper struct {
 
 const DefaultReadBuffSize = 8 * 1024
 const DefaultWriteBuffSize = 16 * 1024
-const ProtectLongPacketSize = 4 * 1024 * 1024
+const ProtectLongPacketSize = 8 * 1024 * 1024
 
 func NewTcpConn(c net.Conn, context *lokas.Context, hub *hub.Hub) *Conn {
 	done := make(chan struct{})
@@ -122,7 +122,7 @@ loop:
 			// }
 			err := this.write(conn, data, buff, outChan)
 			if err != nil {
-				log.Info("tcpserver write error",zap.Error(err))
+				log.Info("tcpserver write error", zap.Error(err))
 				break loop
 			}
 		case <-tickerPing.C:
