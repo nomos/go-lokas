@@ -46,7 +46,7 @@ func NewRegistry(process lokas.IProcess) *Registry {
 	return ret
 }
 
-func (this *Registry) GetServerRegisterMgr() lokas.IServiceRegisterMgr {
+func (this *Registry) GetServiceRegisterMgr() lokas.IServiceRegisterMgr {
 	return this.serviceRegisterMgr
 }
 

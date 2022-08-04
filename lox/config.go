@@ -4,16 +4,18 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
+	"os"
+	"path"
+	"sync"
+	"time"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/slice"
 	"github.com/spf13/viper"
-	"os"
-	"path"
-	"sync"
-	"time"
 )
 
 var _ lokas.IConfig = (*AppConfig)(nil)
@@ -83,6 +85,24 @@ func NewSubAppConfig(name string, parent *AppConfig, conf *viper.Viper) *AppConf
 	}
 	return ret
 }
+
+func ReadDataFromEtcd(addr string, path string) (*bytes.Buffer, error) {
+	client := etcdclient.New(etcdclient.WithEndPoints(addr))
+	if client == nil {
+		return nil, errors.New("etcd disconnect addr:" + addr)
+	}
+	defer client.Client.Close()
+	resp, err := client.Get(context.TODO(), path)
+	if err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
+	if len(resp.Kvs) != 1 {
+		return nil, errors.New("etcd not find path:" + path)
+	}
+	return bytes.NewBuffer(resp.Kvs[0].Value), nil
+}
+
 func (this *AppConfig) GetFolder() string {
 	return this.folder
 }
@@ -120,7 +140,7 @@ func (this *AppConfig) LoadFromRemote() error {
 				return err
 			}
 		} else {
-			return errors.New("wrong etcd return")
+			return errors.New("wrong etcd path:" + this.etcdAddr)
 		}
 		return nil
 	}
@@ -370,6 +390,16 @@ type RedisConfig struct {
 	Password string `mapstructure:"password"`
 }
 
+// type ModuleConfig struct {
+// 	Name     string
+// 	Open     bool
+// 	Host     string
+// 	Port     int
+// 	Conn     string
+// 	Protocol string
+// 	Type     string
+// }
+
 var _ lokas.IConfig = (*DefaultConfig)(nil)
 
 func NewDefaultConfig() *DefaultConfig {
@@ -406,6 +436,14 @@ func (this *DefaultConfig) LoadFromRemote() error {
 		return err
 	}
 	return nil
+}
+
+func (this *DefaultConfig) MergeData(in io.Reader) error {
+	return this.Viper.MergeConfig(in)
+}
+
+func (this *DefaultConfig) LoadInConfig() error {
+	return this.loadInner()
 }
 
 func (this *DefaultConfig) loadInner() error {

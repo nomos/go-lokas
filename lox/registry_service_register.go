@@ -19,7 +19,7 @@ import (
 )
 
 type ServiceRegister struct {
-	serverInfo *lokas.ServiceInfo
+	serviceInfo *lokas.ServiceInfo
 
 	etcdClient *etcdclient.Client
 
@@ -48,9 +48,9 @@ func NewServiceRegisterMgr(process lokas.IProcess) *ServiceRegisterMgr {
 func (register *ServiceRegister) registerEtcd() error {
 	etcd := register.etcdClient
 
-	strServiceInfo, err := json.Marshal(register.serverInfo)
+	strServiceInfo, err := json.Marshal(register.serviceInfo)
 	if err != nil {
-		log.Error(protocol.ERR_REGISTER_SERVICE_INFO_INVALID.Error(), zap.Any("serviceInfo", register.serverInfo))
+		log.Error(protocol.ERR_REGISTER_SERVICE_INFO_INVALID.Error(), zap.Any("serviceInfo", register.serviceInfo))
 		return protocol.ERR_REGISTER_SERVICE_INFO_INVALID
 	}
 
@@ -66,7 +66,7 @@ func (register *ServiceRegister) registerEtcd() error {
 
 	_, err2 := concurrency.NewSTM(etcd.Client, func(s concurrency.STM) error {
 
-		strKey := fmt.Sprintf("/service/%s/%d", register.serverInfo.ServiceType, register.serverInfo.ServiceId)
+		strKey := fmt.Sprintf("/service/%s/%d", register.serviceInfo.ServiceType, register.serviceInfo.ServiceId)
 		remoteValue := s.Get(strKey)
 
 		if remoteValue != "" {
@@ -78,7 +78,7 @@ func (register *ServiceRegister) registerEtcd() error {
 	})
 
 	if err2 != nil {
-		log.Error(err2.Error(), zap.Any("serviceInfo", register.serverInfo))
+		log.Error(err2.Error(), zap.Any("serviceInfo", register.serviceInfo))
 		return err2
 	}
 
@@ -89,7 +89,7 @@ func (register *ServiceRegister) keepAliveEtcd() error {
 	_, err := register.etcdClient.Lease.KeepAliveOnce(context.TODO(), register.leaseId)
 	if err != nil {
 		if err == rpctypes.ErrLeaseNotFound {
-			log.Warn("lease not found, register again", zap.Any("serverInfo", register.serverInfo))
+			log.Warn("lease not found, register again", zap.Any("serverInfo", register.serviceInfo))
 			register.registerEtcd()
 			err = nil
 		}
@@ -99,17 +99,17 @@ func (register *ServiceRegister) keepAliveEtcd() error {
 }
 
 func (register *ServiceRegister) updateEtcd() error {
-	strServiceInfo, err := json.Marshal(register.serverInfo)
+	strServiceInfo, err := json.Marshal(register.serviceInfo)
 	if err != nil {
-		log.Error(protocol.ERR_REGISTER_SERVICE_INFO_INVALID.Error(), zap.Any("serviceInfo", register.serverInfo))
+		log.Error(protocol.ERR_REGISTER_SERVICE_INFO_INVALID.Error(), zap.Any("serviceInfo", register.serviceInfo))
 		return protocol.ERR_REGISTER_SERVICE_INFO_INVALID
 	}
 
-	strKey := fmt.Sprintf("/service/%s/%d", register.serverInfo.ServiceType, register.serverInfo.ServiceId)
+	strKey := fmt.Sprintf("/service/%s/%d", register.serviceInfo.ServiceType, register.serviceInfo.ServiceId)
 	_, err2 := register.etcdClient.KV.Put(context.TODO(), strKey, string(strServiceInfo), clientv3.WithLease(register.leaseId))
 
 	if err2 != nil {
-		log.Warn("etcd err", zap.Any("serviceInfo", register.serverInfo), zap.String("err", err2.Error()))
+		log.Warn("etcd err", zap.Any("serviceInfo", register.serviceInfo), zap.String("err", err2.Error()))
 	}
 	return err2
 
@@ -123,8 +123,8 @@ func (mgr *ServiceRegisterMgr) Register(info *lokas.ServiceInfo) error {
 	}
 
 	register := &ServiceRegister{
-		serverInfo: info,
-		etcdClient: mgr.process.GetEtcd(),
+		serviceInfo: info,
+		etcdClient:  mgr.process.GetEtcd(),
 	}
 
 	// etcd register
@@ -193,12 +193,12 @@ func (mgr *ServiceRegisterMgr) UpdateServiceInfo(info *lokas.ServiceInfo) error 
 	}
 
 	mgr.mutex.Lock()
-	if register.serverInfo.Version == info.Version && register.serverInfo.Cnt == info.Cnt {
+	if register.serviceInfo.Version == info.Version && register.serviceInfo.Cnt == info.Cnt {
 		mgr.mutex.Unlock()
 		return nil
 	}
-	register.serverInfo.Version = info.Version
-	register.serverInfo.Cnt = info.Cnt
+	register.serviceInfo.Version = info.Version
+	register.serviceInfo.Cnt = info.Cnt
 	mgr.mutex.Unlock()
 
 	err := register.updateEtcd()
@@ -226,4 +226,31 @@ func (mgr *ServiceRegisterMgr) findRegisterInfo(serviceType string, serviceId ui
 	}
 	info, ok2 := infos[serviceId]
 	return info, ok2
+}
+
+func (mgr *ServiceRegisterMgr) FindServiceInfo(serviceType string, serviceId uint16) (*lokas.ServiceInfo, bool) {
+	register, ok := mgr.findRegisterInfo(serviceType, serviceId)
+	if !ok {
+		return nil, ok
+	}
+
+	return register.serviceInfo, ok
+}
+
+func (mgr *ServiceRegisterMgr) FindServiceList(serviceType string) ([]*lokas.ServiceInfo, bool) {
+	mgr.mutex.RLock()
+	defer mgr.mutex.RUnlock()
+
+	infoMap, ok := mgr.registerMap[serviceType]
+	if !ok {
+		return nil, false
+	}
+
+	serviceInfos := make([]*lokas.ServiceInfo, len(infoMap))
+
+	for _, v := range infoMap {
+		serviceInfos = append(serviceInfos, v.serviceInfo)
+	}
+
+	return serviceInfos, true
 }

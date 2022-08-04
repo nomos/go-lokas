@@ -214,13 +214,15 @@ type IRegistry interface {
 	UnregisterActorLocal(actor IActor) error
 	GetActorIdsByTypeAndServerId(serverId int32, typ string) []util.ID
 
-	GetServerRegisterMgr() IServiceRegisterMgr
+	GetServiceRegisterMgr() IServiceRegisterMgr
 }
 
 type IServiceRegisterMgr interface {
 	Register(info *ServiceInfo) error
 	Unregister(serviceType string, serviceId uint16) error
 	UpdateServiceInfo(info *ServiceInfo) error
+	FindServiceInfo(serviceType string, serviceId uint16) (*ServiceInfo, bool)
+	FindServiceList(serviceType string) ([]*ServiceInfo, bool)
 }
 
 //IRouter interface for router
