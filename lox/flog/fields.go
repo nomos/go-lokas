@@ -16,7 +16,6 @@ func AvatarUserId(avatar lokas.IAvatarSession) zap.Field {
 	return zap.Int64("userid", avatar.GetUserId().Int64())
 }
 
-
 func AvatarSessionId(avatar lokas.IAvatarSession) zap.Field {
 	return zap.Int64("avatarid", avatar.GetId().Int64())
 }
@@ -30,7 +29,7 @@ func AvatarGate(avatar lokas.IAvatarSession) zap.Field {
 }
 
 func AvatarInfo(avatar lokas.IActor) log.ZapFields {
-	a:=avatar.(lokas.IAvatar)
+	a := avatar.(lokas.IAvatar)
 	ret := log.ZapFields{}
 	ret = ret.Concat(ActorInfo(a))
 	ret = ret.Append(AvatarName(a))
@@ -49,31 +48,35 @@ func AvatarMsgInfo(avatar lokas.IAvatar, transId uint32, msg protocol.ISerializa
 	return AvatarInfo(avatar).Append(TransId(transId)).Concat(MsgInfo(msg)).Append(ClientSessionId(sess))
 }
 
-func UserName(name string)zap.Field{
+func AvatarMsgDetail(avatar lokas.IAvatar, transId uint32, msg protocol.ISerializable, sess util.ID) log.ZapFields {
+	return AvatarInfo(avatar).Append(TransId(transId)).Concat(MsgDetail(msg)).Append(ClientSessionId(sess))
+}
+
+func UserName(name string) zap.Field {
 	return zap.String("username", name)
 }
 
-func AvatarId(id util.ID)zap.Field{
+func AvatarId(id util.ID) zap.Field {
 	return zap.Int64("avatarid", id.Int64())
 }
 
-func UserId(id util.ID)zap.Field{
+func UserId(id util.ID) zap.Field {
 	return zap.Int64("userid", id.Int64())
 }
 
-func ProcessId(id util.ID)zap.Field{
+func ProcessId(id util.ID) zap.Field {
 	return zap.Int64("processid", id.Int64())
 }
 
-func ServerId(id int32)zap.Field{
+func ServerId(id int32) zap.Field {
 	return zap.Int32("serverid", id)
 }
 
-func GameId(name string)zap.Field{
+func GameId(name string) zap.Field {
 	return zap.String("gameid", name)
 }
 
-func RegElapsedDay(day int)zap.Field{
+func RegElapsedDay(day int) zap.Field {
 	return zap.Int("rentday", day)
 }
 
