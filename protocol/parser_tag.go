@@ -7,7 +7,7 @@ import (
 var tag_go_regexp_map = make(map[BINARY_TAG]*regexp.Regexp)
 var tag_model_regexp_map = make(map[BINARY_TAG]*regexp.Regexp)
 
-func init(){
+func init() {
 	tag_go_regexp_map[TAG_Bool] = regexp.MustCompile(`(bool)`)
 	tag_go_regexp_map[TAG_Byte] = regexp.MustCompile(`(uint8)`)
 	tag_go_regexp_map[TAG_Short] = regexp.MustCompile(`(int16)`)
@@ -76,13 +76,13 @@ const tag_model_array_item_reg = "$1"
 const tag_model_map_key_reg = "$1"
 const tag_model_map_key_item = "$2"
 
-func (this BINARY_TAG) MatchRegExp(str string)bool {
-	return tag_go_regexp_map[this].FindString(str) == str&&str!=""
+func (this BINARY_TAG) MatchRegExp(str string) bool {
+	return tag_go_regexp_map[this].FindString(str) == str && str != ""
 }
 
-func MatchGoProtoTag(s string)bool {
-	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time,TAG_Color,TAG_Buffer}
-	for _,tag:=range protoTagArr {
+func MatchGoProtoTag(s string) bool {
+	protoTagArr := []BINARY_TAG{TAG_Bool, TAG_Byte, TAG_Short, TAG_UShort, TAG_Int, TAG_UInt, TAG_Long, TAG_ULong, TAG_Float, TAG_Double, TAG_String, TAG_Time, TAG_Color, TAG_Buffer}
+	for _, tag := range protoTagArr {
 		if tag_go_regexp_map[tag].FindString(s) == s {
 			return true
 		}
@@ -90,24 +90,24 @@ func MatchGoProtoTag(s string)bool {
 	return false
 }
 
-func MatchGoSystemTag(s string)(BINARY_TAG,string,string) {
-	for tag,reg:=range tag_go_regexp_map {
+func MatchGoSystemTag(s string) (BINARY_TAG, string, string) {
+	for tag, reg := range tag_go_regexp_map {
 		if reg.FindString(s) == s {
 			if tag == TAG_List {
-				return tag,reg.ReplaceAllString(s, tag_go_slice_item_reg),""
+				return tag, reg.ReplaceAllString(s, tag_go_slice_item_reg), ""
 			}
-			if tag== TAG_Map {
-				return tag,reg.ReplaceAllString(s, tag_go_map_key_reg),reg.ReplaceAllString(s, tag_go_map_key_item)
+			if tag == TAG_Map {
+				return tag, reg.ReplaceAllString(s, tag_go_map_key_reg), reg.ReplaceAllString(s, tag_go_map_key_item)
 			}
-			return tag,"",""
+			return tag, "", ""
 		}
 	}
-	return 0,"",""
+	return 0, "", ""
 }
 
-func MatchModelProtoTag(s string)BINARY_TAG {
-	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time,TAG_Color,TAG_BoolArray,TAG_ByteArray,TAG_UShortArray,TAG_ShortArray,TAG_UIntArray,TAG_IntArray,TAG_ULongArray,TAG_LongArray}
-	for _,tag:=range protoTagArr {
+func MatchModelProtoTag(s string) BINARY_TAG {
+	protoTagArr := []BINARY_TAG{TAG_Bool, TAG_Byte, TAG_Short, TAG_UShort, TAG_Int, TAG_UInt, TAG_Long, TAG_ULong, TAG_Float, TAG_Double, TAG_String, TAG_Time, TAG_Color, TAG_BoolArray, TAG_ByteArray, TAG_UShortArray, TAG_ShortArray, TAG_UIntArray, TAG_IntArray, TAG_ULongArray, TAG_LongArray, TAG_FloatArray, TAG_DoubleArray}
+	for _, tag := range protoTagArr {
 		if tag_model_regexp_map[tag].FindString(s) == s {
 			return tag
 		}
@@ -115,9 +115,9 @@ func MatchModelProtoTag(s string)BINARY_TAG {
 	return 0
 }
 
-func GetModelProtoTag(s string)BINARY_TAG {
-	protoTagArr:=[]BINARY_TAG{TAG_Bool,TAG_Byte,TAG_Short,TAG_UShort,TAG_Int,TAG_UInt,TAG_Long,TAG_ULong,TAG_Float,TAG_Double,TAG_String,TAG_Time,TAG_Color,TAG_BoolArray,TAG_ByteArray,TAG_UShortArray,TAG_ShortArray,TAG_UIntArray,TAG_IntArray,TAG_ULongArray,TAG_LongArray}
-	for _,tag:=range protoTagArr {
+func GetModelProtoTag(s string) BINARY_TAG {
+	protoTagArr := []BINARY_TAG{TAG_Bool, TAG_Byte, TAG_Short, TAG_UShort, TAG_Int, TAG_UInt, TAG_Long, TAG_ULong, TAG_Float, TAG_Double, TAG_String, TAG_Time, TAG_Color, TAG_BoolArray, TAG_ByteArray, TAG_UShortArray, TAG_ShortArray, TAG_UIntArray, TAG_IntArray, TAG_ULongArray, TAG_LongArray, TAG_FloatArray, TAG_DoubleArray}
+	for _, tag := range protoTagArr {
 		if tag_model_regexp_map[tag].FindString(s) == s {
 			return tag
 		}
@@ -125,17 +125,17 @@ func GetModelProtoTag(s string)BINARY_TAG {
 	return 0
 }
 
-func MatchModelSystemTag(s string)(BINARY_TAG,string,string) {
-	for tag,reg:=range tag_model_regexp_map {
+func MatchModelSystemTag(s string) (BINARY_TAG, string, string) {
+	for tag, reg := range tag_model_regexp_map {
 		if reg.FindString(s) == s {
 			if tag == TAG_List {
-				return tag,reg.ReplaceAllString(s, tag_model_array_item_reg),""
+				return tag, reg.ReplaceAllString(s, tag_model_array_item_reg), ""
 			}
-			if tag== TAG_Map {
-				return tag,reg.ReplaceAllString(s, tag_model_map_key_reg),reg.ReplaceAllString(s, tag_model_map_key_item)
+			if tag == TAG_Map {
+				return tag, reg.ReplaceAllString(s, tag_model_map_key_reg), reg.ReplaceAllString(s, tag_model_map_key_item)
 			}
-			return tag,"",""
+			return tag, "", ""
 		}
 	}
-	return 0,"",""
+	return 0, "", ""
 }
