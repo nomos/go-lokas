@@ -76,6 +76,14 @@ func MsgBody(serializable protocol.ISerializable) zap.Field {
 	return zap.String("msg_body", log.PrettyStruct(serializable))
 }
 
+func MsgDetail(serializable protocol.ISerializable) log.ZapFields {
+	ret := []zap.Field{}
+	ret = append(ret, MsgName(serializable))
+	ret = append(ret, MsgId(serializable))
+	ret = append(ret, MsgBody(serializable))
+	return ret
+}
+
 func MsgInfo(serializable protocol.ISerializable) log.ZapFields {
 	ret := []zap.Field{}
 	ret = append(ret, MsgName(serializable))
