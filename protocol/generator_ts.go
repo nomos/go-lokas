@@ -23,12 +23,12 @@ func (this *Generator) GenerateModel2Ts() error {
 		this.GetLogger().Error(err.Error())
 		return err
 	}
-	err = this.generateModel2TsIds()
+	err = this.generateModel2TsClasses()
 	if err != nil {
 		this.GetLogger().Error(err.Error())
 		return err
 	}
-	err = this.generateModel2TsClasses()
+	err = this.generateModel2TsIds()
 	if err != nil {
 		this.GetLogger().Error(err.Error())
 		return err
@@ -62,6 +62,8 @@ func (this *Generator) LoadTsIds(p string) error {
 		idsPath = path.Join(p, baseName+"_ids.ts")
 		util.CreateFile(idsPath)
 	}
+
+	this.TsGenerateFilePaths = append(this.TsGenerateFilePaths, baseName+"_ids")
 	this.TsIds = NewTsIdsFile(this)
 	this.GetLogger().Warnf("ts idsPath", idsPath)
 	_, err := this.TsIds.Load(idsPath).Await()
@@ -181,6 +183,16 @@ func (this *Generator) generateModel2TsIds() error {
 	}
 	strs += "})()\n"
 	err := ioutil.WriteFile(this.TsIds.FilePath, []byte(strs), 0644)
+	if err != nil {
+		this.GetLogger().Errorf(err.Error())
+	}
+	exportStr := ""
+	for _, v := range this.TsGenerateFilePaths {
+		exportStr += `export * from "./` + v + `"` + "\n"
+	}
+	p := path.Dir(this.TsIds.FilePath)
+	baseName := path.Base(p)
+	err = ioutil.WriteFile(path.Join(p, baseName+"_index.ts"), []byte(exportStr), 0644)
 	if err != nil {
 		this.GetLogger().Errorf(err.Error())
 	}
@@ -390,6 +402,7 @@ func (this *Generator) getTsClassByName(s string) *TsClassObject {
 func (this *Generator) getTsModelFileByModel(schema *ModelClassObject) *TsModelFile {
 	tsPath := path.Join(this.TsPath, schema.TsPackage+"_"+stringutil.SplitCamelCaseLowerSnake(schema.ClassName)) + ".ts"
 
+	this.TsGenerateFilePaths = append(this.TsGenerateFilePaths, schema.TsPackage+"_"+stringutil.SplitCamelCaseLowerSnake(schema.ClassName))
 	for _, file := range this.TsModels {
 		if file.FilePath == tsPath {
 			return file
@@ -441,6 +454,7 @@ func (this *Generator) generateModel2TsEnums() error {
 	for _, enum := range this.ModelEnumObjects {
 		name := stringutil.SplitCamelCaseLowerSnake(enum.EnumName)
 		err := ioutil.WriteFile(path.Join(this.TsPath, enum.TsPackage+"_"+"enum_"+name+".ts"), []byte(stringutil.TrimEnd(enum.TsString(this))), 0644)
+		this.TsGenerateFilePaths = append(this.TsGenerateFilePaths, enum.TsPackage+"_"+"enum_"+name)
 		if err != nil {
 			this.GetLogger().Error(err.Error())
 			return err
