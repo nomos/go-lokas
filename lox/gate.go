@@ -182,7 +182,11 @@ func (this *Gate) Stop() error {
 	defer this.mu.Unlock()
 
 	this.started = false
-	this.Cancel()
+
+	if this.Ctx != nil && this.Cancel != nil {
+		this.Cancel()
+	}
+
 	this.ISessionManager.Clear()
 	log.Warn("stop", flog.FuncInfo(this, "Stop")...)
 

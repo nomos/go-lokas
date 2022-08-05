@@ -140,7 +140,7 @@ func (this *AppConfig) LoadFromRemote() error {
 				return err
 			}
 		} else {
-			return errors.New("wrong etcd path:" + this.etcdAddr)
+			return errors.New("wrong etcd path:" + this.etcdPath)
 		}
 		return nil
 	}
