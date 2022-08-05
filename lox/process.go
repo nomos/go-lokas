@@ -159,7 +159,10 @@ func (this *Process) LoadMod(name string, conf lokas.IConfig) error {
 	}
 	if _, ok := mod.(lokas.IActor); ok {
 		this.AddActor(mod.(lokas.IActor))
-		this.StartActor(mod.(lokas.IActor))
+		err = this.StartActor(mod.(lokas.IActor))
+		if err != nil {
+			return err
+		}
 	}
 	log.Info("load success", zap.String("module", name))
 	return nil
@@ -325,6 +328,7 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 
 	err = this.LoadAllModule(config)
 	if err != nil {
+		log.Error(err.Error())
 		return err
 	}
 	err = this.SaveModuleRegistry()

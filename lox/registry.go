@@ -141,7 +141,6 @@ func (this *Registry) start() {
 
 func (this *Registry) Start() error {
 	this.start()
-	this.OnStart()
 	return nil
 }
 
