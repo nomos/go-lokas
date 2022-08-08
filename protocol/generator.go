@@ -21,22 +21,23 @@ type GeneratorOption struct {
 }
 
 type Generator struct {
-	logger            log.ILogger
-	CsCamelCase       bool
-	Models            map[string]GeneratorFile
-	GoModels          map[string]GeneratorFile
-	Protos            map[string]GeneratorFile
-	GoIds             *GoIdsFile
-	ProtoIds          *ProtoIdsFile
-	Conf              *ConfFile
-	GoStructObjects   []*GoStructObject
-	GoEnumObjects     []*GoEnumObject
-	ProtoMsgObjects   []*ProtoMsgObject
-	ModelClassObjects []*ModelClassObject
-	ModelEnumObjects  []*ModelEnumObject
-	ModelIdsObjects   map[uint16]*ModelId
-	ModelErrorObjects map[int]*ModelError
-	ModelPackages     map[string]*ModelPackageObject
+	logger              log.ILogger
+	CsCamelCase         bool
+	Models              map[string]GeneratorFile
+	GoModels            map[string]GeneratorFile
+	Protos              map[string]GeneratorFile
+	GoIds               *GoIdsFile
+	ProtoIds            *ProtoIdsFile
+	Conf                *ConfFile
+	GoStructObjects     []*GoStructObject
+	GoEnumObjects       []*GoEnumObject
+	ProtoMsgObjects     []*ProtoMsgObject
+	ModelClassObjects   []*ModelClassObject
+	ModelEnumObjects    []*ModelEnumObject
+	ModelIdsObjects     map[uint16]*ModelId
+	ModelErrorObjects   map[int]*ModelError
+	ModelPackages       map[string]*ModelPackageObject
+	TsGenerateFilePaths []string
 
 	TsModels       []*TsModelFile
 	TsIds          *TsIdsFile
@@ -116,6 +117,7 @@ func (this *Generator) Clear() {
 	this.ModelIdsObjects = make(map[uint16]*ModelId)
 	this.ModelErrorObjects = make(map[int]*ModelError)
 	this.ModelPackages = make(map[string]*ModelPackageObject)
+	this.TsGenerateFilePaths = []string{}
 }
 
 func (this *Generator) GetModelByName(s string) *ModelClassObject {
