@@ -285,7 +285,13 @@ func (t *timeWheel) moveAndExec() {
 		val := (*timeNode)(pos.Entry(offset))
 		head.Del(pos)
 
-		if !val.isSchedule {
+		val.loopCur++
+
+		isLoop := true
+		if val.loopMax > 0 && val.loopCur >= val.loopMax {
+			isLoop = false
+		}
+		if !isLoop {
 			val.handler.noders.Delete(val)
 		}
 
@@ -299,12 +305,14 @@ func (t *timeWheel) moveAndExec() {
 		}
 		val.handler.eventChan <- msg
 
-		if val.isSchedule {
+		if isLoop {
 			jiffies := t.jiffies
 			// 这里的jiffies必须要减去1
 			// 当前的callback被调用，已经包含一个时间片,如果不把这个时间片减去，
 			// 每次多一个时间片，就变成累加器, 最后周期定时器慢慢会变得不准
-			val.expire = uint64(getExpire(val.userExpire, jiffies-1))
+
+			// val.expire = uint64(getExpire(val.userExpire, jiffies-1))
+			val.expire = val.interval/(uint64(time.Millisecond)*10) + jiffies
 			t.add(val, jiffies)
 		}
 

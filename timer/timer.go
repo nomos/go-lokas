@@ -48,7 +48,7 @@ type TimeHandler interface {
 
 	After(delay time.Duration, cb func(TimeNoder)) TimeNoder
 
-	Schedule(interval time.Duration, cb func(TimeNoder)) TimeNoder
+	Schedule(interval time.Duration, cb func(TimeNoder), opts ...TimerOption) TimeNoder
 
 	// 停止所有定时器
 	StopTimer()

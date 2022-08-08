@@ -1,21 +1,25 @@
 package test
 
 import (
-	"log"
 	"testing"
 	"time"
 
 	"github.com/nomos/go-lokas"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox"
 	"github.com/nomos/go-lokas/timer"
 )
+
+func init() {
+	log.InitDefault(true, true, "")
+}
 
 func TestTimer(t *testing.T) {
 
 	handler1 := timer.NewHandler()
 	handler2 := timer.NewHandler()
 
-	log.Printf("handler init completed")
+	log.Info("handler init completed")
 
 	go func() {
 		for {
@@ -42,15 +46,15 @@ func TestTimer(t *testing.T) {
 	handler2.PrintDebug()
 
 	handler1.After(3*time.Second, func(tn timer.TimeNoder) {
-		log.Println("handler1 event1  cb", tn.GetDelay(), tn.GetInterval())
+		log.Infof("handler1 event1  cb", tn.GetDelay(), tn.GetInterval())
 	})
 
 	handler1.Schedule(1*time.Second, func(tn timer.TimeNoder) {
-		log.Println("handler1 event2 cb")
+		log.Infof("handler1 event2 cb")
 	})
 
 	handler2.Schedule(2*time.Second, func(tn timer.TimeNoder) {
-		log.Println("handler2 event1 cb")
+		log.Infof("handler2 event1 cb")
 	})
 
 	handler1.PrintDebug()
@@ -59,7 +63,7 @@ func TestTimer(t *testing.T) {
 	// handler2.PrintDebug()
 	handler1.StopTimer()
 	// Stop()
-	log.Println("handler1 stop")
+	log.Infof("handler1 stop")
 	handler1.PrintDebug()
 
 	time.Sleep(5 * time.Second)
@@ -75,17 +79,42 @@ func TestTimerActor(t *testing.T) {
 	var ia lokas.IActor = actor1
 
 	ia.After(3*time.Second, func(tn timer.TimeNoder) {
-		log.Println("actor1 after!!", tn.GetDelay(), tn.GetInterval())
+		log.Infof("actor1 after!!", tn.GetDelay(), tn.GetInterval())
 	})
 
 	node := ia.Schedule(1*time.Second, func(tn timer.TimeNoder) {
-		log.Println("actor1 schedule!!", tn.GetDelay(), tn.GetInterval())
+		log.Infof("actor1 schedule!!", tn.GetDelay(), tn.GetInterval())
 	})
 
-	log.Println("start!!")
+	log.Infof("start!!")
 
 	time.Sleep(10 * time.Second)
 	node.Stop()
 
 	time.Sleep(20 * time.Second)
+}
+
+func TestTimerOption(t *testing.T) {
+
+	h1 := timer.NewHandler()
+
+	repeat := 0
+	h1.Schedule(2*time.Second, func(tn timer.TimeNoder) {
+		repeat++
+		log.Infof("time interval ", repeat)
+	}, timer.WithDelay(5*time.Second), timer.WithLoop(5))
+
+	go func() {
+		for {
+			select {
+			case data := <-h1.EventChan():
+				msg := data.(*timer.TimeEventMsg)
+				msg.Callback(msg.TimeNoder)
+			}
+		}
+	}()
+
+	log.Infof("time started")
+
+	time.Sleep(30 * time.Second)
 }

@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+type TimerOption func(node *timeNode)
+
 type timeHandler struct {
 	key       uint64
 	eventChan chan TypeEventChan
@@ -15,49 +17,72 @@ type timeHandler struct {
 	noders sync.Map
 }
 
-func (t *timeHandler) After(delay time.Duration, cb func(TimeNoder)) TimeNoder {
-
-	// tn := t.wheel.After(delay, cb)
-
-	jiffies := atomic.LoadUint64(&t.wheel.jiffies)
-
-	expire := delay/(time.Millisecond*10) + time.Duration(jiffies)
-
-	node := &timeNode{
-		expire: uint64(expire),
-
-		callback: cb,
-
-		delay:    uint64(delay),
-		interval: uint64(0),
-		loop:     0,
-		handler:  t,
+func WithDelay(delay time.Duration) TimerOption {
+	return func(node *timeNode) {
+		node.delay = uint64(delay)
 	}
-
-	tn := t.wheel.add(node, jiffies)
-
-	t.noders.Store(tn, 1)
-
-	return tn
 }
 
-func (t *timeHandler) Schedule(interval time.Duration, cb func(TimeNoder)) TimeNoder {
+func WithLoop(loop uint64) TimerOption {
+	return func(node *timeNode) {
+		node.loopMax = loop
+	}
+}
+
+func (t *timeHandler) After(delay time.Duration, cb func(TimeNoder)) TimeNoder {
+	// jiffies := atomic.LoadUint64(&t.wheel.jiffies)
+
+	// expire := delay/(time.Millisecond*10) + time.Duration(jiffies)
+
+	// node := &timeNode{
+	// 	expire: uint64(expire),
+
+	// 	callback: cb,
+
+	// 	delay:    uint64(delay),
+	// 	interval: uint64(0),
+	// 	loopMax:  1,
+	// 	handler:  t,
+	// }
+
+	// tn := t.wheel.add(node, jiffies)
+
+	// t.noders.Store(tn, 1)
+
+	// return tn
+
+	return t.Schedule(delay, cb, WithLoop(1))
+}
+
+func (t *timeHandler) Schedule(interval time.Duration, cb func(TimeNoder), opts ...TimerOption) TimeNoder {
 	// tn := t.wheel.Schedule(interval, cb)
 
 	jiffies := atomic.LoadUint64(&t.wheel.jiffies)
 
-	expire := getExpire(interval, jiffies)
+	// expire := getExpire(interval, jiffies)
 
 	node := &timeNode{
-		userExpire: interval,
-		expire:     uint64(expire),
-		callback:   cb,
-		isSchedule: true,
-
+		expire:   0,
+		callback: cb,
 		delay:    uint64(0),
 		interval: uint64(interval),
-		loop:     0,
+		loopCur:  0,
+		loopMax:  0,
 		handler:  t,
+	}
+
+	for _, v := range opts {
+		v(node)
+	}
+
+	if node.delay <= 0 {
+		node.delay = 0
+	}
+
+	if node.delay > 0 {
+		node.expire = node.delay/(uint64(time.Millisecond*10)) + jiffies
+	} else {
+		node.expire = node.interval/(uint64(time.Millisecond*10)) + jiffies
 	}
 
 	tn := t.wheel.add(node, jiffies)
