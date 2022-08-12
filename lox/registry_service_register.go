@@ -70,7 +70,16 @@ func (register *ServiceRegister) registerEtcd() error {
 		remoteValue := s.Get(strKey)
 
 		if remoteValue != "" {
-			return protocol.ERR_REGISTER_SERVICE_DUPLICATED
+			remoteInfo := &lokas.ServiceInfo{}
+			remoteErr := json.Unmarshal([]byte(remoteValue), remoteInfo)
+			if remoteErr == nil {
+				if register.serviceInfo.Host != remoteInfo.Host || register.serviceInfo.Port != remoteInfo.Port {
+					// different service info
+					return protocol.ERR_REGISTER_SERVICE_DUPLICATED
+				}
+			} else {
+				log.Error("register data unpacked err", zap.String("err", remoteErr.Error()), zap.String("value", remoteValue))
+			}
 		}
 
 		s.Put(strKey, string(strServiceInfo), clientv3.WithLease(register.leaseId))
