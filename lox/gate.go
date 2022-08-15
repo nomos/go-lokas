@@ -66,7 +66,7 @@ type Gate struct {
 	lokas.ISessionManager
 	Host               string
 	Port               string
-	AuthFunc           func(data []byte) error
+	AuthFunc           func(data []byte) (interface{}, error)
 	SessionCreatorFunc func(conn lokas.IConn) lokas.ISession
 	Protocol           protocol.TYPE
 	connType           ConnType

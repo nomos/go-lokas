@@ -7,7 +7,7 @@ import (
 )
 
 type LoginHandShake struct {
-	GameId string
+	 GameId string
 	Version string
 	ServerId int32
 	UserId util.ID

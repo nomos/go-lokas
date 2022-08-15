@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
@@ -195,6 +196,7 @@ func (this *AvatarSession) FetchData(a lokas.IProcess) error {
 	avatar := &AvatarMap{}
 	err = a.GetMongo().Collection("avatarmap").Find(context.TODO(), bson.M{"_id": this.Id}).One(avatar)
 	if err != nil {
+		// TODO create avatar
 		log.Error(err.Error())
 		return err
 	}

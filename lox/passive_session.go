@@ -1,13 +1,17 @@
 package lox
 
 import (
+	"bytes"
+	"encoding/binary"
+	"encoding/json"
+	"time"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"go.uber.org/zap"
-	"time"
 )
 
 type PassiveSessionOption func(*PassiveSession)
@@ -44,7 +48,7 @@ type PassiveSession struct {
 	OnCloseFunc      func(conn lokas.IConn)
 	OnOpenFunc       func(conn lokas.IConn)
 	ClientMsgHandler func(msg *protocol.BinaryMessage)
-	AuthFunc         func(data []byte) error
+	AuthFunc         func(data []byte) (interface{}, error)
 	timeout          time.Duration
 	ticker           *time.Ticker
 }
@@ -127,6 +131,7 @@ func (this *PassiveSession) StartMessagePump() {
 		this.doneServer = nil
 	}()
 }
+
 func (this *PassiveSession) clientLoop() {
 	for {
 		select {
@@ -166,8 +171,9 @@ func (this *PassiveSession) clientLoop() {
 			}
 			if cmdId == protocol.TAG_HandShake {
 				var err error
+				var ret interface{}
 				if this.AuthFunc != nil {
-					err = this.AuthFunc(msg.Body.(*protocol.HandShake).Data)
+					ret, err = this.AuthFunc(msg.Body.(*protocol.HandShake).Data)
 				}
 				if err != nil {
 					log.Error(err.Error())
@@ -184,6 +190,32 @@ func (this *PassiveSession) clientLoop() {
 					this.Conn.Close()
 					return
 				}
+
+				if ret != nil {
+					body, err := json.Marshal(ret)
+					if err != nil {
+						log.Error(err.Error())
+						return
+					}
+					var out bytes.Buffer
+					binary.Write(&out, binary.LittleEndian, uint16(0))
+					binary.Write(&out, binary.LittleEndian, msg.TransId)
+					binary.Write(&out, binary.LittleEndian, msg.CmdId)
+					binary.Write(&out, binary.LittleEndian, body)
+
+					data = out.Bytes()
+					binary.LittleEndian.PutUint16(data[0:2], uint16(out.Len()))
+
+					hs := &protocol.HandShake{
+						Data: body,
+					}
+					data1, _ := protocol.MarshalMessage(msg.TransId, hs, this.Protocol)
+
+					log.Debug("handshake data", zap.Binary("data", data))
+					log.Debug("handshake data1", zap.Binary("data1", data1))
+
+				}
+
 				_, err = this.Conn.Write(data)
 				if err != nil {
 					log.Error(err.Error())
