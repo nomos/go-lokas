@@ -209,10 +209,7 @@ func (this *PassiveSession) clientLoop() {
 					hs := &protocol.HandShake{
 						Data: body,
 					}
-					data1, _ := protocol.MarshalMessage(msg.TransId, hs, this.Protocol)
-
-					log.Debug("handshake data", zap.Binary("data", data))
-					log.Debug("handshake data1", zap.Binary("data1", data1))
+					data, _ = protocol.MarshalMessage(msg.TransId, hs, this.Protocol)
 
 				}
 
