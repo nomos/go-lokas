@@ -2,6 +2,7 @@ package promise
 
 import (
 	"errors"
+	"github.com/nomos/go-lokas/util"
 	"sync"
 	"time"
 )
@@ -35,6 +36,11 @@ func (this *Timeout) IsClose() bool {
 
 func (this *Timeout) Close() {
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				util.Recover(r, false)
+			}
+		}()
 		if this.closeChan != nil {
 			this.closeChan <- struct{}{}
 		}
