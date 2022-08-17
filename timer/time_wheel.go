@@ -65,6 +65,10 @@ func newTimeWheel() *timeWheel {
 	return t
 }
 
+func (t *timeWheel) Now() time.Time {
+	return time.UnixMilli(int64(t.curTimePoint * 10)).Local()
+}
+
 func (t *timeWheel) init() {
 
 	// t.timeEvent = make(chan interface{})
@@ -286,11 +290,14 @@ func (t *timeWheel) moveAndExec() {
 		head.Del(pos)
 
 		val.loopCur++
-
-		isLoop := true
-		if val.loopMax > 0 && val.loopCur >= val.loopMax {
-			isLoop = false
+		var interval uint64
+		var isLoop bool
+		if !val.isCron {
+			interval, isLoop = val.intervalExpireFunc()
+		} else {
+			interval, isLoop = val.cronExpireFunc(t)
 		}
+		val.interval = interval
 		if !isLoop {
 			val.handler.noders.Delete(val)
 		}
@@ -304,7 +311,6 @@ func (t *timeWheel) moveAndExec() {
 			TimeNoder: val,
 		}
 		val.handler.eventChan <- msg
-
 		if isLoop {
 			jiffies := t.jiffies
 			// 这里的jiffies必须要减去1
@@ -312,7 +318,7 @@ func (t *timeWheel) moveAndExec() {
 			// 每次多一个时间片，就变成累加器, 最后周期定时器慢慢会变得不准
 
 			// val.expire = uint64(getExpire(val.userExpire, jiffies-1))
-			val.expire = val.interval/(uint64(time.Millisecond)*10) + jiffies
+			val.expire = val.interval/(uint64(time.Millisecond)*10) + jiffies - 1
 			t.add(val, jiffies)
 		}
 

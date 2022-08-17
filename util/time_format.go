@@ -5,10 +5,61 @@ import (
 	"time"
 )
 
+const dayDuration time.Duration = time.Hour * 24
+
 var Time2028 = time.Date(2028, 1, 1, 0, 0, 0, 0, time.Local)
 
 func SameDay(a, b time.Time) bool {
 	return a.Year() == b.Year() && a.YearDay() == b.YearDay()
+}
+
+//获取这星期的星期几
+func GetWeekDay(date time.Time, weekday time.Weekday) time.Time {
+	day_epoch := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
+	t := date.Weekday()
+	return day_epoch.Add(dayDuration * time.Duration(weekday-t))
+}
+
+//获取本月的起始时间
+func GetMonthStartEnd(t time.Time) (time.Time, time.Time) {
+	monthStartDay := t.AddDate(0, 0, -t.Day()+1)
+	monthStartTime := time.Date(monthStartDay.Year(), monthStartDay.Month(), monthStartDay.Day(), 0, 0, 0, 0, t.Location())
+	monthEndDay := monthStartTime.AddDate(0, 1, -1)
+	monthEndTime := time.Date(monthEndDay.Year(), monthEndDay.Month(), monthEndDay.Day(), 23, 59, 59, 0, t.Location())
+	return monthStartTime, monthEndTime
+}
+
+//获取本月有几天
+func GetDaysOfMonth(t time.Time) int {
+	monthStartDay := t.AddDate(0, 0, -t.Day()+1)
+	monthStartTime := time.Date(monthStartDay.Year(), monthStartDay.Month(), monthStartDay.Day(), 0, 0, 0, 0, t.Location())
+	return monthStartTime.AddDate(0, 1, -1).Day() + 1
+}
+
+func GetLastDayOfMonth(t time.Time) time.Time {
+	monthStartDay := t.AddDate(0, 0, -t.Day()+1)
+	monthStartTime := time.Date(monthStartDay.Year(), monthStartDay.Month(), monthStartDay.Day(), 0, 0, 0, 0, t.Location())
+	return monthStartTime.AddDate(0, 1, -1)
+}
+
+func GetLastWeekDay(t time.Time, weekday time.Weekday) time.Time {
+	lastDay := GetLastDayOfMonth(t)
+	lastDayWeekday := lastDay.Weekday()
+	dayShift := weekday - lastDayWeekday
+	if dayShift > 0 {
+		dayShift -= 7
+	}
+	return lastDay.AddDate(0, 0, int(dayShift))
+}
+
+func GetMonthDayByLastWeekDay(t time.Time, weekday time.Weekday) int {
+	lastDay := GetLastDayOfMonth(t)
+	lastDayWeekday := lastDay.Weekday()
+	dayShift := weekday - lastDayWeekday
+	if dayShift > 0 {
+		dayShift -= 7
+	}
+	return lastDay.Day() + int(dayShift)
 }
 
 func IsToday(ts int64) bool {
@@ -23,20 +74,20 @@ func FormatTimeToISOString(time time.Time) string {
 	return time.Format("2006-01-02T15:04:05")
 }
 
-func UnixSecondToString(unix int64) string{
-	return FormatTimeToString(time.Unix(unix,0))
+func UnixSecondToString(unix int64) string {
+	return FormatTimeToString(time.Unix(unix, 0))
 }
 
-func UnixNanoToString(nano int64) string{
-	return FormatTimeToString(time.Unix(0,nano))
+func UnixNanoToString(nano int64) string {
+	return FormatTimeToString(time.Unix(0, nano))
 }
 
-func MilliSecondToString(millisec int64) string{
+func MilliSecondToString(millisec int64) string {
 	return FormatTimeToString(GetTimeFromMs(millisec))
 }
 
-func GetTimeFromMs(t int64)time.Time{
-	return time.Unix(t/time.Millisecond.Nanoseconds(),0)
+func GetTimeFromMs(t int64) time.Time {
+	return time.Unix(t/time.Millisecond.Nanoseconds(), 0)
 }
 
 func CheckTimeFormat(src, layout string) bool {
@@ -44,11 +95,11 @@ func CheckTimeFormat(src, layout string) bool {
 	return err == nil
 }
 
-func GetDateWithOffset(t time.Time,offset time.Duration) string {
-	return GetTimeWithOffset(t,offset).Format("060102")
+func GetDateWithOffset(t time.Time, offset time.Duration) string {
+	return GetTimeWithOffset(t, offset).Format("060102")
 }
 
-func GetTimeWithOffset(t time.Time,offset time.Duration) time.Time {
+func GetTimeWithOffset(t time.Time, offset time.Duration) time.Time {
 	return t.Add(-offset)
 }
 
@@ -59,7 +110,7 @@ func GetDateNoOffset(t time.Time) string {
 //GetNowDateWithOffset
 //得到带重置时间的当天的YYYYMMHH
 func GetNowDateWithOffset(offset time.Duration) string {
-	return GetDateWithOffset(time.Now(),offset)
+	return GetDateWithOffset(time.Now(), offset)
 }
 
 //得到当前时间到2028年的时间
@@ -73,18 +124,18 @@ func GetPassedDays(tm1, tm2 time.Time) int64 {
 	return tm1.Unix()/86400 - tm2.Unix()/86400
 }
 
-func TimeParseLocal(str string)(time.Time,error){
+func TimeParseLocal(str string) (time.Time, error) {
 	return dateparse.ParseLocal(str)
 }
 
-func FormatTimeToDayString(time time.Time)string {
+func FormatTimeToDayString(time time.Time) string {
 	return time.Format("2006-01-02")
 }
 
-func FormatTimeToMonthString(time time.Time)string {
+func FormatTimeToMonthString(time time.Time) string {
 	return time.Format("2006-01")
 }
 
-func FormatTimeToYearString(time time.Time)string {
+func FormatTimeToYearString(time time.Time) string {
 	return time.Format("2006")
 }

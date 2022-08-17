@@ -34,9 +34,15 @@ type Timer interface {
 	NewHandler() TimeHandler
 }
 
+type ITimerData interface {
+	Restore()
+}
+
 // 停止单个定时器
 type TimeNoder interface {
 	Stop()
+
+	GetCallback() func(TimeNoder)
 
 	GetDelay() time.Duration
 
@@ -49,6 +55,10 @@ type TimeHandler interface {
 	After(delay time.Duration, cb func(TimeNoder)) TimeNoder
 
 	Schedule(interval time.Duration, cb func(TimeNoder), opts ...TimerOption) TimeNoder
+
+	Cron(second, minute, hour, day, month, weekday string, cb func(TimeNoder)) TimeNoder
+
+	At(t time.Time, cb func(TimeNoder)) TimeNoder
 
 	// 停止所有定时器
 	StopTimer()

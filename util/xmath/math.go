@@ -48,6 +48,34 @@ func Pow[T Number](x, y T) T {
 	return ret
 }
 
+func MaxArr[T Number](v []T) T {
+	var max T
+	for i := 0; i < len(v); i++ {
+		if i == 0 {
+			max = v[i]
+		} else {
+			if v[i] > max {
+				max = v[i]
+			}
+		}
+	}
+	return max
+}
+
+func MinArr[T Number](v []T) T {
+	var min T
+	for i := 0; i < len(v); i++ {
+		if i == 0 {
+			min = v[i]
+		} else {
+			if v[i] < min {
+				min = v[i]
+			}
+		}
+	}
+	return min
+}
+
 func Max[T Number](x, y T) T {
 	if x > y {
 		return x

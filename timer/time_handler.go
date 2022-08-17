@@ -1,7 +1,7 @@
 package timer
 
 import (
-	"log"
+	"github.com/nomos/go-lokas/log"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -29,8 +29,13 @@ func WithLoop(loop uint64) TimerOption {
 	}
 }
 
-func (t *timeHandler) After(delay time.Duration, cb func(TimeNoder)) TimeNoder {
-	// jiffies := atomic.LoadUint64(&t.wheel.jiffies)
+func (this *timeHandler) At(t time.Time, cb func(TimeNoder)) TimeNoder {
+	delay := t.Sub(this.wheel.Now())
+	return this.Schedule(delay, cb, WithLoop(1))
+}
+
+func (this *timeHandler) After(delay time.Duration, cb func(TimeNoder)) TimeNoder {
+	// jiffies := atomic.LoadUint64(&this.wheel.jiffies)
 
 	// expire := delay/(time.Millisecond*10) + time.Duration(jiffies)
 
@@ -42,24 +47,51 @@ func (t *timeHandler) After(delay time.Duration, cb func(TimeNoder)) TimeNoder {
 	// 	delay:    uint64(delay),
 	// 	interval: uint64(0),
 	// 	loopMax:  1,
-	// 	handler:  t,
+	// 	handler:  this,
 	// }
 
-	// tn := t.wheel.add(node, jiffies)
+	// tn := this.wheel.add(node, jiffies)
 
-	// t.noders.Store(tn, 1)
+	// this.noders.Store(tn, 1)
 
 	// return tn
 
-	return t.Schedule(delay, cb, WithLoop(1))
+	return this.Schedule(delay, cb, WithLoop(1))
 }
 
-func (t *timeHandler) Schedule(interval time.Duration, cb func(TimeNoder), opts ...TimerOption) TimeNoder {
-	// tn := t.wheel.Schedule(interval, cb)
+//func (t *timeHandler) Cron(year int,month int,){
+//	time.
+//}
 
-	jiffies := atomic.LoadUint64(&t.wheel.jiffies)
+func (this *timeHandler) Cron(second, minute, hour, day, month, weekday string, cb func(TimeNoder)) TimeNoder {
+	jiffies := atomic.LoadUint64(&this.wheel.jiffies)
 
-	// expire := getExpire(interval, jiffies)
+	node := &timeNode{
+		expire:   0,
+		callback: cb,
+		delay:    uint64(0),
+		loopCur:  0,
+		loopMax:  0,
+		handler:  this,
+		isCron:   true,
+	}
+	err := node.parseCron(second, minute, hour, day, month, weekday)
+	if err != nil {
+		//TODO:err handler
+		log.Panic(err.Error())
+	}
+	expire, _ := node.cronExpireFunc(this.wheel)
+	node.expire = expire/(uint64(time.Millisecond*10)) + jiffies
+
+	tn := this.wheel.add(node, jiffies)
+
+	this.noders.Store(tn, 1)
+
+	return tn
+}
+
+func (this *timeHandler) Schedule(interval time.Duration, cb func(TimeNoder), opts ...TimerOption) TimeNoder {
+	jiffies := atomic.LoadUint64(&this.wheel.jiffies)
 
 	node := &timeNode{
 		expire:   0,
@@ -68,7 +100,8 @@ func (t *timeHandler) Schedule(interval time.Duration, cb func(TimeNoder), opts 
 		interval: uint64(interval),
 		loopCur:  0,
 		loopMax:  0,
-		handler:  t,
+		handler:  this,
+		isCron:   false,
 	}
 
 	for _, v := range opts {
@@ -85,48 +118,48 @@ func (t *timeHandler) Schedule(interval time.Duration, cb func(TimeNoder), opts 
 		node.expire = node.interval/(uint64(time.Millisecond*10)) + jiffies
 	}
 
-	tn := t.wheel.add(node, jiffies)
+	tn := this.wheel.add(node, jiffies)
 
-	t.noders.Store(tn, 1)
+	this.noders.Store(tn, 1)
 
 	return tn
 }
 
-func (t *timeHandler) EventChan() <-chan TypeEventChan {
-	return t.eventChan
+func (this *timeHandler) EventChan() <-chan TypeEventChan {
+	return this.eventChan
 }
 
-func (t *timeHandler) DelTimer() {
+func (this *timeHandler) DelTimer() {
 
 	// delete time event
-	t.StopTimer()
+	this.StopTimer()
 
 	// close channel
-	close(t.eventChan)
-	t.eventChan = nil
+	close(this.eventChan)
+	this.eventChan = nil
 
 	// delete wheel handler map
-	t.wheel.handlers.Delete(t.key)
-	t.wheel = nil
+	this.wheel.handlers.Delete(this.key)
+	this.wheel = nil
 
 }
 
-func (t *timeHandler) StopTimer() {
-	t.noders.Range(func(key, value any) bool {
+func (this *timeHandler) StopTimer() {
+	this.noders.Range(func(key, value any) bool {
 		node := key.(*timeNode)
 		node.Stop()
 		return true
 	})
 }
 
-func (t *timeHandler) PrintDebug() {
+func (this *timeHandler) PrintDebug() {
 
 	i := 0
 
-	t.noders.Range(func(key, value any) bool {
+	this.noders.Range(func(key, value any) bool {
 		i++
 		return true
 	})
 
-	log.Println("handler info, key:", t.key, " nodeCnt:", i)
+	log.Infof("handler info, key:", this.key, " nodeCnt:", i)
 }

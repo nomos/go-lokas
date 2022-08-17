@@ -18,6 +18,7 @@ func TestTimer(t *testing.T) {
 
 	handler1 := timer.NewHandler()
 	handler2 := timer.NewHandler()
+	handler3 := timer.NewHandler()
 
 	log.Info("handler init completed")
 
@@ -42,6 +43,16 @@ func TestTimer(t *testing.T) {
 		}
 	}()
 
+	go func() {
+		for {
+			select {
+			case data := <-handler3.EventChan():
+				msg := data.(*timer.TimeEventMsg)
+				msg.Callback(msg.TimeNoder)
+			}
+		}
+	}()
+
 	handler1.PrintDebug()
 	handler2.PrintDebug()
 
@@ -55,6 +66,10 @@ func TestTimer(t *testing.T) {
 
 	handler2.Schedule(2*time.Second, func(tn timer.TimeNoder) {
 		log.Infof("handler2 event1 cb")
+	})
+
+	handler3.Cron("1,15,16", "*", "*", "*", "*", "?", func(noder timer.TimeNoder) {
+		log.Warnf("Handler3", time.Now())
 	})
 
 	handler1.PrintDebug()
