@@ -29,4 +29,5 @@ var (
 	ERR_PROTOCOL_NOT_FOUND     = protocol.CreateError(1203, "协议未找到")
 	ERR_NAME_EXIST             = protocol.CreateError(1222, "名称重复")
 	ERR_MULTI_DEV_LOG          = protocol.CreateError(1204, "multi device login")
+	ERR_SERVICE_NOT_FIND       = protocol.CreateError(1205, "服务器未找到")
 )

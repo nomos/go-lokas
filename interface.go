@@ -215,6 +215,7 @@ type IRegistry interface {
 	GetActorIdsByTypeAndServerId(serverId int32, typ string) []util.ID
 
 	GetServiceRegisterMgr() IServiceRegisterMgr
+	GetServiceDiscoverMgr() IServiceDiscoverMgr
 }
 
 type IServiceRegisterMgr interface {
@@ -223,6 +224,10 @@ type IServiceRegisterMgr interface {
 	UpdateServiceInfo(info *ServiceInfo) error
 	FindServiceInfo(serviceType string, serviceId uint16) (*ServiceInfo, bool)
 	FindServiceList(serviceType string) ([]*ServiceInfo, bool)
+}
+
+type IServiceDiscoverMgr interface {
+	FindServiceInfo(serviceType string, serviceId uint16) (*ServiceInfo, bool)
 }
 
 //IRouter interface for router

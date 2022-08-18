@@ -30,6 +30,7 @@ type Registry struct {
 	serviceWatchCloseChan chan struct{}
 
 	serviceRegisterMgr *ServiceRegisterMgr
+	serviceDiscoverMgr *ServiceDiscoverMgr
 
 	timer   *time.Ticker
 	done    chan struct{}
@@ -42,12 +43,17 @@ func NewRegistry(process lokas.IProcess) *Registry {
 		LocalRegistry:      NewCommonRegistry(),
 		GlobalRegistry:     NewCommonRegistry(),
 		serviceRegisterMgr: NewServiceRegisterMgr(process),
+		serviceDiscoverMgr: NewServiceDiscoverMgr(process),
 	}
 	return ret
 }
 
-func (this *Registry) GetServiceRegisterMgr() lokas.IServiceRegisterMgr {
-	return this.serviceRegisterMgr
+func (reg *Registry) GetServiceRegisterMgr() lokas.IServiceRegisterMgr {
+	return reg.serviceRegisterMgr
+}
+
+func (reg *Registry) GetServiceDiscoverMgr() lokas.IServiceDiscoverMgr {
+	return reg.serviceDiscoverMgr
 }
 
 func (this *Registry) GetActorIdsByTypeAndServerId(serverId int32, typ string) []util.ID {
@@ -161,6 +167,7 @@ func (this *Registry) OnStop() error {
 	log.Info("Registry:OnStop")
 
 	this.serviceRegisterMgr.Stop()
+	this.serviceDiscoverMgr.Stop()
 
 	return nil
 }
@@ -180,10 +187,12 @@ func (this *Registry) Type() string {
 func (this *Registry) Load(conf lokas.IConfig) error {
 	this.startUpdateRemoteActorInfo()
 	this.startUpdateRemoteProcessInfo()
-	err := this.startUpdateRemoteService()
+	// err := this.startUpdateRemoteService()
+	err := this.serviceDiscoverMgr.StartDiscover()
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
