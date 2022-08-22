@@ -288,7 +288,6 @@ func (t *timeWheel) moveAndExec() {
 	head.ForEachSafe(func(pos *Head) {
 		val := (*timeNode)(pos.Entry(offset))
 		head.Del(pos)
-
 		val.loopCur++
 		var interval uint64
 		var isLoop bool
@@ -318,7 +317,7 @@ func (t *timeWheel) moveAndExec() {
 			// 每次多一个时间片，就变成累加器, 最后周期定时器慢慢会变得不准
 
 			// val.expire = uint64(getExpire(val.userExpire, jiffies-1))
-			val.expire = val.interval/(uint64(time.Millisecond)*10) + jiffies - 1
+			val.expire = val.interval/(uint64(time.Millisecond)*10) + jiffies
 			t.add(val, jiffies)
 		}
 

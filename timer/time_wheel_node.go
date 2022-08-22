@@ -184,15 +184,14 @@ func rangeCheck(s string) (bool, []int) {
 		return false, nil
 	}
 	ret := []int{}
-	res := r.ReplaceAllString(s, "$1")
-	split := strings.Split(res, "-")
+	split := strings.Split(s, "-")
 	min, _ := strconv.Atoi(strings.TrimSpace(split[0]))
-	max, _ := strconv.Atoi(strings.TrimSpace(split[0]))
+	max, _ := strconv.Atoi(strings.TrimSpace(split[1]))
 	if min > max {
 		log.Error("timewheel:parse error,range min must <= max " + s)
 		return false, nil
 	}
-	for i := min; i < max; i++ {
+	for i := min; i <= max; i++ {
 		ret = append(ret, i)
 	}
 	return true, ret
@@ -253,7 +252,7 @@ func checkCronString(s string, period int) (bitset.BitSet, error) {
 		}
 	}
 	offset := 0
-	if period == 7 || period == 31 || period == 12 {
+	if period == 31 || period == 12 {
 		offset = -1
 	}
 	if d := digitalCheck(s); d != -1 {
@@ -264,7 +263,7 @@ func checkCronString(s string, period int) (bitset.BitSet, error) {
 		ret = ret.Set(d+offset, true)
 		return ret, nil
 	}
-	if ok, entry := splitCheck(s); ok {
+	if ok, entry := rangeCheck(s); ok {
 		if !checkMaxMin(period, entry, offset) {
 			return 0, log.Error("timewheel:range error")
 		}
@@ -274,7 +273,7 @@ func checkCronString(s string, period int) (bitset.BitSet, error) {
 		}
 		return ret, nil
 	}
-	if ok, entry := rangeCheck(s); ok {
+	if ok, entry := splitCheck(s); ok {
 		if !checkMaxMin(period, entry, offset) {
 			return 0, log.Error("timewheel:range error")
 		}
@@ -335,14 +334,24 @@ func (this *timeNode) parseCron(second, minute, hour, day, month, weekday string
 		return err
 	}
 	this.month = b
+
 	return nil
 }
 
-func (this timeNode) cronExpireFunc(t *timeWheel) (uint64, bool) {
+func (this timeNode) parseDebug() {
+	log.Infof("month", this.month.Values(12))
+	log.Infof("weekday", this.weekday.Values(7))
+	log.Infof("day", this.monthday.Values(31))
+	log.Infof("hour", this.hour.Values(24))
+	log.Infof("minute", this.minute.Values(60))
+	log.Infof("second", this.second.Values(60))
+}
+
+func (this timeNode) initCronExpireFunc(t *timeWheel) (uint64, bool) {
 	now := t.Now()
+	var t1 time.Time
 	year := now.Year()
 	monthday := now.Day()
-	weekday := now.Weekday()
 	month := int(now.Month())
 	hour := now.Hour()
 	minute := now.Minute()
@@ -352,13 +361,49 @@ func (this timeNode) cronExpireFunc(t *timeWheel) (uint64, bool) {
 	move_day := false
 	move_hour := false
 	move_minute := false
+	defer func() {
+		if r := recover(); r != nil {
+			util.Recover(r, false)
+		}
+	}()
+	second, move_minute = this.getNextSecond(second)
+	minute, move_hour = this.getNextMinute(minute, move_minute)
+	hour, move_day = this.getNextHour(hour, move_hour)
+	if move_day {
+		t1, move_month = this.getNextDayStart(now, month)
+	}
+	monthday, month, year = this.getNextDayMonthTime(t1, this.useWeekDay, this.lastMonthDay, move_month, false)
+	if move_year {
+		year += 1
+	}
+	next_time := time.Date(year, time.Month(month), monthday, hour, minute, second, 0, time.Local)
+	d := next_time.Sub(now)
+	return uint64(d), true
+}
+
+func (this timeNode) cronExpireFunc(t *timeWheel) (uint64, bool) {
+	now := t.Now()
+	var t1 time.Time
+	year := now.Year()
+	monthday := now.Day()
+	month := int(now.Month())
+	hour := now.Hour()
+	minute := now.Minute()
+	second := now.Second()
+	move_month := false
+	move_year := false
+	move_day := false
+	move_hour := false
+	move_minute := false
+
 	if second, move_minute = this.getNextSecond(second); move_minute {
-		if minute, move_hour = this.getNextMinute(minute); move_hour {
-			if hour, move_day = this.getNextHour(hour); move_day {
-				if monthday, move_month = this.getNextDay(monthday, now, this.useWeekDay, int(weekday), this.lastMonthDay); move_month {
-					month, move_year = this.getNextMonth(month)
-				}
+		if minute, move_hour = this.getNextMinute(minute, true); move_hour {
+			if hour, move_day = this.getNextHour(hour, true); move_day {
 			}
+			if move_day {
+				t1, move_month = this.getNextDayStart(now, month)
+			}
+			monthday, month, year = this.getNextDayMonthTime(t1, this.useWeekDay, this.lastMonthDay, move_month, false)
 		}
 	}
 	if move_year {
@@ -369,75 +414,95 @@ func (this timeNode) cronExpireFunc(t *timeWheel) (uint64, bool) {
 	return uint64(d), true
 }
 
-func (this *timeNode) getNextMonth(month int) (next_month int, move_year bool) {
-	month += 1
-	for i := 0; i < 12; i++ {
-		month += 1
-		if month > 11 {
-			month = 0
-			move_year = true
-		}
-		if this.month.Get(month) {
-			next_month = month
-			return
-		}
-	}
-	log.Panic("timewheel:month not found")
-	return
-}
+func (this *timeNode) getNextDayMonthTime(now time.Time, is_weekday bool, last_day int, move_month, move_year bool) (next_day, next_month, next_year int) {
 
-func (this *timeNode) getNextWeekDay(day int, week_day int, now time.Time, last_day int) (next_day int, move_month bool) {
 	days := util.GetDaysOfMonth(now)
-	if last_day >= 0 {
-		next_day = util.GetMonthDayByLastWeekDay(now, time.Weekday(week_day))
-		if day+1 > next_day {
-			return next_day, true
+	monthday := now.Day()
+	weekday := int(now.Weekday())
+	month := int(now.Month())
+	year := now.Year()
+	if move_month {
+		for i := 0; i < 12; i++ {
+			if this.month.Get(month - 1) {
+				if i > 0 {
+					now = util.GetNextMonthsStart(now, i)
+					return this.getNextDayMonthTime(now, is_weekday, last_day, true, false)
+				} else {
+					break
+				}
+			}
+			month += 1
+			if month > 12 {
+				now = util.GetNextYearStart(now)
+				return this.getNextDayMonthTime(now, is_weekday, last_day, true, true)
+			}
 		}
-		return next_day, false
 	}
-	for i := 0; i < 7; i++ {
-		week_day += 1
-		day += 1
-		if day > days-1 {
-			day = 0
-			move_month = true
-		}
-		if this.weekday.Get(week_day) {
-			next_day = day
-			return
-		}
-	}
-	log.Panic("timewheel:week_day not found")
-	return
-}
 
-func (this *timeNode) getNextDay(day int, now time.Time, is_weekday bool, weekday int, last_day int) (next_day int, move_month bool) {
 	if is_weekday {
-		return this.getNextWeekDay(day, weekday, now, last_day)
-	}
-	days := util.GetDaysOfMonth(now)
-	if last_day >= 0 {
-		if day+1 > last_day {
-			return last_day, true
+		if last_day >= 0 {
+			next_day = util.GetMonthDayByLastWeekDay(now, time.Weekday(weekday))
+			if monthday <= next_day {
+				return next_day, month, year
+			} else {
+				next_month_time, is_move_year_or_not := this.getNextMonthStart(now, year)
+				return this.getNextDayMonthTime(next_month_time, is_weekday, last_day, true, move_year || is_move_year_or_not)
+			}
 		}
-		return last_day, false
+		for i := 0; i < 7; i++ {
+			if this.weekday.Get(weekday) {
+				return monthday, month, year
+			}
+			weekday += 1
+			monthday += 1
+			if weekday > 6 {
+				weekday = 0
+			}
+			if monthday > days {
+				next_month_time, is_move_year_or_not := this.getNextMonthStart(now, year)
+				return this.getNextDayMonthTime(next_month_time, is_weekday, last_day, true, move_year || is_move_year_or_not)
+			}
+		}
+		log.Panic("iterator out of range")
+	}
+	if last_day >= 0 {
+		next_day = util.GetLastDaysOfMonth(now, last_day).Day()
+		if monthday <= next_day {
+			return next_day, month, year
+		} else {
+			next_month_time, is_move_year_or_not := this.getNextMonthStart(now, year)
+			return this.getNextDayMonthTime(next_month_time, is_weekday, last_day, true, move_year || is_move_year_or_not)
+		}
 	}
 	for i := 0; i < days; i++ {
-		day += 1
-		if day > days-1 {
-			day = 0
-			move_month = true
+		if this.monthday.Get(monthday - 1) {
+			return monthday, month, year
 		}
-		if this.monthday.Get(day) {
-			next_day = day
-			return
+		monthday += 1
+		if monthday > days {
+			next_month_time, is_move_year_or_not := this.getNextMonthStart(now, year)
+			return this.getNextDayMonthTime(next_month_time, is_weekday, last_day, true, move_year || is_move_year_or_not)
 		}
 	}
-	log.Panic("timewheel:day not found")
+	log.Panic("iterator out of range")
 	return
 }
 
-func (this *timeNode) getNextHour(hour int) (next_hour int, move_day bool) {
+func (this *timeNode) getNextMonthStart(t time.Time, current_year int) (next_month_start time.Time, is_next_year bool) {
+	ret := util.GetNextMonthStart(t)
+	return ret, ret.Year() > current_year
+}
+
+func (this *timeNode) getNextDayStart(t time.Time, current_month int) (next_day_start time.Time, is_next_month bool) {
+	ret := util.GetNextDayStart(t)
+	return ret, int(ret.Month()) != current_month
+}
+
+func (this *timeNode) getNextHour(hour int, next bool) (next_hour int, move_day bool) {
+	if !next && this.hour.Get(hour) {
+		next_hour = hour
+		return
+	}
 	for i := 0; i < 24; i++ {
 		hour += 1
 		if hour > 23 {
@@ -453,7 +518,11 @@ func (this *timeNode) getNextHour(hour int) (next_hour int, move_day bool) {
 	return
 }
 
-func (this *timeNode) getNextMinute(minute int) (next_minute int, move_hour bool) {
+func (this *timeNode) getNextMinute(minute int, next bool) (next_minute int, move_hour bool) {
+	if !next && this.minute.Get(minute) {
+		next_minute = minute
+		return
+	}
 	for i := 0; i < 60; i++ {
 		minute += 1
 		if minute > 59 {
@@ -470,6 +539,7 @@ func (this *timeNode) getNextMinute(minute int) (next_minute int, move_hour bool
 }
 
 func (this *timeNode) getNextSecond(second int) (next_second int, move_minute bool) {
+
 	for i := 0; i < 60; i++ {
 		second += 1
 		if second > 59 {

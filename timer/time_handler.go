@@ -67,20 +67,21 @@ func (this *timeHandler) Cron(second, minute, hour, day, month, weekday string, 
 	jiffies := atomic.LoadUint64(&this.wheel.jiffies)
 
 	node := &timeNode{
-		expire:   0,
-		callback: cb,
-		delay:    uint64(0),
-		loopCur:  0,
-		loopMax:  0,
-		handler:  this,
-		isCron:   true,
+		expire:       0,
+		callback:     cb,
+		delay:        uint64(0),
+		loopCur:      0,
+		loopMax:      0,
+		handler:      this,
+		isCron:       true,
+		lastMonthDay: -1,
 	}
 	err := node.parseCron(second, minute, hour, day, month, weekday)
 	if err != nil {
 		//TODO:err handler
 		log.Panic(err.Error())
 	}
-	expire, _ := node.cronExpireFunc(this.wheel)
+	expire, _ := node.initCronExpireFunc(this.wheel)
 	node.expire = expire/(uint64(time.Millisecond*10)) + jiffies
 
 	tn := this.wheel.add(node, jiffies)

@@ -19,6 +19,40 @@ func GetWeekDay(date time.Time, weekday time.Weekday) time.Time {
 	t := date.Weekday()
 	return day_epoch.Add(dayDuration * time.Duration(weekday-t))
 }
+func GetMonthStart(t time.Time) time.Time {
+	monthStartDay := t.AddDate(0, 0, -t.Day()+1)
+	monthStartTime := time.Date(monthStartDay.Year(), monthStartDay.Month(), monthStartDay.Day(), 0, 0, 0, 0, t.Location())
+	return monthStartTime
+}
+
+func GetDayStart(t time.Time) time.Time {
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
+}
+
+func GetYearStart(t time.Time) time.Time {
+	return time.Date(t.Year(), 1, 1, 0, 0, 0, 0, time.Local)
+}
+
+func GetNextYearStart(t time.Time) time.Time {
+	return time.Date(t.Year(), 1, 1, 0, 0, 0, 0, time.Local).AddDate(1, 0, 0)
+}
+
+func GetNextDayStart(t time.Time) time.Time {
+	dayStart := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
+	return dayStart.AddDate(0, 0, 1)
+}
+
+func GetNextMonthsStart(t time.Time, months int) time.Time {
+	monthStartDay := t.AddDate(0, 0, -t.Day()+1)
+	monthStartTime := time.Date(monthStartDay.Year(), monthStartDay.Month(), monthStartDay.Day(), 0, 0, 0, 0, t.Location())
+	return monthStartTime.AddDate(0, months, 0)
+}
+
+func GetNextMonthStart(t time.Time) time.Time {
+	monthStartDay := t.AddDate(0, 0, -t.Day()+1)
+	monthStartTime := time.Date(monthStartDay.Year(), monthStartDay.Month(), monthStartDay.Day(), 0, 0, 0, 0, t.Location())
+	return monthStartTime.AddDate(0, 1, 0)
+}
 
 //获取本月的起始时间
 func GetMonthStartEnd(t time.Time) (time.Time, time.Time) {
@@ -40,6 +74,12 @@ func GetLastDayOfMonth(t time.Time) time.Time {
 	monthStartDay := t.AddDate(0, 0, -t.Day()+1)
 	monthStartTime := time.Date(monthStartDay.Year(), monthStartDay.Month(), monthStartDay.Day(), 0, 0, 0, 0, t.Location())
 	return monthStartTime.AddDate(0, 1, -1)
+}
+
+func GetLastDaysOfMonth(t time.Time, days int) time.Time {
+	monthStartDay := t.AddDate(0, 0, -t.Day()+1)
+	monthStartTime := time.Date(monthStartDay.Year(), monthStartDay.Month(), monthStartDay.Day(), 0, 0, 0, 0, t.Location())
+	return monthStartTime.AddDate(0, 1, -days)
 }
 
 func GetLastWeekDay(t time.Time, weekday time.Weekday) time.Time {
