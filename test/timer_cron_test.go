@@ -42,12 +42,12 @@ func TestCron(t *testing.T) {
 		}
 	}()
 	first := 0
-	handler1.Cron("0", "0", "0", "?", "8-9", "5-6", func(noder timer.TimeNoder) {
+	handler1.Cron("0", "0", "0", "7L", "8,9", "?", func(noder timer.TimeNoder) {
 		log.Warnf("TimeTest", first, util.FormatTimeToString(timeHandler.Now()))
-		if first == 0 {
-			timeHandler.SetOffset(time.Date(2022, 9, 29, 23, 59, 59, 0, time.Local).Sub(time.Now()))
-			first++
-		}
+		timeHandler.SetOffset(time.Date(2022, 9, 29, 23, 59, 59, 0, time.Local).Sub(time.Now()))
+	})
+	handler1.Cron("0,1,6,10,15,30,45", "*", "0", "?", "8-9", "5L", func(noder timer.TimeNoder) {
+		log.Warnf("TimeTest", first, util.FormatTimeToString(timeHandler.Now()))
 	})
 
 	util.WaitForTerminate()

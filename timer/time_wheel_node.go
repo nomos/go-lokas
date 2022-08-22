@@ -178,6 +178,19 @@ func digitalCheck(s string) int {
 	return ret
 }
 
+func lastCheck(s string) (bool, int) {
+	r := regexp.MustCompile(`\s*([0-9]+)\s*L\s*`)
+	if r.FindString(s) != s {
+		return false, -1
+	}
+	ret, err := strconv.Atoi(r.ReplaceAllString(s, "$1"))
+	if err != nil {
+		log.Error(err.Error())
+		return false, -1
+	}
+	return true, ret
+}
+
 func rangeCheck(s string) (bool, []int) {
 	r := regexp.MustCompile(`\s*([0-9]+)\s*\-\s*([0-9])+\s*`)
 	if r.FindString(s) != s {
@@ -296,19 +309,34 @@ func (this *timeNode) parseCron(second, minute, hour, day, month, weekday string
 		return log.Error("timewheel:must have 1 ? in day or week day")
 	}
 	if ignore_day {
-		b, err := checkCronString(weekday, 7)
-		if err != nil {
-			return err
-		}
 		this.useWeekDay = true
-		this.weekday = b
-	} else {
-		b, err := checkCronString(day, 31)
-		if err != nil {
-			return err
+		if ok, d := lastCheck(weekday); ok {
+			if d < 0 || d > 6 {
+				return log.Error("timewheel:last weekday error,must be 0-6")
+			}
+			this.lastMonthDay = d
+		} else {
+			b, err := checkCronString(weekday, 7)
+			if err != nil {
+				return err
+			}
+			this.weekday = b
 		}
+
+	} else {
 		this.useWeekDay = false
-		this.monthday = b
+		if ok, d := lastCheck(day); ok {
+			if d < 1 || d > 27 {
+				return log.Error("timewheel:last day error,must be 1-27")
+			}
+			this.lastMonthDay = d
+		} else {
+			b, err := checkCronString(day, 31)
+			if err != nil {
+				return err
+			}
+			this.monthday = b
+		}
 	}
 	b, err := checkCronString(month, 12)
 	if err != nil {
@@ -441,7 +469,7 @@ func (this *timeNode) getNextDayMonthTime(now time.Time, is_weekday bool, last_d
 
 	if is_weekday {
 		if last_day >= 0 {
-			next_day = util.GetMonthDayByLastWeekDay(now, time.Weekday(weekday))
+			next_day = util.GetMonthDayByLastWeekDay(now, time.Weekday(last_day))
 			if monthday <= next_day {
 				return next_day, month, year
 			} else {
