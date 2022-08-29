@@ -2,6 +2,8 @@ package timer
 
 import (
 	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/util"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -35,35 +37,51 @@ func (this *timeHandler) At(t time.Time, cb func(TimeNoder)) TimeNoder {
 }
 
 func (this *timeHandler) After(delay time.Duration, cb func(TimeNoder)) TimeNoder {
-	// jiffies := atomic.LoadUint64(&this.wheel.jiffies)
-
-	// expire := delay/(time.Millisecond*10) + time.Duration(jiffies)
-
-	// node := &timeNode{
-	// 	expire: uint64(expire),
-
-	// 	callback: cb,
-
-	// 	delay:    uint64(delay),
-	// 	interval: uint64(0),
-	// 	loopMax:  1,
-	// 	handler:  this,
-	// }
-
-	// tn := this.wheel.add(node, jiffies)
-
-	// this.noders.Store(tn, 1)
-
-	// return tn
-
 	return this.Schedule(delay, cb, WithLoop(1))
 }
 
-//func (t *timeHandler) Cron(year int,month int,){
-//	time.
-//}
+func convertIntToString(i interface{}) (string, error) {
+	if util.IsString(i) {
+		return i.(string), nil
+	}
+	if util.IsInt(i) {
+		return strconv.Itoa(i.(int)), nil
+	}
+	if util.IsBool(i) {
+		if i.(bool) {
+			return "*", nil
+		} else {
+			return "?", nil
+		}
+	}
+	return "", log.Error("type is not correct")
+}
 
-func (this *timeHandler) Cron(second, minute, hour, day, month, weekday string, cb func(TimeNoder)) TimeNoder {
+func (this *timeHandler) Cron(i_second, i_minute, i_hour, i_day, i_month, i_weekday interface{}, cb func(TimeNoder)) TimeNoder {
+	second, err := convertIntToString(i_second)
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	minute, err := convertIntToString(i_minute)
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	hour, err := convertIntToString(i_hour)
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	day, err := convertIntToString(i_day)
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	month, err := convertIntToString(i_month)
+	if err != nil {
+		log.Panic(err.Error())
+	}
+	weekday, err := convertIntToString(i_weekday)
+	if err != nil {
+		log.Panic(err.Error())
+	}
 	jiffies := atomic.LoadUint64(&this.wheel.jiffies)
 
 	node := &timeNode{
@@ -76,7 +94,7 @@ func (this *timeHandler) Cron(second, minute, hour, day, month, weekday string, 
 		isCron:       true,
 		lastMonthDay: -1,
 	}
-	err := node.parseCron(second, minute, hour, day, month, weekday)
+	err = node.parseCron(second, minute, hour, day, month, weekday)
 	if err != nil {
 		//TODO:err handler
 		log.Panic(err.Error())

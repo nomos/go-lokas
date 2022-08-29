@@ -17,3 +17,15 @@ func Nil[T any]() T {
 	var t T
 	return t
 }
+
+func IsString(i interface{}) bool {
+	return reflect.TypeOf(i).Kind() == reflect.String
+}
+
+func IsInt(i interface{}) bool {
+	return reflect.TypeOf(i).Kind() == reflect.Int
+}
+
+func IsBool(i interface{}) bool {
+	return reflect.TypeOf(i).Kind() == reflect.Bool
+}
