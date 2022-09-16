@@ -2,12 +2,11 @@ package protocol
 
 import (
 	"encoding/binary"
-
-	"reflect"
-	"time"
-
+	"encoding/json"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util"
+	"reflect"
+	"time"
 )
 
 type TYPE int
@@ -301,15 +300,14 @@ func PickJsonLongPacket(data []byte) (bool, int, []byte) {
 	if cmdId != TAG_Compose {
 		return false, 0, nil
 	}
-	body, err := unmarshalBodyByTag(cmdId, data)
+	bodyData := data[HEADER_SIZE+2:]
+	var ack = &ComposeData{}
+	err := json.Unmarshal(bodyData, ack)
 	if err != nil {
+		log.Error(err.Error())
 		return false, 0, nil
 	}
-	ack, ok := body.(*ComposeData)
-	if !ok {
-		return false, 0, nil
-	}
-	log.Warnf("PickLongPacket", ack.Idx)
+	//log.Infof("PickLongPacket", ack.Idx)
 	return true, int(ack.Idx), ack.Data
 }
 
@@ -330,7 +328,7 @@ func CreateBinaryLongPacket(data []byte, idx int) ([]byte, error) {
 
 func CreateJsonLongPacket(data []byte, idx int) ([]byte, error) {
 	ack := &ComposeData{Idx: uint32(idx), Data: data}
-	ret, _ := MarshalBinaryMessage(0, ack)
+	ret, _ := MarshalJsonMessage(0, ack)
 	return ret, nil
 }
 
