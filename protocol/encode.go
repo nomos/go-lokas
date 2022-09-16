@@ -6,23 +6,24 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/util/colors"
-	"github.com/shopspring/decimal"
-	"go.uber.org/zap"
 	"io"
 	"math"
 	"reflect"
 	"time"
+
+	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/util/colors"
+	"github.com/shopspring/decimal"
+	"go.uber.org/zap"
 )
 
-func MarshalMessage(transId uint32, data interface{},t TYPE) (ret []byte, err error) {
+func MarshalMessage(transId uint32, data interface{}, t TYPE) (ret []byte, err error) {
 	if t == JSON {
-		return MarshalJsonMessage(transId,data)
+		return MarshalJsonMessage(transId, data)
 	} else if t == BINARY {
-		return MarshalBinaryMessage(transId,data)
+		return MarshalBinaryMessage(transId, data)
 	} else {
-		return nil,errors.New("unidentified protocol")
+		return nil, errors.New("unidentified protocol")
 	}
 }
 
@@ -70,17 +71,17 @@ func MarshalBinaryMessage(transId uint32, data interface{}) (ret []byte, err err
 	return ret, nil
 }
 
-func MarshalBinary(s interface{})([]byte,error){
+func MarshalBinary(s interface{}) ([]byte, error) {
 	var out bytes.Buffer
-	tag,err := GetTypeRegistry().GetTagByType(reflect.TypeOf(s).Elem())
+	tag, err := GetTypeRegistry().GetTagByType(reflect.TypeOf(s).Elem())
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	v := reflect.ValueOf(s).Elem()
 	t := reflect.TypeOf(s).Elem()
 	w(&out, uint16(tag))
-	writeComplex(&out,tag,v,t)
-	return out.Bytes(),nil
+	writeComplex(&out, tag, v, t)
+	return out.Bytes(), nil
 }
 
 func writeJsonMessage(out io.Writer, transId uint32, s interface{}) {
@@ -99,8 +100,8 @@ func writeJsonMessage(out io.Writer, transId uint32, s interface{}) {
 	w(out, uint16(0))
 	w(out, transId)
 	w(out, uint16(tag))
-	data,_:=json.Marshal(s)
-	w(out,data)
+	data, _ := json.Marshal(s)
+	w(out, data)
 }
 
 func writeBinaryMessage(out io.Writer, transId uint32, s interface{}) {
@@ -158,30 +159,30 @@ func writeBaseValue(out io.Writer, v reflect.Value, kind reflect.Kind) {
 	}
 }
 
-func writeTime(out io.Writer,v reflect.Value) {
-	w(out,v.Interface().(time.Time).UnixNano()/time.Millisecond.Nanoseconds())
+func writeTime(out io.Writer, v reflect.Value) {
+	w(out, v.Interface().(time.Time).UnixNano()/time.Millisecond.Nanoseconds())
 }
 
-func writeDecimal(out io.Writer,v reflect.Value) {
-	data:=[]byte(v.Interface().(decimal.Decimal).String())
+func writeDecimal(out io.Writer, v reflect.Value) {
+	data := []byte(v.Interface().(decimal.Decimal).String())
 	w(out, uint16(len(data)))
-	w(out,data)
+	w(out, data)
 }
 
-func writeColor(out io.Writer,v reflect.Value){
-	if v.Kind()==reflect.Ptr {
-		data:=v.Interface().(*colors.Color)
-		w(out,data.Uint32())
+func writeColor(out io.Writer, v reflect.Value) {
+	if v.Kind() == reflect.Ptr {
+		data := v.Interface().(*colors.Color)
+		w(out, data.Uint32())
 	} else {
-		data:=v.Interface().(colors.Color)
-		w(out,data.Uint32())
+		data := v.Interface().(colors.Color)
+		w(out, data.Uint32())
 	}
 }
 
-func writeBuffer(out io.Writer,v reflect.Value) {
-	data:=v.Interface().(*bytes.Buffer).Bytes()
+func writeBuffer(out io.Writer, v reflect.Value) {
+	data := v.Interface().(*bytes.Buffer).Bytes()
 	w(out, uint16(len(data)))
-	w(out,data)
+	w(out, data)
 }
 
 func writeString(out io.Writer, v interface{}) {
@@ -256,14 +257,14 @@ func getListTypeByType(t reflect.Type) BINARY_TAG {
 	case reflect.Map:
 		return TAG_Map
 	case reflect.Struct:
-		if id,err:=GetTypeRegistry().GetTagByType(t.Elem());err==nil {
+		if id, err := GetTypeRegistry().GetTagByType(t.Elem()); err == nil {
 			return id
 		}
 		return TAG_Proto
 	case reflect.Interface:
 		switch t.Elem().Elem().Kind() {
 		case reflect.Struct:
-			if id,err:=GetTypeRegistry().GetTagByType(t.Elem().Elem());err==nil {
+			if id, err := GetTypeRegistry().GetTagByType(t.Elem().Elem()); err == nil {
 				return id
 			}
 			return TAG_Proto
@@ -273,7 +274,7 @@ func getListTypeByType(t reflect.Type) BINARY_TAG {
 	case reflect.Ptr:
 		switch t.Elem().Elem().Kind() {
 		case reflect.Struct:
-			if id,err:=GetTypeRegistry().GetTagByType(t.Elem().Elem());err==nil {
+			if id, err := GetTypeRegistry().GetTagByType(t.Elem().Elem()); err == nil {
 				return id
 			}
 			return TAG_Proto
@@ -321,13 +322,13 @@ func getTagId(v reflect.Value, t reflect.Type) (BINARY_TAG, reflect.Value, refle
 		return TAG_Map, v, t
 	case reflect.Struct:
 		if t == reflect.TypeOf((*time.Time)(nil)).Elem() {
-			return TAG_Time,v, t
+			return TAG_Time, v, t
 		}
 		if t == reflect.TypeOf((*colors.Color)(nil)).Elem() {
-			return TAG_Color,v, t
+			return TAG_Color, v, t
 		}
 		if t == reflect.TypeOf((*decimal.Decimal)(nil)).Elem() {
-			return TAG_Decimal,v, t
+			return TAG_Decimal, v, t
 		}
 		tag, err := GetTypeRegistry().GetTagByType(t)
 		if err != nil {
@@ -342,19 +343,19 @@ func getTagId(v reflect.Value, t reflect.Type) (BINARY_TAG, reflect.Value, refle
 		case reflect.Struct:
 			if t.Elem() == reflect.TypeOf((*time.Time)(nil)).Elem() {
 				log.Warn("时间格式")
-				return TAG_Time,v.Elem(), t.Elem()
+				return TAG_Time, v.Elem(), t.Elem()
 			}
 			if t.Elem() == reflect.TypeOf((*colors.Color)(nil)).Elem() {
 				log.Warn("颜色格式")
-				return TAG_Color,v.Elem(), t.Elem()
+				return TAG_Color, v.Elem(), t.Elem()
 			}
 			if t.Elem() == reflect.TypeOf((*decimal.Decimal)(nil)).Elem() {
 				log.Warn("Decimal格式")
-				return TAG_Decimal,v.Elem(), t.Elem()
+				return TAG_Decimal, v.Elem(), t.Elem()
 			}
 			if t.Elem() == reflect.TypeOf((*bytes.Buffer)(nil)).Elem() {
 				log.Warn("Buffer格式")
-				return TAG_Buffer,v, t
+				return TAG_Buffer, v, t
 			}
 			tag, err := GetTypeRegistry().GetTagByType(t.Elem())
 			if err != nil {
@@ -363,7 +364,7 @@ func getTagId(v reflect.Value, t reflect.Type) (BINARY_TAG, reflect.Value, refle
 					"type":  t.Elem(),
 				}).Panic("tag is not registered")
 			}
-			if v.Kind()==reflect.Map {
+			if v.Kind() == reflect.Map {
 				return tag, v, t.Elem()
 			} else {
 				return tag, v.Elem(), t.Elem()
@@ -489,7 +490,7 @@ func writeMap(out io.Writer, v reflect.Value, t reflect.Type) {
 		switch keyKind {
 		case reflect.String:
 			writeString(out, key.String())
-		case reflect.Uint32,reflect.Int32, reflect.Int64:
+		case reflect.Uint32, reflect.Int32, reflect.Int64:
 			writeBaseValue(out, key, keyKind)
 		default:
 			log.Panic(fmt.Sprintf("illegal key type %v", keyKind))
@@ -497,7 +498,6 @@ func writeMap(out io.Writer, v reflect.Value, t reflect.Type) {
 		writeValue(out, tag, v1, t1)
 	}
 }
-
 
 func writeComplex(out io.Writer, tag BINARY_TAG, v reflect.Value, t reflect.Type) {
 	if v.Kind() == reflect.Invalid {
@@ -528,16 +528,16 @@ func parseStruct(v reflect.Value, t reflect.Type) []reflect.Value {
 		}
 		name := f.Name
 
-		if tag := f.Tag.Get("json"); tag =="-" {
+		if tag := f.Tag.Get("json"); tag == "-" {
 			continue
 		}
-		if tag := f.Tag.Get("bson"); tag =="-" {
+		if tag := f.Tag.Get("bson"); tag == "-" {
 			continue
 		}
 		if tag := f.Tag.Get("bt"); tag != "" {
 			name = tag
 		}
-		if name[0]<65||name[0]>90 {
+		if name[0] < 65 || name[0] > 90 {
 			continue
 		}
 		if name == "-" {
@@ -547,7 +547,6 @@ func parseStruct(v reflect.Value, t reflect.Type) []reflect.Value {
 	}
 	return parsed
 }
-
 
 //func writeCompound(out io.Writer, v reflect.Value, t reflect.LineType) {
 //	v = reflect.Indirect(v)
@@ -587,3 +586,50 @@ func parseStruct(v reflect.Value, t reflect.Type) []reflect.Value {
 //
 //	return parsed
 //}
+
+func MarshalRouteMsg(msg *RouteMessage, t TYPE) (ret []byte, err error) {
+	if t == JSON {
+		return MarshalJsonRouteMsg(msg)
+	} else if t == BINARY {
+		return nil, errors.New("todo marsh binary")
+	} else {
+		return nil, errors.New("unidentified protocol")
+	}
+}
+
+func MarshalJsonRouteMsg(msg *RouteMessage) (ret []byte, err error) {
+	var out bytes.Buffer
+	defer func() {
+		if r := recover(); r != nil {
+			if s, ok := r.(string); ok {
+				err = fmt.Errorf(s)
+			} else {
+				err = r.(error)
+			}
+		}
+	}()
+
+	v := reflect.ValueOf(msg.Body)
+	t := reflect.TypeOf(msg.Body)
+
+	tag, _, _ := getTagId(v, t)
+	if tag <= TAG_Null {
+		log.Panic("not a binary message type")
+	}
+	w(&out, uint16(0))
+	w(&out, uint16(msg.CmdId))
+	w(&out, msg.TransId)
+	w(&out, uint64(msg.ToActor))
+	w(&out, msg.ReqType)
+	data, _ := json.Marshal(msg.Body)
+	w(&out, data)
+
+	if out.Len() > 65536 {
+		ret = out.Bytes()
+		binary.LittleEndian.PutUint16(ret[0:2], uint16(0))
+		return ret, nil
+	}
+	ret = out.Bytes()
+	binary.LittleEndian.PutUint16(ret[0:2], uint16(out.Len()))
+	return ret, nil
+}

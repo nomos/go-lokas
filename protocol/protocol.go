@@ -3,10 +3,11 @@ package protocol
 import (
 	"encoding/binary"
 	"encoding/json"
-	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/util"
 	"reflect"
 	"time"
+
+	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/util"
 )
 
 type TYPE int
@@ -81,6 +82,7 @@ type RouteMessage struct {
 	TransId   uint32
 	Len       uint16
 	Req       bool
+	ReqType   uint8
 	CmdId     BINARY_TAG
 	InnerId   BINARY_TAG
 	FromActor util.ID
@@ -88,7 +90,7 @@ type RouteMessage struct {
 	Body      ISerializable
 }
 
-func NewRouteMessage(fromActor util.ID, toActor util.ID, transId uint32, msg ISerializable,isReq bool) *RouteMessage {
+func NewRouteMessage(fromActor util.ID, toActor util.ID, transId uint32, msg ISerializable, isReq bool) *RouteMessage {
 	id, _ := msg.GetId()
 	ret := &RouteMessage{
 		TransId:   transId,

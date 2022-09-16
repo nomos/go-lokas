@@ -2,10 +2,11 @@ package conn
 
 import (
 	"bufio"
-	"github.com/nomos/go-lokas"
-	"go.uber.org/zap"
 	"net"
 	"time"
+
+	"github.com/nomos/go-lokas"
+	"go.uber.org/zap"
 
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network/internal/common"

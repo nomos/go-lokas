@@ -6,14 +6,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/util/colors"
-	"github.com/shopspring/decimal"
-	"go.uber.org/zap"
 	"io"
 	"math"
 	"reflect"
 	"time"
+
+	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/util"
+	"github.com/nomos/go-lokas/util/colors"
+	"github.com/shopspring/decimal"
+	"go.uber.org/zap"
 )
 
 func UnmarshalFromBytes(data []byte, v interface{}) error {
@@ -714,4 +716,82 @@ func (this *decodeState) readBaseValue(tag BINARY_TAG, v reflect.Value) {
 			log.Panic(fmt.Sprintf("binary: Tag is %s, but I don't know how to put that in a %s!", tag, v.Kind()))
 		}
 	}
+}
+
+// func UnmarshalBody(data []byte, t TYPE, v interface{}) error {
+// 	if t == JSON {
+// 		err := json.Unmarshal(data, &v)
+// 		if err != nil {
+// 			log.Error(err.Error())
+// 			return err
+// 		}
+// 	} else if t == BINARY {
+// 		// return UnmarshalBinaryMessage(data)
+// 	} else {
+// 		return errors.New("unkonw message type")
+// 	}
+
+// 	return nil
+// }
+
+func UnmarshalRouteMsg(data []byte, t TYPE) (*RouteMessage, error) {
+	if t == JSON {
+		return UnmarshalJsonRouteMsg(data)
+	} else if t == BINARY {
+		return nil, errors.New("todo binary format")
+	} else {
+		return nil, errors.New("unidentified protocol")
+	}
+}
+
+func UnmarshalJsonRouteMsg(data []byte) (*RouteMessage, error) {
+	routeMsg, headerSize, err := unmarshalRouteMsgHeader(data)
+	if err != nil {
+		log.Error("UnmarshalJsonRouteMsg header error", zap.String("error", err.Error()))
+		return nil, err
+	}
+
+	bodyData := data[headerSize:routeMsg.Len]
+	body, err := GetTypeRegistry().GetInterfaceByTag(routeMsg.CmdId)
+	if err != nil {
+		log.Error("not find cmd", zap.Uint16("cmd", uint16(routeMsg.CmdId)), zap.String("err", err.Error()))
+		return nil, err
+	}
+	dec := json.NewDecoder(bytes.NewBuffer(bodyData))
+	dec.UseNumber()
+	err = dec.Decode(body)
+	if err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
+	routeMsg.Body = body
+
+	return routeMsg, nil
+}
+
+func unmarshalRouteMsgHeader(data []byte) (*RouteMessage, int, error) {
+	headerSize := 17
+
+	if len(data) < headerSize {
+		return nil, 0, ERR_MSG_FORMAT
+	}
+
+	routeMsg := &RouteMessage{}
+
+	routeMsg.Len = binary.LittleEndian.Uint16(data[0:2])
+	routeMsg.InnerId = BINARY_TAG(binary.LittleEndian.Uint16(data[2:4]))
+	routeMsg.TransId = binary.LittleEndian.Uint32(data[4:8])
+	routeMsg.ToActor = util.ID(binary.LittleEndian.Uint64(data[8:16]))
+	routeMsg.ReqType = uint8(data[16])
+
+	if routeMsg.ReqType == 0 {
+		routeMsg.Req = false
+	} else {
+		routeMsg.Req = true
+	}
+
+	// routeMsg.FromActor = sess.GetId()
+	routeMsg.CmdId = routeMsg.InnerId
+
+	return routeMsg, headerSize, nil
 }

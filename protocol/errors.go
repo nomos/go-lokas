@@ -17,6 +17,9 @@ var (
 
 	ERR_ETCD_ERROR = CreateError(-201, "etcd error")
 
+	// msg
+	ERR_MSG_ROUTE_NOT_FOUND = CreateError(-6001, "msg route local not found")
+
 	// service
 	ERR_REGISTER_SERVICE_DUPLICATED   = CreateError(-7001, "service register duplicate")
 	ERR_REGISTER_SERVICE_INFO_INVALID = CreateError(-7002, "service info invalid")

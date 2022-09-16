@@ -86,6 +86,7 @@ type IProcess interface {
 	ServerId() int32                                            //get server id
 	GameServerId() string                                       //get game and server id
 	Version() string                                            //get version
+
 }
 
 //IProxy universal module interface for connection
@@ -233,6 +234,7 @@ type IServiceDiscoverMgr interface {
 //IRouter interface for router
 type IRouter interface {
 	RouteMsg(msg *protocol.RouteMessage)
+	RouteMsgLocal(msg *protocol.RouteMessage) error
 }
 
 //IContext context interface

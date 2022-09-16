@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"fmt"
+
 	"github.com/nomos/go-lokas/log"
 )
 
@@ -49,6 +50,7 @@ const (
 	TAG_HandShake     BINARY_TAG = 45
 	TAG_RouteMessage  BINARY_TAG = 46
 	//内建类型
+
 )
 
 type BINARY_TAG uint16
@@ -61,7 +63,7 @@ func (tag BINARY_TAG) IsProto() bool {
 
 func (tag BINARY_TAG) IsArrayLike() bool {
 	switch tag {
-	case TAG_BoolArray, TAG_ByteArray, TAG_ShortArray,TAG_UShortArray, TAG_IntArray,TAG_UIntArray, TAG_LongArray,TAG_ULongArray, TAG_FloatArray, TAG_DoubleArray:
+	case TAG_BoolArray, TAG_ByteArray, TAG_ShortArray, TAG_UShortArray, TAG_IntArray, TAG_UIntArray, TAG_LongArray, TAG_ULongArray, TAG_FloatArray, TAG_DoubleArray:
 		return true
 	default:
 		return false
@@ -69,7 +71,7 @@ func (tag BINARY_TAG) IsArrayLike() bool {
 }
 func (tag BINARY_TAG) IsBaseValue() bool {
 	switch tag {
-	case TAG_Bool, TAG_Byte, TAG_Short,TAG_UShort, TAG_Int,TAG_UInt, TAG_Long,TAG_ULong, TAG_Float, TAG_Double:
+	case TAG_Bool, TAG_Byte, TAG_Short, TAG_UShort, TAG_Int, TAG_UInt, TAG_Long, TAG_ULong, TAG_Float, TAG_Double:
 		return true
 	default:
 		return false

@@ -112,6 +112,7 @@ func (this *PassiveSession) StartMessagePump() {
 		this.doneClient = nil
 		close(this.Messages)
 		this.Messages = nil
+
 	}()
 
 	go func() {
@@ -170,6 +171,11 @@ func (this *PassiveSession) clientLoop() {
 				return
 			}
 			if cmdId == protocol.TAG_HandShake {
+				if this.Verified {
+					log.Warn("duplicated handshake")
+					return
+				}
+
 				var err error
 				var ret interface{}
 				if this.AuthFunc != nil {
@@ -184,7 +190,7 @@ func (this *PassiveSession) clientLoop() {
 						this.Conn.Close()
 						return
 					}
-					log.Errorf("Auth Failed", cmdId)
+					log.Info("Auth Failed", zap.Any("cmdId", uint16(cmdId)))
 					this.Conn.Write(msg)
 					this.Conn.Wait()
 					this.Conn.Close()

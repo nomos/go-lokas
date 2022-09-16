@@ -13,6 +13,7 @@ import (
 	"unsafe"
 
 	"github.com/nomos/go-lokas/log"
+	"go.uber.org/zap"
 )
 
 func ExecPath() (string, error) {
@@ -51,7 +52,8 @@ func Ternary[T any](expr bool, whenTrue, whenFalse T) T {
 func WaitForTerminateChanCb(c chan struct{}, cb func()) {
 	signalChan := make(chan os.Signal, 1)
 	go func() {
-		<-signalChan
+		signal := <-signalChan
+		log.Info("system signal", zap.String("signal", signal.String()))
 		close(c)
 	}()
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
