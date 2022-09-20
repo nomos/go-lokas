@@ -404,7 +404,7 @@ func (this timeNode) initCronExpireFunc(t *timeWheel) (uint64, bool) {
 	if move_year {
 		year += 1
 	}
-	next_time := time.Date(year, time.Month(month), monthday, hour, minute, second, 0, time.Local)
+	next_time := time.Date(year, time.Month(month), monthday, hour, minute, second, 0, time.Local).Local()
 	d := next_time.Sub(now)
 	return uint64(d), true
 }
@@ -437,7 +437,7 @@ func (this timeNode) cronExpireFunc(t *timeWheel) (uint64, bool) {
 	if move_year {
 		year += 1
 	}
-	next_time := time.Date(year, time.Month(month), monthday, hour, minute, second, 0, time.Local)
+	next_time := time.Date(year, time.Month(month), monthday, hour, minute, second, 0, time.Local).Local()
 	d := next_time.Sub(now)
 	return uint64(d), true
 }

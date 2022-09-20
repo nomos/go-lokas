@@ -109,9 +109,9 @@ func (this *Mutex) lock() (err error) {
 			log.Error("get node", LogKey(this.key), LogOk(false), zap.Error(err))
 			return err
 		}
-		log.Error("get node", LogKey(this.key), LogOk(true))
+		log.Info("get node", LogKey(this.key), LogOk(true))
 		watcher := this.watcher.Watch(this.ctx, prefix+this.key, clientv3.WithRev(gResp.Header.Revision))
-		log.Error("watching start", LogKey(this.key))
+		log.Info("watching start", LogKey(this.key))
 		for {
 			select {
 			case wResp := <-watcher:
