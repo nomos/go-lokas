@@ -3,11 +3,10 @@ package protocol
 import (
 	"encoding/binary"
 	"encoding/json"
-	"reflect"
-	"time"
-
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util"
+	"reflect"
+	"time"
 )
 
 type TYPE int
@@ -42,8 +41,8 @@ func (this TYPE) String() string {
 const (
 	// len 2 transId 4
 	HEADER_SIZE        = 2 + 4
-	MAX_PACKET_SIZE    = 4 * 1024 * 1024
-	DEFAULT_PACKET_LEN = 4 * 1024 * 1024
+	MAX_PACKET_SIZE    = 20 * 1024
+	DEFAULT_PACKET_LEN = 2048 * 4
 	ROUTE_MSG_ADDITION = 2 + 8 + 8
 )
 
