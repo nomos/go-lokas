@@ -101,7 +101,6 @@ func (this *timeHandler) Cron(i_second, i_minute, i_hour, i_day, i_month, i_week
 	}
 	expire, _ := node.initCronExpireFunc(this.wheel)
 	node.expire = expire/(uint64(time.Millisecond*10)) + jiffies
-
 	tn := this.wheel.add(node, jiffies)
 
 	this.noders.Store(tn, 1)

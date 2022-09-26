@@ -377,7 +377,7 @@ func (this timeNode) parseDebug() {
 
 func (this timeNode) initCronExpireFunc(t *timeWheel) (uint64, bool) {
 	now := t.Now()
-	var t1 time.Time
+	t1 := now
 	year := now.Year()
 	monthday := now.Day()
 	month := int(now.Month())
@@ -411,7 +411,7 @@ func (this timeNode) initCronExpireFunc(t *timeWheel) (uint64, bool) {
 
 func (this timeNode) cronExpireFunc(t *timeWheel) (uint64, bool) {
 	now := t.Now()
-	var t1 time.Time
+	t1 := now
 	year := now.Year()
 	monthday := now.Day()
 	month := int(now.Month())

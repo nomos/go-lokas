@@ -26,19 +26,19 @@ func GetMonthStart(t time.Time) time.Time {
 }
 
 func GetDayStart(t time.Time) time.Time {
-	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
+	return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 }
 
 func GetYearStart(t time.Time) time.Time {
-	return time.Date(t.Year(), 1, 1, 0, 0, 0, 0, time.Local)
+	return time.Date(t.Year(), 1, 1, 0, 0, 0, 0, t.Location())
 }
 
 func GetNextYearStart(t time.Time) time.Time {
-	return time.Date(t.Year(), 1, 1, 0, 0, 0, 0, time.Local).AddDate(1, 0, 0)
+	return time.Date(t.Year(), 1, 1, 0, 0, 0, 0, t.Location()).AddDate(1, 0, 0)
 }
 
 func GetNextDayStart(t time.Time) time.Time {
-	dayStart := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
+	dayStart := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 	return dayStart.AddDate(0, 0, 1)
 }
 
