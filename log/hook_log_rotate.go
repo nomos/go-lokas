@@ -1,10 +1,11 @@
 package log
 
 import (
-	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
-	"go.uber.org/zap/zapcore"
 	"io"
 	"time"
+
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
+	"go.uber.org/zap/zapcore"
 )
 
 type FileRotateOpt struct {
@@ -14,6 +15,7 @@ type FileRotateOpt struct {
 	FileName     string        //文件名
 	Json         bool          //是否用Json格式输出
 	Format       string        //时间格式
+	Filter       []func(ent zapcore.Entry) bool
 }
 
 type FileRotateHook struct {
@@ -21,7 +23,7 @@ type FileRotateHook struct {
 	writer io.Writer
 }
 
-func NewFileRotationHook(opt *FileRotateOpt)*FileRotateHook {
+func NewFileRotationHook(opt *FileRotateOpt) *FileRotateHook {
 	ret := &FileRotateHook{
 		opt: opt,
 	}
@@ -39,6 +41,12 @@ func (this *FileRotateHook) WriteConsole(ent zapcore.Entry, p []byte) error {
 
 func (this *FileRotateHook) WriteJson(ent zapcore.Entry, p []byte) error {
 	if this.opt.Json {
+		for _, f := range this.opt.Filter {
+			if f != nil && !f(ent) {
+				return nil
+			}
+		}
+
 		_, err := this.writer.Write(p)
 		return err
 	}
