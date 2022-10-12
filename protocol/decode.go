@@ -171,14 +171,14 @@ func (this *decodeState) unmarshal(v interface{}) {
 }
 
 func (this *decodeState) unmarshalMessage(v interface{}) {
-	length := this.readLength()
-	transId := this.readTransId()
+	_ = this.readLength()
+	_ = this.readTransId()
 	tag := this.readTag()
-	log.WithFields(log.Fields{
-		"transId": transId,
-		"length":  length,
-		"tag":     tag,
-	}).Warn("")
+	//log.WithFields(log.Fields{
+	//	"transId": transId,
+	//	"length":  length,
+	//	"tag":     tag,
+	//}).Warn("")
 	e := reflect.ValueOf(v).Elem()
 	t := reflect.TypeOf(v).Elem()
 	this.readValue(tag, e, t)
