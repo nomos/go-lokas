@@ -218,7 +218,6 @@ func (this *PassiveSession) clientLoop() {
 					data, _ = protocol.MarshalMessage(msg.TransId, hs, this.Protocol)
 
 				}
-
 				_, err = this.Conn.Write(data)
 				if err != nil {
 					log.Error(err.Error())

@@ -423,6 +423,11 @@ func (this timeNode) cronExpireFunc(t *timeWheel) (uint64, bool) {
 	move_day := false
 	move_hour := false
 	move_minute := false
+	defer func() {
+		if r := recover(); r != nil {
+			util.Recover(r, false)
+		}
+	}()
 
 	if second, move_minute = this.getNextSecond(second); move_minute {
 		if minute, move_hour = this.getNextMinute(minute, true); move_hour {

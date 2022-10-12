@@ -478,7 +478,7 @@ func (this *decodeState) readComplex(tag BINARY_TAG, v reflect.Value, t reflect.
 		v.Set(reflect.Zero(t))
 
 	default:
-		log.Panic(fmt.Sprintf("binary: Tag is %s, but I don't know how to put that in a %v!", tag, t.Kind()))
+		log.Panic(fmt.Sprintf("binary: Tag is %s, but I don't know how to put that in a %v!", tag0, t.Kind()))
 	}
 	fields := parseStruct(v, t)
 	defer func() {
@@ -487,19 +487,19 @@ func (this *decodeState) readComplex(tag BINARY_TAG, v reflect.Value, t reflect.
 		}
 	}()
 	for index, field := range fields {
-		var tag BINARY_TAG
+		var tag1 BINARY_TAG
 		if index == 0 {
-			tag = tag0
+			tag1 = tag0
 		} else {
-			tag = this.readTag()
+			tag1 = this.readTag()
 		}
-		if tag == TAG_End {
+		if tag1 == TAG_End {
 			return
 		}
-		this.readValue(tag, field, field.Type())
+		this.readValue(tag1, field, field.Type())
 	}
-	tag = this.readTag()
-	if tag != TAG_End {
+	tag1 := this.readTag()
+	if tag1 != TAG_End {
 		log.Error("complex read error")
 	}
 }

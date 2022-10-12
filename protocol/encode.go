@@ -479,7 +479,8 @@ func writeMap(out io.Writer, v reflect.Value, t reflect.Type) {
 	default:
 		log.Panic(fmt.Sprintf("illegal key type %v", keyKind))
 	}
-	elemTag, _, _ := getTagId(v, t.Elem())
+	//这里临时建立一个空指针的reflect.Value
+	elemTag, _, _ := getTagId(reflect.ValueOf(&t), t.Elem())
 	writeTag(out, elemTag)
 	length := uint32(len(v.MapKeys()))
 	w(out, length)

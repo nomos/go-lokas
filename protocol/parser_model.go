@@ -1531,7 +1531,8 @@ func (this *ModelClassObject) ToTsClassHeader(g *Generator, object *TsClassObjec
 
 func (this *ModelClassObject) CsString(g *Generator) string {
 	ret := `//this is a generate file,do not modify it!
-
+using System;
+using System.Collections.Generic;
 using Funnel.Protocol;
 using Newtonsoft.Json;
 {Comment}
@@ -1556,7 +1557,8 @@ namespace {CsPackageName}
 
 	if len(this.Fields) == 0 {
 		ret = `//this is a generate file,do not modify it!
-
+using System;
+using System.Collections.Generic;
 using Funnel.Protocol;
 using Newtonsoft.Json;
 {Comment}
