@@ -50,7 +50,7 @@ type AvatarManager struct {
 	Avatars   map[util.ID]*Avatar
 	AvatarCnt int32
 	Option    lokas.IGameHandler
-	mu        sync.Mutex
+	Mu        sync.Mutex
 	Ctx       context.Context
 	Cancel    context.CancelFunc
 }
@@ -78,14 +78,14 @@ func (this *AvatarManager) HandleMsg(actorId util.ID, transId uint32, msg protoc
 }
 
 func (this *AvatarManager) GetAvatar(id util.ID) *Avatar {
-	this.mu.Lock()
-	defer this.mu.Unlock()
+	this.Mu.Lock()
+	defer this.Mu.Unlock()
 	return this.Avatars[id]
 }
 
 func (this *AvatarManager) CreateAvatar(id util.ID) error {
-	this.mu.Lock()
-	defer this.mu.Unlock()
+	this.Mu.Lock()
+	defer this.Mu.Unlock()
 	avatar := this.Avatars[id]
 	if avatar != nil {
 		this.logRetention(avatar)
@@ -141,8 +141,8 @@ func (this *AvatarManager) logRetention(avatar lokas.IAvatar) {
 
 func (this *AvatarManager) RemoveAvatar(id util.ID) {
 	this.GetProcess().RemoveActorById(id)
-	this.mu.Lock()
-	defer this.mu.Unlock()
+	this.Mu.Lock()
+	defer this.Mu.Unlock()
 	delete(this.Avatars, id)
 	atomic.AddInt32(&this.AvatarCnt, -1)
 }

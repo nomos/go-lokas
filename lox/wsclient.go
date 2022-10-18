@@ -3,6 +3,12 @@ package lox
 import (
 	"context"
 	"errors"
+	"net/http"
+	"strconv"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/gorilla/websocket"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
@@ -12,11 +18,6 @@ import (
 	"github.com/nomos/go-lokas/util/events"
 	"github.com/nomos/go-lokas/util/promise"
 	"go.uber.org/zap"
-	"net/http"
-	"strconv"
-	"strings"
-	"sync"
-	"time"
 )
 
 var _ lokas.INetClient = (*WsClient)(nil)
@@ -513,7 +514,7 @@ func (this *wsImpl) readPump() {
 			_, message, err := this.Conn.ReadMessage()
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
-					log.Error("error: %v", zap.Error(err))
+					log.Error("wsConn read error: %v", zap.Error(err))
 				}
 				return
 			}

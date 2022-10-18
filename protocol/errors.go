@@ -7,6 +7,8 @@ import (
 type ErrCode int
 
 var (
+	ERR_SUCC = CreateError(0, "successful")
+
 	//inner error
 	ERR_TYPE_NOT_FOUND  = CreateError(-1, "type not found")
 	ERR_RPC_TIMEOUT     = CreateError(-2, "rpc timeout")
@@ -15,8 +17,7 @@ var (
 	ERR_ACTOR_NOT_FOUND = CreateError(-101, "actor not found")
 	ERR_RPC_FAILED      = CreateError(-102, "rpc failed")
 
-	ERR_ETCD_ERROR = CreateError(-201, "etcd error")
-
+	ERR_JSON_MARSHAL_FAILED = CreateError(-202, "json marshal failed")
 	// msg
 	ERR_MSG_ROUTE_NOT_FOUND = CreateError(-6001, "msg route local not found avatar")
 
@@ -24,6 +25,13 @@ var (
 	ERR_REGISTER_SERVICE_DUPLICATED   = CreateError(-7001, "service register duplicate")
 	ERR_REGISTER_SERVICE_INFO_INVALID = CreateError(-7002, "service info invalid")
 	ERR_REGISTER_SERVICE_NOT_FOUND    = CreateError(-7003, "service registered not found")
+
+	ERR_REGISTER_ROUTE_USER_DUPLICATED = CreateError(-7101, "user route register duplicate")
+
+	ERR_ETCD_ERROR = CreateError(201, "数据错误")
+	ERR_DB_ERROR   = CreateError(202, "数据库错误")
+
+	ERR_MSG_LEN_INVALID = CreateError(301, "数据长度无效")
 
 	//cs error
 	ERR_INTERNAL_SERVER        = CreateError(901, "服务器繁忙")

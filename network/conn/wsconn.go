@@ -2,9 +2,10 @@ package conn
 
 import (
 	"errors"
+	"time"
+
 	"github.com/nomos/go-lokas"
 	"go.uber.org/zap"
-	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/nomos/go-lokas/log"
@@ -81,13 +82,9 @@ func (this *WsPumper) readPump(conn *Conn) {
 	for {
 		_, data, err := wsConn.ReadMessage()
 		if err != nil {
-			log.Warn("read error",
-				zap.String("err", err.Error()),
-			)
+			log.Warn("wsConn read error", zap.String("err", err.Error()))
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNoStatusReceived, websocket.CloseAbnormalClosure) {
-				log.Info("wsserver read error",
-					zap.String("err", err.Error()),
-				)
+				log.Info("wsConn read error unexpected", zap.String("err", err.Error()))
 			}
 			break
 		}

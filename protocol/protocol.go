@@ -1,12 +1,15 @@
 package protocol
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/util"
 	"reflect"
 	"time"
+
+	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/util"
+	"go.uber.org/zap"
 )
 
 type TYPE int
@@ -14,6 +17,17 @@ type TYPE int
 const (
 	BINARY TYPE = 0
 	JSON   TYPE = 1
+)
+
+const (
+	AUTH_STATE_CONNECTED uint8 = 0
+	AUTH_STATE_AUTHING   uint8 = 1
+	AUTH_STATE_AUTHED    uint8 = 2
+)
+
+const (
+	ROUTE_MSG_HEAD_SIZE  int = 17
+	BINARY_MSG_HEAD_SIZE int = 8
 )
 
 func String2Type(s string) TYPE {
@@ -101,6 +115,30 @@ func NewRouteMessage(fromActor util.ID, toActor util.ID, transId uint32, msg ISe
 		ToActor:   toActor,
 		Body:      msg,
 	}
+	if ret.Req {
+		ret.ReqType = REQ_TYPE_MAIN
+	}
+	return ret
+}
+
+// new ctor
+func NewRouteMsg(fromActor util.ID, toActor util.ID, transId uint32, msg ISerializable, reqType uint8) *RouteMessage {
+	cmd, _ := msg.GetId()
+	ret := &RouteMessage{
+		TransId:   transId,
+		Len:       0,
+		ReqType:   reqType,
+		CmdId:     TAG_RouteMessage,
+		InnerId:   cmd,
+		FromActor: fromActor,
+		ToActor:   toActor,
+		Body:      msg,
+	}
+	if ret.ReqType == REQ_TYPE_REPLAY {
+		ret.Req = false
+	} else {
+		ret.Req = true
+	}
 	return ret
 }
 
@@ -144,6 +182,81 @@ func (this *RouteMessage) BinaryMessage() *BinaryMessage {
 		Body:    this.Body,
 	}
 	return ret
+}
+
+type RouteRecv struct {
+	Protocol TYPE
+	Data     []byte
+}
+
+func (recv *RouteRecv) GetReq() bool {
+
+	reqType := uint8(recv.Data[16])
+
+	if reqType == REQ_TYPE_REPLAY {
+		return false
+	} else {
+		return true
+	}
+
+}
+
+func (recv *RouteRecv) GetCmd() uint16 {
+	cmd := binary.LittleEndian.Uint16(recv.Data[2:4])
+
+	return cmd
+}
+
+func (recv *RouteRecv) GetTransId() uint32 {
+	transId := binary.LittleEndian.Uint32(recv.Data[4:8])
+	return transId
+}
+
+type RouteDataMsg struct {
+	Protocol  TYPE
+	Len       uint16
+	Cmd       uint16
+	TransId   uint32
+	ReqType   uint8
+	FromActor util.ID
+	ToActor   util.ID
+	BodyData  []byte
+}
+
+func NewRouteDataMsg(fromActorId util.ID, toActorId util.ID, transId uint32, cmd uint16, reqType uint8, body []byte, protocolType TYPE) *RouteDataMsg {
+	return &RouteDataMsg{
+		Protocol:  protocolType,
+		TransId:   transId,
+		Cmd:       cmd,
+		ReqType:   reqType,
+		FromActor: fromActorId,
+		ToActor:   toActorId,
+		BodyData:  body,
+	}
+}
+
+func UnmarshalRouteDataMsg(data []byte) (*RouteDataMsg, error) {
+
+	return nil, nil
+}
+
+func (msg RouteDataMsg) MarshalData() ([]byte, error) {
+	var buff bytes.Buffer
+	binary.Write(&buff, binary.LittleEndian, uint16(0))
+	binary.Write(&buff, binary.LittleEndian, msg.Cmd)
+	binary.Write(&buff, binary.LittleEndian, msg.TransId)
+	binary.Write(&buff, binary.LittleEndian, uint64(msg.ToActor))
+	binary.Write(&buff, binary.LittleEndian, uint8(msg.ReqType))
+	binary.Write(&buff, binary.LittleEndian, msg.BodyData)
+
+	if buff.Len() > 65535 {
+		log.Error("error data len", zap.Int("len", buff.Len()))
+		return nil, ERR_MSG_LEN_INVALID
+	}
+	out := buff.Bytes()
+	binary.LittleEndian.PutUint16(out[0:2], uint16(buff.Len()))
+
+	return out, nil
 }
 
 var _ ISerializable = &BinaryMessage{}
@@ -251,6 +364,11 @@ func (this *HandShake) Serializable() ISerializable {
 func GetCmdId16(data []byte) BINARY_TAG {
 	cmdId := BINARY_TAG(binary.LittleEndian.Uint16(data[6:8]))
 	return cmdId
+}
+
+func GetTransId(data []byte) uint32 {
+	transId := binary.LittleEndian.Uint32(data[2:6])
+	return transId
 }
 
 func GetCmdId(data []byte) BINARY_TAG {

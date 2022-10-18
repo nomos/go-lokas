@@ -1,8 +1,6 @@
 package lox
 
 import (
-	"bytes"
-	"encoding/binary"
 	"encoding/json"
 	"time"
 
@@ -24,7 +22,7 @@ func NewPassiveSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManag
 		Actor:    NewActor(),
 		Messages: make(chan []byte, 100),
 		Conn:     conn,
-		manager:  manager,
+		Manager:  manager,
 		timeout:  TimeOut,
 		ticker:   time.NewTicker(UpdateTime),
 	}
@@ -42,7 +40,7 @@ type PassiveSession struct {
 	Messages         chan []byte
 	Conn             lokas.IConn
 	Protocol         protocol.TYPE
-	manager          lokas.ISessionManager
+	Manager          lokas.ISessionManager
 	doneClient       chan struct{}
 	doneServer       chan struct{}
 	OnCloseFunc      func(conn lokas.IConn)
@@ -203,14 +201,14 @@ func (this *PassiveSession) clientLoop() {
 						log.Error(err.Error())
 						return
 					}
-					var out bytes.Buffer
-					binary.Write(&out, binary.LittleEndian, uint16(0))
-					binary.Write(&out, binary.LittleEndian, msg.TransId)
-					binary.Write(&out, binary.LittleEndian, msg.CmdId)
-					binary.Write(&out, binary.LittleEndian, body)
+					// var out bytes.Buffer
+					// binary.Write(&out, binary.LittleEndian, uint16(0))
+					// binary.Write(&out, binary.LittleEndian, msg.TransId)
+					// binary.Write(&out, binary.LittleEndian, msg.CmdId)
+					// binary.Write(&out, binary.LittleEndian, body)
 
-					data = out.Bytes()
-					binary.LittleEndian.PutUint16(data[0:2], uint16(out.Len()))
+					// data = out.Bytes()
+					// binary.LittleEndian.PutUint16(data[0:2], uint16(out.Len()))
 
 					hs := &protocol.HandShake{
 						Data: body,
@@ -285,8 +283,8 @@ func (this *PassiveSession) OnMessage(msg *protocol.RouteMessage) {
 }
 
 func (this *PassiveSession) closeSession() {
-	if this.manager != nil {
-		this.manager.RemoveSession(this.GetId())
+	if this.Manager != nil {
+		this.Manager.RemoveSession(this.GetId())
 	}
 }
 
@@ -305,8 +303,8 @@ func (this *PassiveSession) stop() {
 func (this *PassiveSession) OnOpen(conn lokas.IConn) {
 	this.StartMessagePump()
 	log.Info("PassiveSession:OnOpen", flog.ActorInfo(this)...)
-	if this.manager != nil {
-		this.manager.AddSession(this.GetId(), this)
+	if this.Manager != nil {
+		this.Manager.AddSession(this.GetId(), this)
 	}
 	if this.OnOpenFunc != nil {
 		this.OnOpenFunc(conn)
@@ -314,8 +312,8 @@ func (this *PassiveSession) OnOpen(conn lokas.IConn) {
 }
 
 func (this *PassiveSession) OnClose(conn lokas.IConn) {
-	if this.manager != nil {
-		this.manager.RemoveSession(this.GetId())
+	if this.Manager != nil {
+		this.Manager.RemoveSession(this.GetId())
 	}
 	log.Info("PassiveSession:OnClose", flog.ActorInfo(this)...)
 	if this.OnCloseFunc != nil {

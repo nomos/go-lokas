@@ -1,7 +1,9 @@
 package lox
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"sync"
 	"time"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/nomos/go-lokas/timer"
 	"github.com/nomos/go-lokas/util"
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.uber.org/zap"
 )
 
 const (
@@ -34,6 +37,12 @@ func NewActor() *Actor {
 		Timer:       time.NewTicker(UpdateTime),
 		Timeout:     TimeOut,
 		TimeHandler: timer.NewHandler(),
+
+		MsgChan:   make(chan *protocol.RouteMessage, 100),
+		ReplyChan: make(chan *protocol.RouteMessage, 100),
+
+		DataChan:      make(chan *protocol.RouteRecv, 100),
+		ReplyDataChan: make(chan *protocol.RouteRecv, 100),
 	}
 	ret.SetType("Actor")
 	return ret
@@ -55,6 +64,9 @@ type Actor struct {
 	DoneChan     chan struct{}
 	OnUpdateFunc func()
 	MsgHandler   func(actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error)
+
+	DataChan      chan *protocol.RouteRecv
+	ReplyDataChan chan *protocol.RouteRecv
 }
 
 func (this *Actor) Send(id util.ProcessId, msg *protocol.RouteMessage) error {
@@ -152,9 +164,12 @@ func (this *Actor) SetProcess(process lokas.IProcess) {
 }
 
 func (this *Actor) StartMessagePump() {
-	this.MsgChan = make(chan *protocol.RouteMessage, 100)
-	this.ReplyChan = make(chan *protocol.RouteMessage, 100)
+	// this.MsgChan = make(chan *protocol.RouteMessage, 100)
+	// this.ReplyChan = make(chan *protocol.RouteMessage, 100)
 	this.DoneChan = make(chan struct{})
+
+	// this.DataChan = make(chan *protocol.RouteRecv, 100)
+	// this.ReplyDataChan = make(chan *protocol.RouteRecv, 100)
 
 	go func() {
 	MSG_LOOP:
@@ -164,6 +179,8 @@ func (this *Actor) StartMessagePump() {
 				this.Update(0, time.Now())
 			case rMsg := <-this.MsgChan:
 				this.OnMessage(rMsg)
+			case recv := <-this.DataChan:
+				this.OnRecvData(recv)
 			case msg := <-this.TimeHandler.EventChan():
 				out := msg.(*timer.TimeEventMsg)
 				out.Callback(out.TimeNoder)
@@ -185,6 +202,8 @@ func (this *Actor) StartMessagePump() {
 			select {
 			case rMsg := <-this.ReplyChan:
 				this.OnMessage(rMsg)
+			case recv := <-this.ReplyDataChan:
+				this.OnRecvData(recv)
 			case <-this.DoneChan:
 				break REP_LOOP
 			}
@@ -200,6 +219,19 @@ func (this *Actor) ReceiveMessage(msg *protocol.RouteMessage) {
 	} else {
 		this.ReplyChan <- msg
 	}
+}
+
+func (this *Actor) ReceiveData(recv *protocol.RouteRecv) error {
+
+	log.Debug("receive data", zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmd", recv.GetCmd()))
+
+	if recv.GetReq() {
+		this.DataChan <- recv
+	} else {
+		this.ReplyDataChan <- recv
+	}
+
+	return nil
 }
 
 func (this *Actor) clearContext(err error) {
@@ -315,6 +347,14 @@ func (this *Actor) OnMessage(msg *protocol.RouteMessage) {
 	}
 }
 
+func (this *Actor) OnRecvData(recv *protocol.RouteRecv) {
+	rMsg, err := protocol.UnmarshalRouteMsg(recv.Data, recv.Protocol)
+	if err != nil {
+		log.Error("route msg unmarsh err", zap.Int("len", len(recv.Data)))
+	}
+	this.OnMessage(rMsg)
+}
+
 func (this *Actor) SendReply(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
 	_, err := msg.GetId()
 	if err != nil {
@@ -337,6 +377,30 @@ func (this *Actor) SendMessage(actorId util.ID, transId uint32, msg protocol.ISe
 	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, true)
 	this.process.RouteMsg(routeMsg)
 	return nil
+}
+
+func (this *Actor) SendRouteData(actorId util.ID, transId uint32, cmd uint16, body []byte) error {
+
+	var buff bytes.Buffer
+	binary.Write(&buff, binary.LittleEndian, uint16(0))
+	binary.Write(&buff, binary.LittleEndian, cmd)
+	binary.Write(&buff, binary.LittleEndian, transId)
+	binary.Write(&buff, binary.LittleEndian, uint64(actorId))
+	binary.Write(&buff, binary.LittleEndian, uint8(protocol.REQ_TYPE_MAIN))
+	binary.Write(&buff, binary.LittleEndian, body)
+
+	if buff.Len() > 65536 {
+		log.Error("error data len", zap.Int("len", buff.Len()))
+		return protocol.ERR_MSG_LEN_INVALID
+	}
+	out := buff.Bytes()
+	binary.LittleEndian.PutUint16(out[0:2], uint16(buff.Len()))
+
+	// this.process.RouteData()
+	// TODO
+
+	return nil
+
 }
 
 func (this *Actor) Call(actorId util.ID, req protocol.ISerializable) (protocol.ISerializable, error) {

@@ -617,7 +617,7 @@ func MarshalJsonRouteMsg(msg *RouteMessage) (ret []byte, err error) {
 		log.Panic("not a binary message type")
 	}
 	w(&out, uint16(0))
-	w(&out, uint16(msg.CmdId))
+	w(&out, uint16(msg.InnerId))
 	w(&out, msg.TransId)
 	w(&out, uint64(msg.ToActor))
 	w(&out, msg.ReqType)

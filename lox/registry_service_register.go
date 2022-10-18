@@ -33,7 +33,7 @@ type ServiceRegister struct {
 type ServiceRegisterMgr struct {
 	process lokas.IProcess
 
-	registerMap map[string]map[uint16]*ServiceRegister
+	registerMap map[string]map[uint16]map[uint16]*ServiceRegister
 
 	mutex sync.RWMutex
 }
@@ -41,8 +41,14 @@ type ServiceRegisterMgr struct {
 func NewServiceRegisterMgr(process lokas.IProcess) *ServiceRegisterMgr {
 	return &ServiceRegisterMgr{
 		process:     process,
-		registerMap: make(map[string]map[uint16]*ServiceRegister),
+		registerMap: make(map[string]map[uint16]map[uint16]*ServiceRegister),
 	}
+}
+
+func (register *ServiceRegister) getEtcdKey() string {
+	format := ETCD_SERVICE_PREFIX_KEY + "%s/%d/%d"
+	strKey := fmt.Sprintf(format, register.serviceInfo.ServiceType, register.serviceInfo.ServiceId, register.serviceInfo.LineId)
+	return strKey
 }
 
 func (register *ServiceRegister) registerEtcd() error {
@@ -66,7 +72,8 @@ func (register *ServiceRegister) registerEtcd() error {
 
 	_, err2 := concurrency.NewSTM(etcd.Client, func(s concurrency.STM) error {
 
-		strKey := fmt.Sprintf("/service/%s/%d", register.serviceInfo.ServiceType, register.serviceInfo.ServiceId)
+		strKey := register.getEtcdKey()
+
 		remoteValue := s.Get(strKey)
 
 		if remoteValue != "" {
@@ -114,7 +121,7 @@ func (register *ServiceRegister) updateEtcd() error {
 		return protocol.ERR_REGISTER_SERVICE_INFO_INVALID
 	}
 
-	strKey := fmt.Sprintf("/service/%s/%d", register.serviceInfo.ServiceType, register.serviceInfo.ServiceId)
+	strKey := register.getEtcdKey()
 	_, err2 := register.etcdClient.KV.Put(context.TODO(), strKey, string(strServiceInfo), clientv3.WithLease(register.leaseId))
 
 	if err2 != nil {
@@ -126,7 +133,7 @@ func (register *ServiceRegister) updateEtcd() error {
 
 func (mgr *ServiceRegisterMgr) Register(info *lokas.ServiceInfo) error {
 
-	if mgr.hasRegister(info.ServiceType, info.ServiceId) {
+	if mgr.hasRegister(info.ServiceType, info.ServiceId, info.LineId) {
 		log.Warn(protocol.ERR_REGISTER_SERVICE_DUPLICATED.Error(), zap.Any("serviceInfo", info))
 		return protocol.ERR_REGISTER_SERVICE_DUPLICATED
 	}
@@ -161,17 +168,22 @@ func (mgr *ServiceRegisterMgr) Register(info *lokas.ServiceInfo) error {
 
 	mgr.mutex.Lock()
 	defer mgr.mutex.Unlock()
+
 	if _, ok := mgr.registerMap[info.ServiceType]; !ok {
-		mgr.registerMap[info.ServiceType] = make(map[uint16]*ServiceRegister)
+		mgr.registerMap[info.ServiceType] = make(map[uint16]map[uint16]*ServiceRegister)
 	}
-	mgr.registerMap[info.ServiceType][info.ServiceId] = register
+	if _, ok := mgr.registerMap[info.ServiceType][info.ServiceId]; !ok {
+		mgr.registerMap[info.ServiceType][info.ServiceId] = make(map[uint16]*ServiceRegister)
+	}
+
+	mgr.registerMap[info.ServiceType][info.ServiceId][info.LineId] = register
 
 	return nil
 }
 
-func (mgr *ServiceRegisterMgr) Unregister(serviceType string, serviceId uint16) error {
+func (mgr *ServiceRegisterMgr) Unregister(serviceType string, serviceId uint16, lineId uint16) error {
 
-	register, ok := mgr.findRegisterInfo(serviceType, serviceId)
+	register, ok := mgr.findRegisterInfo(serviceType, serviceId, lineId)
 	if !ok {
 		return protocol.ERR_REGISTER_SERVICE_NOT_FOUND
 	}
@@ -187,7 +199,10 @@ func (mgr *ServiceRegisterMgr) Unregister(serviceType string, serviceId uint16) 
 func (mgr *ServiceRegisterMgr) Stop() {
 	for _, v1 := range mgr.registerMap {
 		for _, v2 := range v1 {
-			v2.etcdClient.Lease.Revoke(context.TODO(), v2.leaseId)
+			for _, v3 := range v2 {
+				v3.etcdClient.Lease.Revoke(context.TODO(), v3.leaseId)
+			}
+
 		}
 	}
 
@@ -195,7 +210,7 @@ func (mgr *ServiceRegisterMgr) Stop() {
 }
 
 func (mgr *ServiceRegisterMgr) UpdateServiceInfo(info *lokas.ServiceInfo) error {
-	register, ok := mgr.findRegisterInfo(info.ServiceType, info.ServiceId)
+	register, ok := mgr.findRegisterInfo(info.ServiceType, info.ServiceId, info.LineId)
 	if !ok {
 		log.Warn("not find service", zap.Any("serviceInfo", info))
 		return protocol.ERR_REGISTER_SERVICE_NOT_FOUND
@@ -214,18 +229,12 @@ func (mgr *ServiceRegisterMgr) UpdateServiceInfo(info *lokas.ServiceInfo) error 
 	return err
 }
 
-func (mgr *ServiceRegisterMgr) hasRegister(serviceType string, serviceId uint16) bool {
-	mgr.mutex.RLock()
-	defer mgr.mutex.RUnlock()
-	infos, ok := mgr.registerMap[serviceType]
-	if !ok {
-		return false
-	}
-	_, ok2 := infos[serviceId]
-	return ok2
+func (mgr *ServiceRegisterMgr) hasRegister(serviceType string, serviceId uint16, lineId uint16) bool {
+	_, ok := mgr.findRegisterInfo(serviceType, serviceId, lineId)
+	return ok
 }
 
-func (mgr *ServiceRegisterMgr) findRegisterInfo(serviceType string, serviceId uint16) (*ServiceRegister, bool) {
+func (mgr *ServiceRegisterMgr) findRegisterInfo(serviceType string, serviceId uint16, lineId uint16) (*ServiceRegister, bool) {
 	mgr.mutex.RLock()
 	defer mgr.mutex.RUnlock()
 
@@ -233,12 +242,17 @@ func (mgr *ServiceRegisterMgr) findRegisterInfo(serviceType string, serviceId ui
 	if !ok {
 		return nil, false
 	}
-	info, ok2 := infos[serviceId]
-	return info, ok2
+	infos2, ok2 := infos[serviceId]
+	if !ok2 {
+		return nil, false
+	}
+	info, ok3 := infos2[lineId]
+
+	return info, ok3
 }
 
-func (mgr *ServiceRegisterMgr) FindServiceInfo(serviceType string, serviceId uint16) (*lokas.ServiceInfo, bool) {
-	register, ok := mgr.findRegisterInfo(serviceType, serviceId)
+func (mgr *ServiceRegisterMgr) FindServiceInfo(serviceType string, serviceId uint16, lineId uint16) (*lokas.ServiceInfo, bool) {
+	register, ok := mgr.findRegisterInfo(serviceType, serviceId, lineId)
 	if !ok {
 		return nil, ok
 	}
@@ -257,8 +271,10 @@ func (mgr *ServiceRegisterMgr) FindServiceList(serviceType string) ([]*lokas.Ser
 
 	serviceInfos := make([]*lokas.ServiceInfo, len(infoMap))
 
-	for _, v := range infoMap {
-		serviceInfos = append(serviceInfos, v.serviceInfo)
+	for _, v1 := range infoMap {
+		for _, v2 := range v1 {
+			serviceInfos = append(serviceInfos, v2.serviceInfo)
+		}
 	}
 
 	return serviceInfos, true

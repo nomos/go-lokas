@@ -92,6 +92,8 @@ type IProcess interface {
 //IProxy universal module interface for connection
 type IProxy interface {
 	Send(id util.ProcessId, msg *protocol.RouteMessage) error
+
+	SendData(id util.ProcessId, data []byte) error
 }
 
 // IActorContainer container for IActor
@@ -113,7 +115,7 @@ type IActorInfo interface {
 //IActor standard interface for actor
 type IActor interface {
 	IEntity
-	IProxy
+	// IProxy
 	IModule
 	timer.TimeHandler
 	PId() util.ProcessId
@@ -123,6 +125,8 @@ type IActor interface {
 	Call(actorId util.ID, req protocol.ISerializable) (protocol.ISerializable, error)
 	GetLeaseId() (clientv3.LeaseID, bool, error)
 	Update(dt time.Duration, now time.Time)
+
+	ReceiveData(recv *protocol.RouteRecv) error
 }
 
 // IEntity entity of ecs system,container of IComponent
@@ -221,20 +225,30 @@ type IRegistry interface {
 
 type IServiceRegisterMgr interface {
 	Register(info *ServiceInfo) error
-	Unregister(serviceType string, serviceId uint16) error
+	Unregister(serviceType string, serviceId uint16, lineId uint16) error
 	UpdateServiceInfo(info *ServiceInfo) error
-	FindServiceInfo(serviceType string, serviceId uint16) (*ServiceInfo, bool)
+	FindServiceInfo(serviceType string, serviceId uint16, lineId uint16) (*ServiceInfo, bool)
 	FindServiceList(serviceType string) ([]*ServiceInfo, bool)
 }
 
 type IServiceDiscoverMgr interface {
-	FindServiceInfo(serviceType string, serviceId uint16) (*ServiceInfo, bool)
+	FindServiceInfo(serviceType string, serviceId uint16, lineId uint16) (*ServiceInfo, bool)
+
+	// if serviceId is zero, get a random serviceId; if lineId is zero, get a random lineId
+	FindRandServiceInfo(serviceType string, serviceId uint16, lineId uint16) (*ServiceInfo, bool)
 }
 
 //IRouter interface for router
 type IRouter interface {
 	RouteMsg(msg *protocol.RouteMessage)
 	RouteMsgLocal(msg *protocol.RouteMessage) error
+
+	RouteMsgByAvatar(fromActorId util.ID, toActorId util.ID, transId uint32, reqType uint8, msg protocol.ISerializable) error
+	RouteMsgByService(fromActorId util.ID, serviceType string, serviceId uint16, lineId uint16, transId uint32, reqType uint8, msg protocol.ISerializable, protocolType protocol.TYPE) error
+
+	// RouteData(fromActorId util.ID, toActorId util.ID, transId uint32, reqType uint8, msg protocol.ISerializable) error
+
+	RouteDataByService(routeDataMsg *protocol.RouteDataMsg, serviceType string, serviceId uint16, lineId uint16) error
 }
 
 //IContext context interface

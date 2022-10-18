@@ -770,7 +770,7 @@ func UnmarshalJsonRouteMsg(data []byte) (*RouteMessage, error) {
 }
 
 func unmarshalRouteMsgHeader(data []byte) (*RouteMessage, int, error) {
-	headerSize := 17
+	headerSize := ROUTE_MSG_HEAD_SIZE
 
 	if len(data) < headerSize {
 		return nil, 0, ERR_MSG_FORMAT

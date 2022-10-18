@@ -1,12 +1,13 @@
 package lox
 
 import (
+	"runtime"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	"runtime"
 )
 
 var _ lokas.IModel = (*Avatar)(nil)
@@ -26,6 +27,7 @@ func NewAvatar(id util.ID, handler lokas.IGameHandler, manager *AvatarManager) *
 	ret.Initializer = handler.GetInitializer()
 	ret.Updater = handler.GetUpdater()
 	ret.MsgDelegator = handler.GetMsgDelegator()
+
 	return ret
 }
 
@@ -40,6 +42,7 @@ type Avatar struct {
 	Deserializer func(avatar lokas.IActor, process lokas.IProcess) error
 	Updater      func(avatar lokas.IActor, process lokas.IProcess) error
 	MsgDelegator func(avatar lokas.IActor, actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error)
+	ClientHost   string
 }
 
 func (this *Avatar) SendEvent(msg protocol.ISerializable) error {
@@ -103,37 +106,46 @@ func (this *Avatar) OnUpdate() {
 		}
 	}()
 	this.GetProcess().RegisterActorRemote(this)
+
 	this.Updater(this, this.GetProcess())
 	if this.Dirty() {
 		this.Serialize(this.GetProcess())
 	}
 }
 
+// func (this *Avatar) Start() error {
+// 	err := this.AvatarSession.Deserialize(this.GetProcess())
+// 	if err != nil {
+// 		log.Error(err.Error())
+// 		return err
+// 	}
+// 	if this.AvatarSession.UserName == "" || this.AvatarSession.GameId == "" {
+// 		err = this.AvatarSession.FetchData(this.GetProcess())
+// 		if err != nil {
+// 			log.Error(err.Error())
+// 			return err
+// 		}
+// 	}
+// 	err = this.AvatarSession.Serialize(this.GetProcess())
+// 	if err != nil {
+// 		log.Error(err.Error())
+// 		return err
+// 	}
+// 	this.AvatarSession.SetOnGateWayChanged(func(session *AvatarSession) {
+// 		this.GateId = session.GateId
+// 	})
+// 	this.AvatarSession.SetOnSessionClosed(func() {
+// 		this.GetProcess().RemoveActor(this)
+// 	})
+// 	this.AvatarSession.StartAvatarSession()
+// 	this.GetProcess().RegisterActorLocal(this)
+// 	this.GetProcess().RegisterActorRemote(this)
+// 	this.StartMessagePump()
+// 	return nil
+// }
+
 func (this *Avatar) Start() error {
-	err := this.AvatarSession.Deserialize(this.GetProcess())
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
-	if this.AvatarSession.UserName == "" || this.AvatarSession.GameId == "" {
-		err = this.AvatarSession.FetchData(this.GetProcess())
-		if err != nil {
-			log.Error(err.Error())
-			return err
-		}
-	}
-	err = this.AvatarSession.Serialize(this.GetProcess())
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
-	this.AvatarSession.SetOnGateWayChanged(func(session *AvatarSession) {
-		this.GateId = session.GateId
-	})
-	this.AvatarSession.SetOnSessionClosed(func() {
-		this.GetProcess().RemoveActor(this)
-	})
-	this.AvatarSession.StartAvatarSession()
+
 	this.GetProcess().RegisterActorLocal(this)
 	this.GetProcess().RegisterActorRemote(this)
 	this.StartMessagePump()

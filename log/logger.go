@@ -3,12 +3,13 @@ package log
 import (
 	"encoding/json"
 	"fmt"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"reflect"
 	"regexp"
 	"sync"
 	"time"
+
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 var __hooks []Hook = make([]Hook, 0)

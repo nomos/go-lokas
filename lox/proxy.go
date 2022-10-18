@@ -3,6 +3,9 @@ package lox
 import (
 	"encoding/json"
 	"errors"
+	"sync"
+	"time"
+
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
@@ -10,8 +13,6 @@ import (
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/promise"
-	"sync"
-	"time"
 )
 
 var ProxyCtor = proxyCtor{}
@@ -251,6 +252,12 @@ func (this *Proxy) Send(id util.ProcessId, msg *protocol.RouteMessage) error {
 		log.Error(err.Error())
 		return err
 	}
+	return nil
+}
+
+func (this *Proxy) SendData(pid util.ProcessId, data []byte) error {
+
+	//no use this
 	return nil
 }
 
