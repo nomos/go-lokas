@@ -15,7 +15,7 @@ require (
 	github.com/mitchellh/go-ps v1.0.0
 	github.com/noaway/dateparse v0.0.0-20171117034806-ad2b19d7b298
 	github.com/nomos/jwt-go v3.2.0+incompatible
-	github.com/nomos/qmgo v1.9.7
+	github.com/nomos/qmgo v1.9.8
 	github.com/pkg/sftp v1.13.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/shopspring/decimal v1.2.0

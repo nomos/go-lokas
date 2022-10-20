@@ -375,40 +375,6 @@ func (this timeNode) parseDebug() {
 	log.Infof("second", this.second.Values(60))
 }
 
-func (this timeNode) initCronExpireFunc(t *timeWheel) (uint64, bool) {
-	now := t.Now()
-	t1 := now
-	year := now.Year()
-	monthday := now.Day()
-	month := int(now.Month())
-	hour := now.Hour()
-	minute := now.Minute()
-	second := now.Second()
-	move_year := false
-	move_month := false
-	move_day := false
-	move_hour := false
-	move_minute := false
-	defer func() {
-		if r := recover(); r != nil {
-			util.Recover(r, false)
-		}
-	}()
-	second, move_minute = this.getNextSecond(second)
-	minute, move_hour = this.getNextMinute(minute, move_minute)
-	hour, move_day = this.getNextHour(hour, move_hour)
-	if move_day {
-		t1, move_month = this.getNextDayStart(now, month)
-	}
-	monthday, month, year = this.getNextDayMonthTime(t1, this.useWeekDay, this.lastMonthDay, move_month, false)
-	if move_year {
-		year += 1
-	}
-	next_time := time.Date(year, time.Month(month), monthday, hour, minute, second, 0, time.Local).Local()
-	d := next_time.Sub(now)
-	return uint64(d), true
-}
-
 func (this timeNode) cronExpireFunc(t *timeWheel) (uint64, bool) {
 	now := t.Now()
 	t1 := now
@@ -418,27 +384,50 @@ func (this timeNode) cronExpireFunc(t *timeWheel) (uint64, bool) {
 	hour := now.Hour()
 	minute := now.Minute()
 	second := now.Second()
-	move_month := false
 	move_year := false
+	move_month := false
 	move_day := false
 	move_hour := false
 	move_minute := false
+	move_next_day := false
+	if this.useWeekDay {
+		if !this.weekday.Get(int(now.Weekday())) {
+			move_next_day = true
+			hour = 0
+			minute = 0
+			second = 0
+		}
+	} else {
+		if !this.monthday.Get(monthday - 1) {
+			move_next_day = true
+			hour = 0
+			minute = 0
+			second = 0
+		}
+	}
+	if !this.month.Get(month) {
+		hour = 0
+		minute = 0
+		second = 0
+	} else if !this.hour.Get(hour) {
+		minute = 0
+		second = 0
+	} else if !this.minute.Get(minute) {
+		second = 0
+	}
 	defer func() {
 		if r := recover(); r != nil {
 			util.Recover(r, false)
 		}
 	}()
-
-	if second, move_minute = this.getNextSecond(second); move_minute {
-		if minute, move_hour = this.getNextMinute(minute, true); move_hour {
-			if hour, move_day = this.getNextHour(hour, true); move_day {
-			}
-			if move_day {
-				t1, move_month = this.getNextDayStart(now, month)
-			}
-			monthday, month, year = this.getNextDayMonthTime(t1, this.useWeekDay, this.lastMonthDay, move_month, false)
-		}
+	second, move_minute = this.getNextSecond(second)
+	minute, move_hour = this.getNextMinute(minute, move_minute)
+	hour, move_day = this.getNextHour(hour, move_hour)
+	move_day = move_day || move_next_day
+	if move_day {
+		t1, move_month = this.getNextDayStart(now, month)
 	}
+	monthday, month, year = this.getNextDayMonthTime(t1, this.useWeekDay, this.lastMonthDay, move_month, false)
 	if move_year {
 		year += 1
 	}
@@ -572,7 +561,6 @@ func (this *timeNode) getNextMinute(minute int, next bool) (next_minute int, mov
 }
 
 func (this *timeNode) getNextSecond(second int) (next_second int, move_minute bool) {
-
 	for i := 0; i < 60; i++ {
 		second += 1
 		if second > 59 {
