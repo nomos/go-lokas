@@ -70,6 +70,38 @@ type WeightAble interface {
 	Weight() float64
 }
 
+func PickOneWeightSelect[T WeightAble](weightList []T, seed ...uint64) (int, T, []T) {
+	if len(weightList) == 0 {
+		log.Panic("weight list must > 0")
+	}
+	sum := 0.0
+	for i := 0; i < len(weightList); i++ {
+		sum += weightList[i].Weight()
+	}
+	r := SRandom(seed...) * sum
+	var i int
+	for i = 0; i < len(weightList); i++ {
+		weight := weightList[i].Weight()
+		if weight >= r {
+			break
+		} else {
+			r -= weight
+		}
+	}
+	arr := slice.RemoveAt(weightList, i)
+	return i, weightList[i], arr
+}
+func PickSomeWeightSelect[T WeightAble](weightList []T, num int, seed ...uint64) (results []T, remain []T) {
+	results = []T{}
+	remain = weightList
+	var ret T
+	for i := 0; i < num; i++ {
+		_, ret, remain = PickOneWeightSelect(remain, seed...)
+		results = append(results, ret)
+	}
+	return results, remain
+}
+
 func WeightSelect[T WeightAble](weightList []T, seed ...uint64) (int, T) {
 	if len(weightList) == 0 {
 		log.Panic("weight list must > 0")
