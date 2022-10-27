@@ -54,6 +54,13 @@ func NumberConvert[T1, T2 Number](arr []T1) []T2 {
 	return ret
 }
 
+func RemoveAt[T any](arr []T, index int) []T {
+	if len(arr) == 0 {
+		return arr
+	}
+	return append(arr[:index], arr[index+1:]...)
+}
+
 func Remove[T comparable](arr []T, a ...T) []T {
 	ret := []T{}
 	for _, v := range arr {

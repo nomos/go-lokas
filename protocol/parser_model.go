@@ -228,7 +228,6 @@ using System;
 using System.Threading.Tasks;
 using Funnel.Client;
 using Funnel.Protocol;
-using Funnel.Protocol.Abstractions;
 #if UNITY_2017_1_OR_NEWER
     using UnityEngine;
 #endif
@@ -1284,7 +1283,7 @@ func (this *ModelClassFields) csString(g *Generator, lower bool) string {
 }
 
 func (this *ModelClassFields) CsString(g *Generator) string {
-	return "\t\tpublic " + this.csString(g, false) + "{ get;set; }" + " " + this.Comment
+	return "\t\t[JsonProperty]\n\t\tpublic " + this.csString(g, false) + "{ get;set; }" + " " + this.Comment
 }
 
 func (this *ModelClassFields) TsDefineTags(g *Generator, tsClass *TsClassObject) string {
@@ -1534,11 +1533,13 @@ func (this *ModelClassObject) CsString(g *Generator) string {
 	ret := `//this is a generate file,do not modify it!
 using System;
 using System.Collections.Generic;
-using Funnel.Protocol.Abstractions;
+using Funnel.Protocol;
+using Newtonsoft.Json;
 {Comment}
 namespace {CsPackageName}
 {
-    public class {ClassName}:FunnelSerializable
+	[JsonObject(MemberSerialization.OptIn)]
+    public partial class {ClassName}:FunnelSerializable
     {
 {ClassBody}
 
@@ -1556,12 +1557,15 @@ namespace {CsPackageName}
 
 	if len(this.Fields) == 0 {
 		ret = `//this is a generate file,do not modify it!
+using System;
 using System.Collections.Generic;
-using Funnel.Protocol.Abstractions;
+using Funnel.Protocol;
+using Newtonsoft.Json;
 {Comment}
 namespace {CsPackageName}
 {
-    public class {ClassName}:FunnelSerializable
+	[JsonObject(MemberSerialization.OptIn)]
+    public partial class {ClassName}:FunnelSerializable
     {
 {ClassBody}
     }

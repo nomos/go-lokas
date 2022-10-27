@@ -56,6 +56,7 @@ type TimeHandler interface {
 
 	Schedule(interval time.Duration, cb func(TimeNoder), opts ...TimerOption) TimeNoder
 
+	//expresion:1-2,3,4,5,6-12
 	Cron(second, minute, hour, day, month, weekday interface{}, cb func(TimeNoder)) TimeNoder
 
 	At(t time.Time, cb func(TimeNoder)) TimeNoder

@@ -3,7 +3,7 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
+
 	"reflect"
 	"time"
 
@@ -418,14 +418,15 @@ func PickJsonLongPacket(data []byte) (bool, int, []byte) {
 	if cmdId != TAG_Compose {
 		return false, 0, nil
 	}
-	bodyData := data[HEADER_SIZE+2:]
-	var ack = &ComposeData{}
-	err := json.Unmarshal(bodyData, ack)
+	body, err := unmarshalBodyByTag(cmdId, data)
 	if err != nil {
-		log.Error(err.Error())
 		return false, 0, nil
 	}
-	//log.Infof("PickLongPacket", ack.Idx)
+	ack, ok := body.(*ComposeData)
+	if !ok {
+		return false, 0, nil
+	}
+	log.Warnf("PickLongPacket", ack.Idx)
 	return true, int(ack.Idx), ack.Data
 }
 
@@ -446,7 +447,7 @@ func CreateBinaryLongPacket(data []byte, idx int) ([]byte, error) {
 
 func CreateJsonLongPacket(data []byte, idx int) ([]byte, error) {
 	ack := &ComposeData{Idx: uint32(idx), Data: data}
-	ret, _ := MarshalJsonMessage(0, ack)
+	ret, _ := MarshalBinaryMessage(0, ack)
 	return ret, nil
 }
 

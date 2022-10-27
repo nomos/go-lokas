@@ -4,6 +4,7 @@ import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util"
 	"github.com/nomos/go-lokas/util/bitset"
+	"github.com/nomos/go-lokas/util/slice"
 	"github.com/nomos/go-lokas/util/xmath"
 	"regexp"
 	"strconv"
@@ -61,7 +62,7 @@ var _ TimeNoder = (*timeNode)(nil)
 const ALL_WEEK bitset.BitSet = 0b1111111
 const ALL_MONTH bitset.BitSet = 0b111111111111
 const ALL_DAY bitset.BitSet = 0b1111111111111111111111111111111
-const ALL_HOUR bitset.BitSet = 0b111111111111
+const ALL_HOUR bitset.BitSet = 0b111111111111111111111111
 const ALL_MINUTE bitset.BitSet = 0b111111111111111111111111111111111111111111111111111111111111
 const ALL_SECOND bitset.BitSet = ALL_MINUTE
 
@@ -169,15 +170,6 @@ func everyCheck(s string) bool {
 	return regexp.MustCompile(`\s*\*\s*`).FindString(s) == s
 }
 
-//纯数字检测
-func digitalCheck(s string) int {
-	if regexp.MustCompile(`\s*(\d+)\s*`).FindString(s) != s {
-		return -1
-	}
-	ret, _ := strconv.Atoi(regexp.MustCompile(`\s*(\d+)\s*`).ReplaceAllString(s, "$1"))
-	return ret
-}
-
 func lastCheck(s string) (bool, int) {
 	r := regexp.MustCompile(`\s*([0-9]+)\s*L\s*`)
 	if r.FindString(s) != s {
@@ -191,46 +183,50 @@ func lastCheck(s string) (bool, int) {
 	return true, ret
 }
 
-func rangeCheck(s string) (bool, []int) {
-	r := regexp.MustCompile(`\s*([0-9]+)\s*\-\s*([0-9])+\s*`)
-	if r.FindString(s) != s {
-		return false, nil
-	}
-	ret := []int{}
-	split := strings.Split(s, "-")
-	min, _ := strconv.Atoi(strings.TrimSpace(split[0]))
-	max, _ := strconv.Atoi(strings.TrimSpace(split[1]))
-	if min > max {
-		log.Error("timewheel:parse error,range min must <= max " + s)
-		return false, nil
-	}
-	for i := min; i <= max; i++ {
-		ret = append(ret, i)
-	}
-	return true, ret
-}
-
 //检测分隔符
 func splitCheck(s string) (bool, []int) {
-	r := regexp.MustCompile(`\s*([\d+\s*\,\s*]+\s*\d*)\s*`)
+	r := regexp.MustCompile(`\s*(\d+)\s*(\-\s*\d+)?(\s*\,\s*(\d+)\s*(\-\s*\d+)?)*`)
 	res := r.FindString(s)
 	if res == "" {
 		return false, nil
 	}
 	ret := []int{}
-	res = r.ReplaceAllString(s, "$1")
-	splits := strings.Split(res, ",")
+	splits := strings.Split(s, ",")
 	for _, v := range splits {
 		v = strings.TrimSpace(v)
 		if v == "" {
 			continue
 		}
-		d, err := strconv.Atoi(v)
-		if err != nil {
-			log.Error(err.Error())
-			return false, ret
+		splits1 := strings.Split(v, "-")
+		results := []int{}
+		for _, v1 := range splits1 {
+			v1 = strings.TrimSpace(v1)
+			if v1 == "" {
+				continue
+			}
+			d, err := strconv.Atoi(v1)
+			if err != nil {
+				log.Error(err.Error())
+				return false, ret
+			}
+			results = append(results, d)
 		}
-		ret = append(ret, d)
+		if len(results) == 2 {
+			min := results[0]
+			max := results[1]
+			if min > max {
+				log.Error("timewheel:parse error,range min must <= max " + s)
+				return false, nil
+			}
+			for i := min; i <= max; i++ {
+				ret = slice.AppendOnce(ret, i)
+			}
+		} else if len(results) == 1 {
+			ret = slice.AppendOnce(ret, results[0])
+		} else {
+			log.Error("timewheel:parse error")
+			return false, nil
+		}
 	}
 	return true, ret
 }
@@ -267,24 +263,6 @@ func checkCronString(s string, period int) (bitset.BitSet, error) {
 	offset := 0
 	if period == 31 || period == 12 {
 		offset = -1
-	}
-	if d := digitalCheck(s); d != -1 {
-		if !checkMaxMin(period, []int{d}, offset) {
-			return 0, log.Error("timewheel:range error")
-		}
-		var ret bitset.BitSet = 0
-		ret = ret.Set(d+offset, true)
-		return ret, nil
-	}
-	if ok, entry := rangeCheck(s); ok {
-		if !checkMaxMin(period, entry, offset) {
-			return 0, log.Error("timewheel:range error")
-		}
-		var ret bitset.BitSet = 0
-		for _, v := range entry {
-			ret = ret.Set(v+offset, true)
-		}
-		return ret, nil
 	}
 	if ok, entry := splitCheck(s); ok {
 		if !checkMaxMin(period, entry, offset) {
@@ -375,40 +353,6 @@ func (this timeNode) parseDebug() {
 	log.Infof("second", this.second.Values(60))
 }
 
-func (this timeNode) initCronExpireFunc(t *timeWheel) (uint64, bool) {
-	now := t.Now()
-	t1 := now
-	year := now.Year()
-	monthday := now.Day()
-	month := int(now.Month())
-	hour := now.Hour()
-	minute := now.Minute()
-	second := now.Second()
-	move_year := false
-	move_month := false
-	move_day := false
-	move_hour := false
-	move_minute := false
-	defer func() {
-		if r := recover(); r != nil {
-			util.Recover(r, false)
-		}
-	}()
-	second, move_minute = this.getNextSecond(second)
-	minute, move_hour = this.getNextMinute(minute, move_minute)
-	hour, move_day = this.getNextHour(hour, move_hour)
-	if move_day {
-		t1, move_month = this.getNextDayStart(now, month)
-	}
-	monthday, month, year = this.getNextDayMonthTime(t1, this.useWeekDay, this.lastMonthDay, move_month, false)
-	if move_year {
-		year += 1
-	}
-	next_time := time.Date(year, time.Month(month), monthday, hour, minute, second, 0, time.Local).Local()
-	d := next_time.Sub(now)
-	return uint64(d), true
-}
-
 func (this timeNode) cronExpireFunc(t *timeWheel) (uint64, bool) {
 	now := t.Now()
 	t1 := now
@@ -418,22 +362,50 @@ func (this timeNode) cronExpireFunc(t *timeWheel) (uint64, bool) {
 	hour := now.Hour()
 	minute := now.Minute()
 	second := now.Second()
-	move_month := false
 	move_year := false
+	move_month := false
 	move_day := false
 	move_hour := false
 	move_minute := false
-
-	if second, move_minute = this.getNextSecond(second); move_minute {
-		if minute, move_hour = this.getNextMinute(minute, true); move_hour {
-			if hour, move_day = this.getNextHour(hour, true); move_day {
-			}
-			if move_day {
-				t1, move_month = this.getNextDayStart(now, month)
-			}
-			monthday, month, year = this.getNextDayMonthTime(t1, this.useWeekDay, this.lastMonthDay, move_month, false)
+	move_next_day := false
+	if this.useWeekDay {
+		if !this.weekday.Get(int(now.Weekday())) {
+			move_next_day = true
+			hour = 0
+			minute = 0
+			second = 0
+		}
+	} else {
+		if !this.monthday.Get(monthday - 1) {
+			move_next_day = true
+			hour = 0
+			minute = 0
+			second = 0
 		}
 	}
+	if !this.month.Get(month) {
+		hour = 0
+		minute = 0
+		second = 0
+	} else if !this.hour.Get(hour) {
+		minute = 0
+		second = 0
+	} else if !this.minute.Get(minute) {
+		second = 0
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			util.Recover(r, false)
+		}
+	}()
+	second, move_minute = this.getNextSecond(second)
+	minute, move_hour = this.getNextMinute(minute, move_minute)
+	hour, move_day = this.getNextHour(hour, move_hour)
+	move_day = move_day || move_next_day
+	if move_day {
+		t1, move_month = this.getNextDayStart(now, month)
+	}
+	monthday, month, year = this.getNextDayMonthTime(t1, this.useWeekDay, this.lastMonthDay, move_month, false)
 	if move_year {
 		year += 1
 	}
@@ -567,7 +539,6 @@ func (this *timeNode) getNextMinute(minute int, next bool) (next_minute int, mov
 }
 
 func (this *timeNode) getNextSecond(second int) (next_second int, move_minute bool) {
-
 	for i := 0; i < 60; i++ {
 		second += 1
 		if second > 59 {

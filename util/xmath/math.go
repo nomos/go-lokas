@@ -140,6 +140,10 @@ func Floor[T Float](v T) T {
 	return T(math.Floor(float64(v)))
 }
 
+func Ceil[T Float](v T) T {
+	return T(math.Ceil(float64(v)))
+}
+
 func Fract[T Float](v T) T {
 	return v - Floor(v)
 }
