@@ -243,12 +243,14 @@ type IRouter interface {
 	RouteMsg(msg *protocol.RouteMessage)
 	RouteMsgLocal(msg *protocol.RouteMessage) error
 
-	RouteMsgByAvatar(fromActorId util.ID, toActorId util.ID, transId uint32, reqType uint8, msg protocol.ISerializable) error
-	RouteMsgByService(fromActorId util.ID, serviceType string, serviceId uint16, lineId uint16, transId uint32, reqType uint8, msg protocol.ISerializable, protocolType protocol.TYPE) error
+	// RouteMsgByAvatar(fromActorId util.ID, toActorId util.ID, transId uint32, reqType uint8, msg protocol.ISerializable) error
+	RouteMsgToService(fromActorId util.ID, serviceType string, serviceId uint16, lineId uint16, transId uint32, reqType uint8, msg protocol.ISerializable, protocolType protocol.TYPE) error
 
 	// RouteData(fromActorId util.ID, toActorId util.ID, transId uint32, reqType uint8, msg protocol.ISerializable) error
 
 	RouteDataByService(routeDataMsg *protocol.RouteDataMsg, serviceType string, serviceId uint16, lineId uint16) error
+
+	RouteMsgWithPid(routeMsg *protocol.RouteMessage, pid util.ProcessId) error
 }
 
 //IContext context interface

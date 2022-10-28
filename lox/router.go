@@ -3,7 +3,6 @@ package lox
 import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"go.uber.org/zap"
@@ -35,19 +34,23 @@ func (this *Router) SetProcess(process lokas.IProcess) {
 
 func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 	if msg.ToActor.IsValidProcessId() {
-		log.Info("Router:isProcessId", flog.ActorRouterMsgInfo(msg.Body, msg.TransId, msg.FromActor, msg.ToActor, msg.Req)...)
+		log.Debug("Router:isProcessId", zap.Uint16("cmd", uint16(msg.InnerId)), zap.Uint32("transId", msg.TransId), zap.Uint64("fromActor", uint64(msg.FromActor)), zap.Uint64("toActor", uint64(msg.ToActor)))
 	} else if msg.ToActor != 0 {
 		a := this.process.GetActor(msg.ToActor)
-		log.Info("Router:RouteMsg", flog.ActorRouterMsgInfo(msg.Body, msg.TransId, msg.FromActor, msg.ToActor, msg.Req)...)
+		// log.Info("Router:RouteMsg", flog.ActorRouterMsgInfo(msg.Body, msg.TransId, msg.FromActor, msg.ToActor, msg.Req)...)
+		// log.Debug("route message", zap.Uint16("cmd", uint16(msg.InnerId)), zap.Uint32("transId", msg.TransId), zap.Uint64("fromActor", uint64(msg.FromActor)), zap.Uint64("toActor", uint64(msg.ToActor)))
 		if a != nil {
 			a.ReceiveMessage(msg)
+			log.Debug("router message local", zap.Uint16("cmd", uint16(msg.InnerId)), zap.Uint32("transId", msg.TransId), zap.Uint64("fromActor", uint64(msg.FromActor)), zap.Uint64("toActor", uint64(msg.ToActor)))
 			return
 		}
+
+		// log.Debug("router not find local actor", zap.Uint16("cmd", uint16(msg.InnerId)), zap.Uint64("fromActor", uint64(msg.FromActor)), zap.Uint64("toActor", uint64(msg.ToActor)))
 
 		pid, err := this.process.GetProcessIdByActor(msg.ToActor)
 		// log.Info("processId", flog.ProcessId(pid.Snowflake()))
 		if err != nil {
-			log.Error("actor not found", zap.Uint64("toActorId", uint64(msg.ToActor)), zap.Uint16("cmd", uint16(msg.InnerId)))
+			log.Error("route message, actor not found", zap.Uint64("toActorId", uint64(msg.ToActor)), zap.Uint16("cmd", uint16(msg.InnerId)))
 			return
 		}
 
@@ -62,7 +65,7 @@ func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 			return
 		}
 	} else if msg.ToActor == 0 {
-
+		log.Error("route, toActor is zero", zap.Uint16("cmd", uint16(msg.InnerId)), zap.Uint32("tansId", msg.TransId), zap.Uint64("fromActorId", uint64(msg.FromActor)), zap.Uint64("toActorId", uint64(msg.ToActor)))
 	} else {
 		panic("wrong id format" + msg.ToActor.String())
 	}
@@ -70,7 +73,7 @@ func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 
 func (router *Router) RouteMsgLocal(msg *protocol.RouteMessage) error {
 	a := router.process.GetActor(msg.ToActor)
-	log.Info("Router:RouteMsgLocal", flog.ActorRouterMsgInfo(msg.Body, msg.TransId, msg.FromActor, msg.ToActor, msg.Req)...)
+	// log.Info("Router:RouteMsgLocal", flog.ActorRouterMsgInfo(msg.Body, msg.TransId, msg.FromActor, msg.ToActor, msg.Req)...)
 	if a == nil {
 		log.Error("route local, not find actor", zap.Any("routeMsg", msg))
 		return protocol.ERR_MSG_ROUTE_NOT_FOUND
@@ -80,36 +83,36 @@ func (router *Router) RouteMsgLocal(msg *protocol.RouteMessage) error {
 	return nil
 }
 
-func (router *Router) RouteMsgByAvatar(fromActorId util.ID, toActorId util.ID, transId uint32, reqType uint8, msg protocol.ISerializable) error {
-	cmd, _ := msg.GetId()
-	routeMsg := protocol.RouteMessage{
-		TransId:   transId,
-		ReqType:   reqType,
-		CmdId:     cmd,
-		InnerId:   cmd,
-		FromActor: fromActorId,
-		ToActor:   toActorId,
-		Body:      msg,
-	}
+// func (router *Router) RouteMsgByAvatar(fromActorId util.ID, toActorId util.ID, transId uint32, reqType uint8, msg protocol.ISerializable) error {
+// 	cmd, _ := msg.GetId()
+// 	routeMsg := protocol.RouteMessage{
+// 		TransId:   transId,
+// 		ReqType:   reqType,
+// 		CmdId:     cmd,
+// 		InnerId:   cmd,
+// 		FromActor: fromActorId,
+// 		ToActor:   toActorId,
+// 		Body:      msg,
+// 	}
 
-	if routeMsg.ReqType == protocol.REQ_TYPE_REPLAY {
-		routeMsg.Req = false
-	} else {
-		routeMsg.Req = true
-	}
+// 	if routeMsg.ReqType == protocol.REQ_TYPE_REPLAY {
+// 		routeMsg.Req = false
+// 	} else {
+// 		routeMsg.Req = true
+// 	}
 
-	a := router.process.GetActor(routeMsg.ToActor)
-	if a != nil {
-		a.ReceiveMessage(&routeMsg)
-		return nil
-	}
+// 	a := router.process.GetActor(routeMsg.ToActor)
+// 	if a != nil {
+// 		a.ReceiveMessage(&routeMsg)
+// 		return nil
+// 	}
 
-	// TODO send by proxy
+// 	// TODO send by proxy
 
-	return nil
-}
+// 	return nil
+// }
 
-func (router *Router) RouteMsgByService(fromActorId util.ID, serviceType string, serviceId uint16, lineId uint16, transId uint32, reqType uint8, msg protocol.ISerializable, protocolType protocol.TYPE) error {
+func (router *Router) RouteMsgToService(fromActorId util.ID, serviceType string, serviceId uint16, lineId uint16, transId uint32, reqType uint8, msg protocol.ISerializable, protocolType protocol.TYPE) error {
 
 	serviceInfo, ok := router.GetProcess().GetServiceDiscoverMgr().FindServiceInfo(serviceType, serviceId, lineId)
 	if !ok {
@@ -124,18 +127,19 @@ func (router *Router) RouteMsgByService(fromActorId util.ID, serviceType string,
 		CmdId:     cmd,
 		InnerId:   cmd,
 		FromActor: fromActorId,
-		ToActor:   serviceInfo.ActorId,
-		Body:      msg,
+		// FromPid:   router.GetProcess().PId(),
+		ToActor: serviceInfo.ActorId,
+		Body:    msg,
 	}
 
 	if router.GetProcess().PId() == serviceInfo.ProcessId {
 
 		a := router.process.GetActor(routeMsg.ToActor)
 		if a == nil {
-			log.Warn("router local process, not find actor", zap.Uint16("pid", uint16(serviceInfo.ProcessId)), zap.Uint64("toActor", uint64(routeMsg.ToActor)))
+			log.Warn("router local process, not find actor", zap.Uint16("cmd", uint16(cmd)), zap.Uint16("toPid", uint16(serviceInfo.ProcessId)), zap.Uint64("toActor", uint64(routeMsg.ToActor)))
 			return protocol.ERR_ACTOR_NOT_FOUND
 		}
-		log.Info("router local actor", zap.Uint16("toPid", uint16(serviceInfo.ProcessId)), zap.Uint64("fromActorId", uint64(fromActorId)), zap.Uint64("toActorId", uint64(routeMsg.ToActor)), zap.Uint16("cmd", uint16(cmd)))
+		log.Debug("router local actor", zap.Uint16("cmd", uint16(cmd)), zap.Uint16("toPid", uint16(serviceInfo.ProcessId)), zap.Uint64("fromActorId", uint64(fromActorId)), zap.Uint64("toActorId", uint64(routeMsg.ToActor)))
 
 		if routeMsg.ReqType == protocol.REQ_TYPE_REPLAY {
 			routeMsg.Req = false
@@ -153,7 +157,7 @@ func (router *Router) RouteMsgByService(fromActorId util.ID, serviceType string,
 		}
 
 		router.GetProcess().SendData(serviceInfo.ProcessId, outData)
-		log.Info("router send routeMsg", zap.String("serviceType", serviceType), zap.Uint16("serviceId", serviceId), zap.Uint16("lineId", lineId), zap.Uint16("toPid", uint16(serviceInfo.ActorId.ProcessId())), zap.Uint64("fromActor", uint64(fromActorId)), zap.Uint64("toActor", uint64(routeMsg.ToActor)), zap.Uint16("cmd", uint16(cmd)))
+		log.Debug("router send routeMsg", zap.String("serviceType", serviceType), zap.Uint16("serviceId", serviceId), zap.Uint16("lineId", lineId), zap.Uint16("toPid", uint16(serviceInfo.ActorId.ProcessId())), zap.Uint64("fromActor", uint64(fromActorId)), zap.Uint64("toActor", uint64(routeMsg.ToActor)), zap.Uint16("cmd", uint16(cmd)))
 	}
 
 	return nil
@@ -163,7 +167,7 @@ func (router *Router) RouteDataByService(routeDataMsg *protocol.RouteDataMsg, se
 
 	serviceInfo, ok := router.GetProcess().GetServiceDiscoverMgr().FindServiceInfo(serviceType, serviceId, lineId)
 	if !ok {
-		log.Error("route data msg err, not find service", zap.String("serviceType", serviceType), zap.Uint16("serviceId", serviceId), zap.Uint16("lineId", lineId))
+		log.Error("route data msg err, not find service", zap.Uint16("cmd", routeDataMsg.Cmd), zap.Uint64("fromActor", uint64(routeDataMsg.FromActor)), zap.Uint64("toActor", uint64(routeDataMsg.ToActor)), zap.String("serviceType", serviceType), zap.Uint16("serviceId", serviceId), zap.Uint16("lineId", lineId))
 		return protocol.ERR_INTERNAL_SERVER
 	}
 
@@ -181,8 +185,10 @@ func (router *Router) RouteDataByService(routeDataMsg *protocol.RouteDataMsg, se
 		// log.Info("router local actor", zap.Uint16("toPid", uint16(serviceInfo.ProcessId)), zap.Uint64("fromActorId", uint64(fromActorId)), zap.Uint64("toActorId", uint64(routeMsg.ToActor)), zap.Uint16("cmd", uint16(cmd)))
 		// a.ReceiveMessage(&routeDataMsg)
 		recv := &protocol.RouteRecv{
-			Protocol: routeDataMsg.Protocol,
-			Data:     outData,
+			Protocol:  routeDataMsg.Protocol,
+			FromActor: routeDataMsg.FromActor,
+			// FromPid:   router.GetProcess().PId(),
+			Data: outData,
 		}
 		a.ReceiveData(recv)
 		return nil
@@ -195,6 +201,15 @@ func (router *Router) RouteDataByService(routeDataMsg *protocol.RouteDataMsg, se
 	}
 
 	return nil
+}
+
+func (router *Router) RouteMsgWithPid(routeMsg *protocol.RouteMessage, pid util.ProcessId) error {
+
+	if router.GetProcess().PId() == pid {
+		return router.RouteMsgLocal(routeMsg)
+	} else {
+		return router.GetProcess().Send(pid, routeMsg)
+	}
 }
 
 func (this *Router) Type() string {

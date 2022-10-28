@@ -208,10 +208,9 @@ func (this *Registry) checkOrCreateActorRegistry(kv *mvccpb.KeyValue) {
 	actorId := util.ID(id)
 	actorReg := NewActorRegistry(actorId)
 	json.Unmarshal(kv.Value, actorReg)
-	log.Warn("success",
-		flog.FuncInfo(this, "checkOrCreateActorRegistry").
-			Append(flog.Result(log.PrettyStruct(actorReg)))...,
-	)
+	// log.Warn("add actor registry success", flog.FuncInfo(this, "checkOrCreateActorRegistry").Append(flog.Result(log.PrettyStruct(actorReg)))...)
+
+	log.Debug("add actor registry success", zap.Uint64("actor", uint64(actorId)), zap.Any("reg", actorReg))
 	this.GlobalRegistry.AddActor(actorReg)
 }
 
@@ -224,10 +223,13 @@ func (this *Registry) deleteActorRegistry(kv *mvccpb.KeyValue) {
 //check if process key exist,otherwise add it
 func (this *Registry) checkOrCreateProcessRegistry(kv *mvccpb.KeyValue) {
 	id, _ := strconv.Atoi(regexp.MustCompile(`[/]processids[/]([0-9]+)`).ReplaceAllString(string(kv.Key), "$1"))
-	log.Warn("checkOrCreateProcessRegistry", zap.Int("id", id))
+	// log.Debug("checkOrCreateProcessRegistry", zap.Int("id", id))
+
 	pid := util.ProcessId(id)
 	processReg := NewProcessRegistry(pid)
 	this.GlobalRegistry.AddProcess(processReg)
+
+	log.Debug("add process registry success", zap.Uint16("pid", uint16(pid)), zap.Any("reg", processReg))
 }
 
 func (this *Registry) deleteProcessRegistry(kv *mvccpb.KeyValue) {
@@ -439,7 +441,7 @@ func (this *Registry) unregisterProcessInfo() error {
 }
 
 func (this *Registry) registerProcessInfo() error {
-	log.Info("registerProcessInfo")
+	// log.Info("registerProcessInfo")
 	client := this.GetProcess().GetEtcd()
 	s, err := json.Marshal(CreateProcessRegistryInfo(this.GetProcess()))
 	if err != nil {
@@ -452,7 +454,7 @@ func (this *Registry) registerProcessInfo() error {
 		log.Error(err.Error())
 		return err
 	}
-	log.Info("register process info complete")
+	log.Info("register process info complete", zap.Uint16("pid", uint16(this.process.GetId())))
 
 	return nil
 }
@@ -464,12 +466,12 @@ func (this *Registry) RegisterActors() error {
 		log.Error(err.Error())
 		return err
 	}
-	res, err := client.Put(context.TODO(), "/process/"+this.process.PId().ToString()+"/actors", string(s))
+	_, err = client.Put(context.TODO(), "/process/"+this.process.PId().ToString()+"/actors", string(s))
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	log.Info("res", flog.FuncInfo(this, "RegisterActors").Append(flog.Result(res.Header.String()))...)
+	// log.Debug("res", flog.FuncInfo(this, "RegisterActors").Append(flog.Result(res.Header.String()))...)
 	return nil
 }
 
@@ -492,7 +494,9 @@ func (this *Registry) RegisterActorRemote(actor lokas.IActor) error {
 			log.Error(err.Error())
 			return err
 		}
-		log.Warn("res", flog.FuncInfo(this, "RegisterActorRemote").Append(flog.Result(res.Header.String()))...)
+
+		// arr := flog.FuncInfo(this, "RegisterActorRemote").Append(flog.Result(res.Header.String()))
+		log.Debug("register actor remote", zap.String("actorType", actor.Type()), zap.Uint64("actorId", uint64(actor.GetId())), flog.Result(res.Header.String()))
 	}
 	return nil
 }
@@ -523,10 +527,10 @@ func (this *Registry) QueryRemoteActorsByServer(typ string, ServerId int32) []*A
 }
 
 func (this *Registry) RegisterActorLocal(actor lokas.IActor) error {
-	log.Info("register",
-		flog.FuncInfo(this, "RegisterActorLocal").
-			Concat(flog.ActorInfo(actor))...,
-	)
+	// log.Debug("register",
+	// 	flog.FuncInfo(this, "RegisterActorLocal").
+	// 		Concat(flog.ActorInfo(actor))...,
+	// )
 	re := &ActorRegistry{
 		Id:        actor.GetId(),
 		Type:      actor.Type(),

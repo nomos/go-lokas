@@ -99,6 +99,7 @@ type RouteMessage struct {
 	CmdId     BINARY_TAG
 	InnerId   BINARY_TAG
 	FromActor util.ID
+	FromPid   util.ProcessId // TODO  add route
 	ToActor   util.ID
 	Body      ISerializable
 }
@@ -185,8 +186,10 @@ func (this *RouteMessage) BinaryMessage() *BinaryMessage {
 }
 
 type RouteRecv struct {
-	Protocol TYPE
-	Data     []byte
+	Protocol  TYPE
+	FromActor util.ID
+	FromPid   util.ProcessId
+	Data      []byte
 }
 
 func (recv *RouteRecv) GetReq() bool {

@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	TimeOut                  = time.Second * 15
+	TimeOut                  = time.Second * 120
 	UpdateTime               = time.Second * 15
 	LeaseDuration      int64 = 23
 	LeaseRenewDuration int64 = 15
@@ -31,6 +31,8 @@ const (
 var _ lokas.IActor = (*Actor)(nil)
 
 func NewActor() *Actor {
+	ctx, cancel := context.WithCancel(context.Background())
+
 	ret := &Actor{
 		IEntity:     ecs.CreateEntity(),
 		ReqContexts: make(map[uint32]lokas.IReqContext),
@@ -43,6 +45,9 @@ func NewActor() *Actor {
 
 		DataChan:      make(chan *protocol.RouteRecv, 100),
 		ReplyDataChan: make(chan *protocol.RouteRecv, 100),
+
+		Ctx:    ctx,
+		Cancel: cancel,
 	}
 	ret.SetType("Actor")
 	return ret
@@ -67,6 +72,9 @@ type Actor struct {
 
 	DataChan      chan *protocol.RouteRecv
 	ReplyDataChan chan *protocol.RouteRecv
+
+	Ctx    context.Context
+	Cancel context.CancelFunc
 }
 
 func (this *Actor) Send(id util.ProcessId, msg *protocol.RouteMessage) error {
@@ -86,7 +94,9 @@ func (this *Actor) Start() error {
 }
 
 func (this *Actor) Stop() error {
-	this.DoneChan <- struct{}{}
+	// this.DoneChan <- struct{}{}
+
+	this.Cancel()
 	return nil
 }
 
@@ -176,6 +186,7 @@ func (this *Actor) StartMessagePump() {
 		for {
 			select {
 			case <-this.Timer.C:
+				// log.Debug("timer", zap.String("type", this.Type()), zap.Uint64("actorId", uint64(this.GetId())))
 				this.Update(0, time.Now())
 			case rMsg := <-this.MsgChan:
 				this.OnMessage(rMsg)
@@ -186,6 +197,8 @@ func (this *Actor) StartMessagePump() {
 				out.Callback(out.TimeNoder)
 			case <-this.DoneChan:
 				break MSG_LOOP
+			case <-this.Ctx.Done():
+				break MSG_LOOP
 			}
 		}
 		close(this.MsgChan)
@@ -195,7 +208,10 @@ func (this *Actor) StartMessagePump() {
 
 		this.TimeHandler.DelTimer()
 		this.TimeHandler = nil
+
+		log.Debug("actor stop ", zap.String("type", this.Type()), zap.Uint64("actorId", uint64(this.GetId())))
 	}()
+
 	go func() {
 	REP_LOOP:
 		for {
@@ -205,6 +221,8 @@ func (this *Actor) StartMessagePump() {
 			case recv := <-this.ReplyDataChan:
 				this.OnRecvData(recv)
 			case <-this.DoneChan:
+				break REP_LOOP
+			case <-this.Ctx.Done():
 				break REP_LOOP
 			}
 		}
@@ -352,6 +370,7 @@ func (this *Actor) OnRecvData(recv *protocol.RouteRecv) {
 	if err != nil {
 		log.Error("route msg unmarsh err", zap.Int("len", len(recv.Data)))
 	}
+	rMsg.FromActor = recv.FromActor
 	this.OnMessage(rMsg)
 }
 
@@ -361,7 +380,7 @@ func (this *Actor) SendReply(actorId util.ID, transId uint32, msg protocol.ISeri
 		log.Error(err.Error())
 		return err
 	}
-	log.Info("Actor:SendReply", flog.ActorSendMsgInfo(this, msg, transId, actorId)...)
+	// log.Info("Actor:SendReply", flog.ActorSendMsgInfo(this, msg, transId, actorId)...)
 	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, false)
 	this.process.RouteMsg(routeMsg)
 	return nil
@@ -373,7 +392,7 @@ func (this *Actor) SendMessage(actorId util.ID, transId uint32, msg protocol.ISe
 		log.Error(err.Error())
 		return err
 	}
-	log.Info("Actor:SendMessage", flog.ActorSendMsgInfo(this, msg, transId, actorId)...)
+	// log.Info("Actor:SendMessage", flog.ActorSendMsgInfo(this, msg, transId, actorId)...)
 	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, true)
 	this.process.RouteMsg(routeMsg)
 	return nil
