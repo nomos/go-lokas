@@ -245,7 +245,9 @@ func (this *Process) LoadAllModule(conf lokas.IProcessConfig) error {
 		proxy = this.Get("FnProxyClient")
 	}
 	// TODO temp do
-	this.IProxy = proxy.(lokas.IProxy)
+	if proxy != nil {
+		this.IProxy = proxy.(lokas.IProxy)
+	}
 
 	return nil
 }
