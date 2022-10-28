@@ -33,7 +33,7 @@ func (this *Client) SetPath(p string) error {
 	return nil
 }
 
-func (this *Client) IsClean() error {
+func (this *Client) IsClean() (bool, error) {
 	cmd := exec.Command("git", "status", "--porcelain")
 	cmd.Dir = this.path
 	var stdout bytes.Buffer
@@ -42,14 +42,14 @@ func (this *Client) IsClean() error {
 	if err != nil {
 		var exitErr exec.ExitError
 		if errors.As(err, &exitErr) {
-			return errors.Errorf("git status failed: %s", exitErr.Stderr)
+			return false, errors.Errorf("git status failed: %s", exitErr.Stderr)
 		}
-		return errors.WithStack(err)
+		return false, errors.WithStack(err)
 	}
 	if stdout.Len() > 0 {
-		return errors.Errorf("index is not clean")
+		return false, nil
 	}
-	return nil
+	return true, nil
 }
 
 func (this *Client) CurrentBranch() string {
