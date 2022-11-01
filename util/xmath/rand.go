@@ -88,8 +88,9 @@ func PickOneWeightSelect[T WeightAble](weightList []T, seed ...uint64) (int, T, 
 			r -= weight
 		}
 	}
+	ret := weightList[i]
 	arr := slice.RemoveAt(weightList, i)
-	return i, weightList[i], arr
+	return i, ret, arr
 }
 func PickSomeWeightSelect[T WeightAble](weightList []T, num int, seed ...uint64) (results []T, remain []T) {
 	results = []T{}
