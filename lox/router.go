@@ -75,7 +75,7 @@ func (router *Router) RouteMsgLocal(msg *protocol.RouteMessage) error {
 	a := router.process.GetActor(msg.ToActor)
 	// log.Info("Router:RouteMsgLocal", flog.ActorRouterMsgInfo(msg.Body, msg.TransId, msg.FromActor, msg.ToActor, msg.Req)...)
 	if a == nil {
-		log.Error("route local, not find actor", zap.Any("routeMsg", msg))
+		// log.Error("route local, not find actor", zap.Any("routeMsg", msg))
 		return protocol.ERR_MSG_ROUTE_NOT_FOUND
 	}
 
