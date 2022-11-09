@@ -43,8 +43,8 @@ func NewActor() *Actor {
 		MsgChan:   make(chan *protocol.RouteMessage, 100),
 		ReplyChan: make(chan *protocol.RouteMessage, 100),
 
-		DataChan:      make(chan *protocol.RouteRecv, 100),
-		ReplyDataChan: make(chan *protocol.RouteRecv, 100),
+		DataChan:      make(chan *protocol.RouteDataMsg, 100),
+		ReplyDataChan: make(chan *protocol.RouteDataMsg, 100),
 
 		Ctx:    ctx,
 		Cancel: cancel,
@@ -70,8 +70,8 @@ type Actor struct {
 	OnUpdateFunc func()
 	MsgHandler   func(actorId util.ID, transId uint32, msg protocol.ISerializable) (protocol.ISerializable, error)
 
-	DataChan      chan *protocol.RouteRecv
-	ReplyDataChan chan *protocol.RouteRecv
+	DataChan      chan *protocol.RouteDataMsg
+	ReplyDataChan chan *protocol.RouteDataMsg
 
 	Ctx    context.Context
 	Cancel context.CancelFunc
@@ -239,14 +239,14 @@ func (this *Actor) ReceiveMessage(msg *protocol.RouteMessage) {
 	}
 }
 
-func (this *Actor) ReceiveData(recv *protocol.RouteRecv) error {
+func (this *Actor) ReceiveData(msg *protocol.RouteDataMsg) error {
 
-	log.Debug("receive data", zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmd", recv.GetCmd()))
+	// log.Debug("receive data", zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmd", recv.GetCmd()))
 
-	if recv.GetReq() {
-		this.DataChan <- recv
+	if msg.ReqType == protocol.REQ_TYPE_REPLAY {
+		this.ReplyDataChan <- msg
 	} else {
-		this.ReplyDataChan <- recv
+		this.DataChan <- msg
 	}
 
 	return nil
@@ -365,13 +365,34 @@ func (this *Actor) OnMessage(msg *protocol.RouteMessage) {
 	}
 }
 
-func (this *Actor) OnRecvData(recv *protocol.RouteRecv) {
-	rMsg, err := protocol.UnmarshalRouteMsg(recv.Data, recv.Protocol)
+func (this *Actor) OnRecvData(dataMsg *protocol.RouteDataMsg) {
+	// rMsg, err := protocol.UnmarshalRouteMsg(recv.Data, recv.Protocol)
+	// if err != nil {
+	// 	log.Error("route msg unmarsh err", zap.Int("len", len(recv.Data)))
+	// }
+	// rMsg.FromActor = recv.FromActor
+	// this.OnMessage(rMsg)
+
+	body, err := dataMsg.UnmarshalData()
 	if err != nil {
-		log.Error("route msg unmarsh err", zap.Int("len", len(recv.Data)))
+		log.Error("route msg unmarsh err", zap.String("actorType", this.Type()), zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmd", uint16(dataMsg.Cmd)), zap.String("err", err.Error()))
+		return
 	}
-	rMsg.FromActor = recv.FromActor
-	this.OnMessage(rMsg)
+
+	if dataMsg.ReqType == protocol.REQ_TYPE_REPLAY {
+		ctx := this.getContext(dataMsg.TransId)
+		if ctx != nil {
+			ctx.SetResp(body)
+			ctx.Finish()
+		}
+		return
+	}
+
+	err = this.HandleMsg(dataMsg.FromActor, dataMsg.TransId, body)
+	if err != nil {
+		log.Error("handle msg err", zap.String("actorType", this.Type()), zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmd", uint16(dataMsg.Cmd)), zap.Any("body", body), zap.String("err", err.Error()))
+	}
+
 }
 
 func (this *Actor) SendReply(actorId util.ID, transId uint32, msg protocol.ISerializable) error {

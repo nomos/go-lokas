@@ -598,6 +598,17 @@ func MarshalRouteMsg(msg *RouteMessage, t TYPE) (ret []byte, err error) {
 	}
 }
 
+func MarshalBody(body ISerializable, t TYPE) (bodyData []byte, err error) {
+	if t == JSON {
+		data, err := json.Marshal(body)
+		return data, err
+	} else if t == BINARY {
+		return nil, errors.New("todo marshal binary")
+	} else {
+		return nil, errors.New("unidentified protocol")
+	}
+}
+
 func MarshalJsonRouteMsg(msg *RouteMessage) (ret []byte, err error) {
 	var out bytes.Buffer
 	defer func() {
@@ -621,11 +632,12 @@ func MarshalJsonRouteMsg(msg *RouteMessage) (ret []byte, err error) {
 	w(&out, uint16(msg.InnerId))
 	w(&out, msg.TransId)
 	w(&out, uint64(msg.ToActor))
-	w(&out, msg.ReqType)
+	// w(&out, msg.ReqType)
+	w(&out, uint64(msg.FromActor))
 	data, _ := json.Marshal(msg.Body)
 	w(&out, data)
 
-	if out.Len() > 65536 {
+	if out.Len() > 65535 {
 		ret = out.Bytes()
 		binary.LittleEndian.PutUint16(ret[0:2], uint16(0))
 		return ret, nil

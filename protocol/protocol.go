@@ -3,6 +3,7 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/json"
 
 	"reflect"
 	"time"
@@ -26,7 +27,7 @@ const (
 )
 
 const (
-	ROUTE_MSG_HEAD_SIZE  int = 17
+	ROUTE_MSG_HEAD_SIZE  int = 24
 	BINARY_MSG_HEAD_SIZE int = 8
 )
 
@@ -185,18 +186,41 @@ func (this *RouteMessage) BinaryMessage() *BinaryMessage {
 	return ret
 }
 
+type RouteHead struct {
+	Len       uint16
+	Cmd       uint16
+	TransId   uint32
+	ToActor   uint64
+	FromActor uint64
+}
+
 type RouteRecv struct {
-	Protocol  TYPE
-	FromActor util.ID
-	FromPid   util.ProcessId
-	Data      []byte
+	Protocol TYPE
+	// FromActor util.ID
+	FromPid util.ProcessId
+	Head    *RouteHead
+	Data    []byte
+}
+
+func NewRouteRecv(data []byte, protocolType TYPE, fromPid util.ProcessId) *RouteRecv {
+	return &RouteRecv{
+		Protocol: protocolType,
+		FromPid:  fromPid,
+		Data:     data,
+	}
+}
+
+func (recv *RouteRecv) UnmarshalHead() {
+
 }
 
 func (recv *RouteRecv) GetReq() bool {
 
-	reqType := uint8(recv.Data[16])
+	// reqType := uint8(recv.Data[16])
 
-	if reqType == REQ_TYPE_REPLAY {
+	transId := recv.GetTransId()
+
+	if transId == 0 {
 		return false
 	} else {
 		return true
@@ -218,15 +242,16 @@ func (recv *RouteRecv) GetTransId() uint32 {
 type RouteDataMsg struct {
 	Protocol  TYPE
 	Len       uint16
-	Cmd       uint16
+	Cmd       BINARY_TAG
 	TransId   uint32
 	ReqType   uint8
 	FromActor util.ID
+	FromPId   util.ProcessId
 	ToActor   util.ID
 	BodyData  []byte
 }
 
-func NewRouteDataMsg(fromActorId util.ID, toActorId util.ID, transId uint32, cmd uint16, reqType uint8, body []byte, protocolType TYPE) *RouteDataMsg {
+func NewRouteDataMsg(fromActorId util.ID, toActorId util.ID, transId uint32, cmd BINARY_TAG, reqType uint8, body []byte, protocolType TYPE) *RouteDataMsg {
 	return &RouteDataMsg{
 		Protocol:  protocolType,
 		TransId:   transId,
@@ -238,18 +263,45 @@ func NewRouteDataMsg(fromActorId util.ID, toActorId util.ID, transId uint32, cmd
 	}
 }
 
-func UnmarshalRouteDataMsg(data []byte) (*RouteDataMsg, error) {
+func UnmarshalRouteDataMsg(data []byte, protocolType TYPE, fromPid util.ProcessId) (*RouteDataMsg, error) {
 
-	return nil, nil
+	if len(data) < ROUTE_MSG_HEAD_SIZE {
+		return nil, ERR_MSG_FORMAT
+	}
+
+	routeMsg := &RouteDataMsg{
+		Protocol: protocolType,
+		FromPId:  fromPid,
+
+		BodyData: data[ROUTE_MSG_HEAD_SIZE:],
+	}
+
+	routeMsg.Len = binary.LittleEndian.Uint16(data[0:2])
+	routeMsg.Cmd = BINARY_TAG(binary.LittleEndian.Uint16(data[2:4]))
+	routeMsg.TransId = binary.LittleEndian.Uint32(data[4:8])
+	routeMsg.ToActor = util.ID(binary.LittleEndian.Uint64(data[8:16]))
+	// routeMsg.ReqType = uint8(data[16])
+	routeMsg.FromActor = util.ID(binary.LittleEndian.Uint64(data[16:24]))
+
+	if routeMsg.TransId == 0 {
+		// routeMsg.Req = true
+		routeMsg.ReqType = REQ_TYPE_MAIN
+	} else {
+		// routeMsg.Req = false
+		routeMsg.ReqType = REQ_TYPE_REPLAY
+	}
+
+	return routeMsg, nil
 }
 
-func (msg RouteDataMsg) MarshalData() ([]byte, error) {
+func (msg *RouteDataMsg) MarshalData() ([]byte, error) {
 	var buff bytes.Buffer
 	binary.Write(&buff, binary.LittleEndian, uint16(0))
 	binary.Write(&buff, binary.LittleEndian, msg.Cmd)
 	binary.Write(&buff, binary.LittleEndian, msg.TransId)
 	binary.Write(&buff, binary.LittleEndian, uint64(msg.ToActor))
-	binary.Write(&buff, binary.LittleEndian, uint8(msg.ReqType))
+	// binary.Write(&buff, binary.LittleEndian, uint8(msg.ReqType))
+	binary.Write(&buff, binary.LittleEndian, uint64(msg.FromActor))
 	binary.Write(&buff, binary.LittleEndian, msg.BodyData)
 
 	if buff.Len() > 65535 {
@@ -260,6 +312,24 @@ func (msg RouteDataMsg) MarshalData() ([]byte, error) {
 	binary.LittleEndian.PutUint16(out[0:2], uint16(buff.Len()))
 
 	return out, nil
+}
+
+func (msg *RouteDataMsg) UnmarshalData() (ISerializable, error) {
+
+	body, err := GetTypeRegistry().GetInterfaceByTag(msg.Cmd)
+	if err != nil {
+		log.Error("not find cmd", zap.Uint16("cmd", uint16(msg.Cmd)), zap.String("err", err.Error()))
+		return nil, err
+	}
+	dec := json.NewDecoder(bytes.NewBuffer(msg.BodyData))
+	dec.UseNumber()
+	err = dec.Decode(body)
+	if err != nil {
+		log.Error(err.Error())
+		return nil, err
+	}
+
+	return body, nil
 }
 
 var _ ISerializable = &BinaryMessage{}

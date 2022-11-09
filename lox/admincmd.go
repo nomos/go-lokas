@@ -1,30 +1,34 @@
 package lox
 
 import (
+	"reflect"
+	"strconv"
+
 	"github.com/nomos/go-lokas/cmds"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/protocol"
-	"reflect"
-	"strconv"
+	"github.com/nomos/go-lokas/util"
 )
 
 type AdminCommand struct {
-	Command string
+	Command  string
 	Username string
-	Params []string
+	UserId   util.ID
+	AvatarId util.ID
+	Params   []string
 }
 
-func (this *AdminCommand) GetId()(protocol.BINARY_TAG,error){
-	return TAG_ADMIN_CMD,nil
+func (this *AdminCommand) GetId() (protocol.BINARY_TAG, error) {
+	return TAG_ADMIN_CMD, nil
 }
 
-func (this *AdminCommand) Serializable()protocol.ISerializable {
+func (this *AdminCommand) Serializable() protocol.ISerializable {
 	return this
 }
 
-func NewAdminCommand(cmd string,username string,params... interface{})*AdminCommand {
-	pArr:=[]string{}
-	for _,p:=range params {
+func NewAdminCommand(cmd string, username string, params ...interface{}) *AdminCommand {
+	pArr := []string{}
+	for _, p := range params {
 		switch reflect.TypeOf(p).Kind() {
 		case reflect.String:
 			pArr = append(pArr, p.(string))
@@ -33,15 +37,15 @@ func NewAdminCommand(cmd string,username string,params... interface{})*AdminComm
 		case reflect.Int32:
 			pArr = append(pArr, strconv.Itoa(int(p.(int32))))
 		case reflect.Float64:
-			pArr = append(pArr, strconv.FormatFloat(p.(float64),'f',10,64))
+			pArr = append(pArr, strconv.FormatFloat(p.(float64), 'f', 10, 64))
 		case reflect.Bool:
 			if p.(bool) {
-				pArr = append(pArr,"true")
+				pArr = append(pArr, "true")
 			} else {
-				pArr = append(pArr,"false")
+				pArr = append(pArr, "false")
 			}
 		default:
-			log.Panic("unsupported param type:"+reflect.TypeOf(p).Kind().String())
+			log.Panic("unsupported param type:" + reflect.TypeOf(p).Kind().String())
 		}
 
 	}
@@ -52,7 +56,6 @@ func NewAdminCommand(cmd string,username string,params... interface{})*AdminComm
 	}
 }
 
-
 type AdminCommandResult struct {
 	Command  string
 	Username string
@@ -60,8 +63,8 @@ type AdminCommandResult struct {
 	Data     []byte
 }
 
-func NewAdminCommandResult(cmd *AdminCommand,success bool,data []byte)*AdminCommandResult {
-	ret:=&AdminCommandResult{
+func NewAdminCommandResult(cmd *AdminCommand, success bool, data []byte) *AdminCommandResult {
+	ret := &AdminCommandResult{
 		Command:  cmd.Command,
 		Username: cmd.Username,
 		Success:  success,
@@ -71,18 +74,18 @@ func NewAdminCommandResult(cmd *AdminCommand,success bool,data []byte)*AdminComm
 	return ret
 }
 
-func (this *AdminCommandResult) GetId()(protocol.BINARY_TAG,error){
-	return TAG_ADMIN_CMD_RESULT,nil
+func (this *AdminCommandResult) GetId() (protocol.BINARY_TAG, error) {
+	return TAG_ADMIN_CMD_RESULT, nil
 }
 
-func (this *AdminCommandResult) Serializable()protocol.ISerializable {
+func (this *AdminCommandResult) Serializable() protocol.ISerializable {
 	return this
 }
 
-func (this *AdminCommand) ParamsValue()*cmds.ParamsValue{
-	params:=[]interface{}{}
-	for _,v:=range this.Params {
+func (this *AdminCommand) ParamsValue() *cmds.ParamsValue {
+	params := []interface{}{}
+	for _, v := range this.Params {
 		params = append(params, v)
 	}
-	return cmds.NewParamsValue(this.Command,params...)
+	return cmds.NewParamsValue(this.Command, params...)
 }

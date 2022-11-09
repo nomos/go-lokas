@@ -782,12 +782,15 @@ func unmarshalRouteMsgHeader(data []byte) (*RouteMessage, int, error) {
 	routeMsg.InnerId = BINARY_TAG(binary.LittleEndian.Uint16(data[2:4]))
 	routeMsg.TransId = binary.LittleEndian.Uint32(data[4:8])
 	routeMsg.ToActor = util.ID(binary.LittleEndian.Uint64(data[8:16]))
-	routeMsg.ReqType = uint8(data[16])
+	// routeMsg.ReqType = uint8(data[16])
+	routeMsg.FromActor = util.ID(binary.LittleEndian.Uint64(data[16:24]))
 
-	if routeMsg.ReqType == 0 {
-		routeMsg.Req = false
-	} else {
+	if routeMsg.TransId == 0 {
 		routeMsg.Req = true
+		routeMsg.ReqType = REQ_TYPE_MAIN
+	} else {
+		routeMsg.Req = false
+		routeMsg.ReqType = REQ_TYPE_REPLAY
 	}
 
 	// routeMsg.FromActor = sess.GetId()

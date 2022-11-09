@@ -11,7 +11,7 @@ func SetProtobuf() {
 }
 
 const (
-	REQ_TYPE_REPLAY  = 0
-	REQ_TYPE_MAIN    = 1
-	REQ_TYPE_OUTSIDE = 2
+	REQ_TYPE_REPLAY = 0
+	REQ_TYPE_MAIN   = 1
+	// REQ_TYPE_OUTSIDE = 2
 )

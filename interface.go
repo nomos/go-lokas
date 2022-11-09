@@ -126,7 +126,7 @@ type IActor interface {
 	GetLeaseId() (clientv3.LeaseID, bool, error)
 	Update(dt time.Duration, now time.Time)
 
-	ReceiveData(recv *protocol.RouteRecv) error
+	ReceiveData(recv *protocol.RouteDataMsg) error
 }
 
 // IEntity entity of ecs system,container of IComponent
@@ -251,6 +251,8 @@ type IRouter interface {
 	RouteDataByService(routeDataMsg *protocol.RouteDataMsg, serviceType string, serviceId uint16, lineId uint16) error
 
 	RouteMsgWithPid(routeMsg *protocol.RouteMessage, pid util.ProcessId) error
+
+	RouteDataMsgLocal(dataMsg *protocol.RouteDataMsg) error
 }
 
 //IContext context interface

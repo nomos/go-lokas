@@ -28,8 +28,9 @@ var (
 
 	ERR_REGISTER_ROUTE_USER_DUPLICATED = CreateError(-7101, "user route register duplicate")
 
-	ERR_ETCD_ERROR = CreateError(201, "数据错误")
-	ERR_DB_ERROR   = CreateError(202, "数据库错误")
+	ERR_ETCD_ERROR   = CreateError(201, "数据错误")
+	ERR_DB_ERROR     = CreateError(202, "数据库错误")
+	ERR_CONFIG_ERROR = CreateError(203, "配置错误")
 
 	ERR_MSG_LEN_INVALID = CreateError(301, "数据长度无效")
 
