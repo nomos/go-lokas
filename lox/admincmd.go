@@ -7,14 +7,11 @@ import (
 	"github.com/nomos/go-lokas/cmds"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/protocol"
-	"github.com/nomos/go-lokas/util"
 )
 
 type AdminCommand struct {
 	Command  string
 	Username string
-	UserId   util.ID
-	AvatarId util.ID
 	Params   []string
 }
 
