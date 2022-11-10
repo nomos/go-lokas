@@ -632,8 +632,8 @@ func MarshalJsonRouteMsg(msg *RouteMessage) (ret []byte, err error) {
 	w(&out, uint16(msg.InnerId))
 	w(&out, msg.TransId)
 	w(&out, uint64(msg.ToActor))
-	// w(&out, msg.ReqType)
 	w(&out, uint64(msg.FromActor))
+	w(&out, msg.ReqType)
 	data, _ := json.Marshal(msg.Body)
 	w(&out, data)
 

@@ -1,9 +1,7 @@
 package lox
 
 import (
-	"bytes"
 	"context"
-	"encoding/binary"
 	"sync"
 	"time"
 
@@ -402,7 +400,11 @@ func (this *Actor) SendReply(actorId util.ID, transId uint32, msg protocol.ISeri
 		return err
 	}
 	// log.Info("Actor:SendReply", flog.ActorSendMsgInfo(this, msg, transId, actorId)...)
-	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, false)
+	isReq := false
+	if transId == 0 {
+		isReq = true
+	}
+	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, isReq)
 	this.process.RouteMsg(routeMsg)
 	return nil
 }
@@ -417,30 +419,6 @@ func (this *Actor) SendMessage(actorId util.ID, transId uint32, msg protocol.ISe
 	routeMsg := protocol.NewRouteMessage(this.GetId(), actorId, transId, msg, true)
 	this.process.RouteMsg(routeMsg)
 	return nil
-}
-
-func (this *Actor) SendRouteData(actorId util.ID, transId uint32, cmd uint16, body []byte) error {
-
-	var buff bytes.Buffer
-	binary.Write(&buff, binary.LittleEndian, uint16(0))
-	binary.Write(&buff, binary.LittleEndian, cmd)
-	binary.Write(&buff, binary.LittleEndian, transId)
-	binary.Write(&buff, binary.LittleEndian, uint64(actorId))
-	binary.Write(&buff, binary.LittleEndian, uint8(protocol.REQ_TYPE_MAIN))
-	binary.Write(&buff, binary.LittleEndian, body)
-
-	if buff.Len() > 65536 {
-		log.Error("error data len", zap.Int("len", buff.Len()))
-		return protocol.ERR_MSG_LEN_INVALID
-	}
-	out := buff.Bytes()
-	binary.LittleEndian.PutUint16(out[0:2], uint16(buff.Len()))
-
-	// this.process.RouteData()
-	// TODO
-
-	return nil
-
 }
 
 func (this *Actor) Call(actorId util.ID, req protocol.ISerializable) (protocol.ISerializable, error) {

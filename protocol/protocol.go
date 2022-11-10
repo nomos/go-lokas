@@ -27,7 +27,7 @@ const (
 )
 
 const (
-	ROUTE_MSG_HEAD_SIZE  int = 24
+	ROUTE_MSG_HEAD_SIZE  int = 25
 	BINARY_MSG_HEAD_SIZE int = 8
 )
 
@@ -102,6 +102,7 @@ type RouteMessage struct {
 	FromActor util.ID
 	FromPid   util.ProcessId // TODO  add route
 	ToActor   util.ID
+	ToPid     util.ProcessId
 	Body      ISerializable
 }
 
@@ -246,8 +247,9 @@ type RouteDataMsg struct {
 	TransId   uint32
 	ReqType   uint8
 	FromActor util.ID
-	FromPId   util.ProcessId
+	FromPid   util.ProcessId
 	ToActor   util.ID
+	ToPid     util.ProcessId
 	BodyData  []byte
 }
 
@@ -271,7 +273,7 @@ func UnmarshalRouteDataMsg(data []byte, protocolType TYPE, fromPid util.ProcessI
 
 	routeMsg := &RouteDataMsg{
 		Protocol: protocolType,
-		FromPId:  fromPid,
+		FromPid:  fromPid,
 
 		BodyData: data[ROUTE_MSG_HEAD_SIZE:],
 	}
@@ -280,16 +282,8 @@ func UnmarshalRouteDataMsg(data []byte, protocolType TYPE, fromPid util.ProcessI
 	routeMsg.Cmd = BINARY_TAG(binary.LittleEndian.Uint16(data[2:4]))
 	routeMsg.TransId = binary.LittleEndian.Uint32(data[4:8])
 	routeMsg.ToActor = util.ID(binary.LittleEndian.Uint64(data[8:16]))
-	// routeMsg.ReqType = uint8(data[16])
 	routeMsg.FromActor = util.ID(binary.LittleEndian.Uint64(data[16:24]))
-
-	if routeMsg.TransId == 0 {
-		// routeMsg.Req = true
-		routeMsg.ReqType = REQ_TYPE_MAIN
-	} else {
-		// routeMsg.Req = false
-		routeMsg.ReqType = REQ_TYPE_REPLAY
-	}
+	routeMsg.ReqType = uint8(data[24])
 
 	return routeMsg, nil
 }
@@ -300,8 +294,8 @@ func (msg *RouteDataMsg) MarshalData() ([]byte, error) {
 	binary.Write(&buff, binary.LittleEndian, msg.Cmd)
 	binary.Write(&buff, binary.LittleEndian, msg.TransId)
 	binary.Write(&buff, binary.LittleEndian, uint64(msg.ToActor))
-	// binary.Write(&buff, binary.LittleEndian, uint8(msg.ReqType))
 	binary.Write(&buff, binary.LittleEndian, uint64(msg.FromActor))
+	binary.Write(&buff, binary.LittleEndian, uint8(msg.ReqType))
 	binary.Write(&buff, binary.LittleEndian, msg.BodyData)
 
 	if buff.Len() > 65535 {
