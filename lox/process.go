@@ -147,7 +147,7 @@ func (this *Process) getModuleByType(name string) lokas.IModule {
 }
 
 func (this *Process) LoadMod(name string, conf lokas.IConfig) error {
-	log.Info("loading ", zap.String("module", name))
+	// log.Info("loading ", zap.String("module", name))
 	mod := this.getModuleByType(name)
 	if mod == nil {
 		mod = this.createMod(name)

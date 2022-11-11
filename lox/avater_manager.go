@@ -181,7 +181,7 @@ func (this *AvatarManager) OnUpdate() {
 }
 
 func (this *AvatarManager) OnStart() error {
-	log.Warn("AvatarManager:OnStart")
+	// log.Warn("AvatarManager:OnStart")
 	err := this.GetProcess().RegisterActorLocal(this)
 	if err != nil {
 		log.Error(err.Error())

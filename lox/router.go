@@ -53,7 +53,7 @@ func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 			// log.Info("processId", flog.ProcessId(pid.Snowflake()))
 			pid, err = this.process.GetProcessIdByActor(msg.ToActor)
 			if err != nil {
-				log.Error("route message, actor not found", zap.Uint64("toActorId", uint64(msg.ToActor)), zap.Uint16("cmd", uint16(msg.InnerId)))
+				// log.Error("route message, actor not found", zap.Uint64("toActorId", uint64(msg.ToActor)), zap.Uint16("cmd", uint16(msg.InnerId)))
 				return
 			}
 		} else {
