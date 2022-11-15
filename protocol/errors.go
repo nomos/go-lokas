@@ -52,7 +52,7 @@ var (
 )
 
 func (this ErrCode) Error() string {
-	return strconv.Itoa(int(this)) + ":" + predefined_errors[this]
+	return predefined_errors[this] + "(" + strconv.Itoa(int(this)) + ")"
 }
 
 func (this ErrCode) ErrCode() int {

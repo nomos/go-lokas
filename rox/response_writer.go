@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
-	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/protocol"
 	"net"
 	"net/http"
+
+	"github.com/nomos/go-lokas/log"
+	"github.com/nomos/go-lokas/protocol"
 )
 
 type ResponseWriter interface {
