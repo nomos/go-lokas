@@ -103,7 +103,7 @@ func (this *ActorContainer) AddActor(actor lokas.IActor) {
 	defer this.mu.Unlock()
 	actor.SetProcess(this.process)
 	this.Actors[actor.GetId()] = actor
-	this.process.RegisterActors()
+	// this.process.RegisterActors()
 
 	// log.Debug("container add actor", zap.String("actorType", actor.Type()), zap.Uint64("actorId", uint64(actor.GetId())))
 }
