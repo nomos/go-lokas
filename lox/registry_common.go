@@ -36,6 +36,8 @@ func (this *CommonRegistry) GetActorRegistry(id util.ID) *ActorRegistry {
 }
 
 func (this *CommonRegistry) GetActorIdsByTypeAndServerId(serverId int32, typ string) []util.ID {
+	this.mu.Lock()
+	defer this.mu.Unlock()
 	ret := []util.ID{}
 	serverIds, ok := this.ActorsByServer[serverId]
 	if !ok {
@@ -59,7 +61,7 @@ func removeIdFromArr(id util.ID, arr []util.ID) []util.ID {
 	ret := []util.ID{}
 	for _, v := range arr {
 		if v != id {
-			ret = append(ret, id)
+			ret = append(ret, v)
 		}
 	}
 	return ret
@@ -98,10 +100,10 @@ func (this *CommonRegistry) RemoveActor(actorId util.ID) {
 	defer this.mu.Unlock()
 	if actor, ok := this.Actors[actorId]; ok {
 		delete(this.Actors, actorId)
-		if actorArr, ok := this.ActorsByType[actor.Type]; ok {
+		if actorArr, ok1 := this.ActorsByType[actor.Type]; ok1 {
 			this.ActorsByType[actor.Type] = removeIdFromArr(actor.Id, actorArr)
 		}
-		if actorArr, ok := this.ActorsByServer[actor.ServerId]; ok {
+		if actorArr, ok1 := this.ActorsByServer[actor.ServerId]; ok1 {
 			this.ActorsByServer[actor.ServerId] = removeIdFromArr(actor.Id, actorArr)
 		}
 	}
