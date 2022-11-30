@@ -1513,7 +1513,7 @@ type ModelClassObject struct {
 }
 
 func (this *ModelClassObject) SortString() string {
-	return strconv.Itoa(int(this.TagId))
+	return this.Package + ":" + this.ClassName
 }
 
 func (this *ModelClassObject) GetPackageName() string {
