@@ -1,12 +1,11 @@
 package gitclient
 
 import (
-	"bytes"
 	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/storer"
 	"github.com/nomos/go-lokas/log"
-	"github.com/pkg/errors"
-	"os/exec"
+	"github.com/nomos/go-lokas/util/slice"
 )
 
 type Client struct {
@@ -33,23 +32,18 @@ func (this *Client) SetPath(p string) error {
 	return nil
 }
 
-func (this *Client) IsClean() (bool, error) {
-	cmd := exec.Command("git", "status", "--porcelain")
-	cmd.Dir = this.path
-	var stdout bytes.Buffer
-	cmd.Stdout = &stdout
-	err := cmd.Run()
+func (this *Client) IsClean() bool {
+	tree, err := this.repo.Worktree()
 	if err != nil {
-		var exitErr exec.ExitError
-		if errors.As(err, &exitErr) {
-			return false, errors.Errorf("git status failed: %s", exitErr.Stderr)
-		}
-		return false, errors.WithStack(err)
+		log.Error(err.Error())
+		return false
 	}
-	if stdout.Len() > 0 {
-		return false, nil
+	status, err := tree.Status()
+	if err != nil {
+		log.Error(err.Error())
+		return false
 	}
-	return true, nil
+	return status.IsClean()
 }
 
 func (this *Client) CurrentBranch() string {
@@ -57,20 +51,44 @@ func (this *Client) CurrentBranch() string {
 	return head.String()
 }
 
-func (this *Client) LastCommit() string {
+func (this *Client) LastCommit() *object.Commit {
 	head, _ := this.repo.Head()
 	cIter, _ := this.repo.Log(&git.LogOptions{From: head.Hash()})
 	commit, _ := cIter.Next()
-	return commit.String()
+	return commit
 }
 
-func (this *Client) CurrentTags() []string {
+func (this *Client) CurrentTags() []*object.Tag {
 	head, _ := this.repo.Head()
-	tags, _ := this.repo.Tags()
-	ret := []string{}
-	tags.ForEach(func(reference *plumbing.Reference) error {
-		if reference.Hash() == head.Hash() {
-			ret = append(ret, reference.String())
+	tags, _ := this.repo.TagObjects()
+	ret := []*object.Tag{}
+	tags.ForEach(func(tag *object.Tag) error {
+		if tag.Target.String() == head.Hash().String() {
+			ret = append(ret, tag)
+		}
+		return nil
+	})
+	return ret
+}
+
+func (this *Client) GetCommitByTagName(s string) *object.Commit {
+	head, _ := this.repo.Head()
+	cIter, _ := this.repo.Log(&git.LogOptions{From: head.Hash()})
+	tags := map[string]string{}
+	tagIter, _ := this.repo.TagObjects()
+	tagIter.ForEach(func(tag *object.Tag) error {
+		tags[tag.Name] = tag.Target.String()
+		return nil
+	})
+	hashStr := tags[s]
+	if hashStr == "" {
+		return nil
+	}
+	var ret *object.Commit
+	cIter.ForEach(func(commit *object.Commit) error {
+		if commit.Hash.String() == hashStr {
+			ret = commit
+			return storer.ErrStop
 		}
 		return nil
 	})
@@ -78,30 +96,61 @@ func (this *Client) CurrentTags() []string {
 }
 
 func (this *Client) GetTagsByCommit(commit string) []string {
-	tags, _ := this.repo.Tags()
+	tags, _ := this.repo.TagObjects()
 	ret := []string{}
-	tags.ForEach(func(reference *plumbing.Reference) error {
-		if reference.Hash().String() == commit {
-			ret = append(ret, reference.String())
+	tags.ForEach(func(tag *object.Tag) error {
+		if tag.Target.String() == commit {
+			log.Infof(tag.Name)
+			ret = append(ret, tag.Name)
 		}
 		return nil
 	})
 	return ret
 }
 
-func (this *Client) LatestTags() []string {
+func (this *Client) LatestTag() *object.Tag {
 	head, _ := this.repo.Head()
-	cIter, _ := this.repo.Log(&git.LogOptions{From: head.Hash()})
-	tags := []string{}
+	cIter, _ := this.repo.Log(&git.LogOptions{From: head.Hash(), Order: git.LogOrderCommitterTime})
+	tags := map[string][]*object.Tag{}
+	tagIter, _ := this.repo.TagObjects()
+	tagIter.ForEach(func(tag *object.Tag) error {
+		if tags[tag.Target.String()] == nil {
+			tags[tag.Target.String()] = []*object.Tag{}
+		}
+		tags[tag.Target.String()] = append(tags[tag.Target.String()], tag)
+		return nil
+	})
 	for {
-		commit, err := cIter.Next()
+		item, err := cIter.Next()
 		if err != nil {
 			log.Error(err.Error())
-			return tags
+			return nil
 		}
-		tags = this.GetTagsByCommit(commit.Hash.String())
-		if len(tags) > 0 {
-			return tags
+		if t, ok := tags[item.Hash.String()]; ok {
+			return t[0]
 		}
 	}
+	return nil
+}
+
+func (this *Client) LatestTags() []*object.Tag {
+	head, _ := this.repo.Head()
+	cIter, _ := this.repo.Log(&git.LogOptions{From: head.Hash(), Order: git.LogOrderCommitterTime})
+	tags := map[string][]*object.Tag{}
+	tagIter, _ := this.repo.TagObjects()
+	tagIter.ForEach(func(tag *object.Tag) error {
+		if tags[tag.Target.String()] == nil {
+			tags[tag.Target.String()] = []*object.Tag{}
+		}
+		tags[tag.Target.String()] = append(tags[tag.Target.String()], tag)
+		return nil
+	})
+	ret := []*object.Tag{}
+	cIter.ForEach(func(commit *object.Commit) error {
+		if t, ok := tags[commit.Hash.String()]; ok {
+			ret = slice.Concat(ret, t)
+		}
+		return nil
+	})
+	return ret
 }
