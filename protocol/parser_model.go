@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/promise"
+	"github.com/nomos/go-lokas/util/slice"
 	"github.com/nomos/go-lokas/util/stringutil"
 	"regexp"
 	"sort"
@@ -20,6 +21,10 @@ type ModelPackageObject struct {
 	Imports       map[string]*ModelPackageObject
 	Ids           map[BINARY_TAG]*ModelId
 	Errors        map[int]*ModelError
+}
+
+func (this *ModelPackageObject) HashString() string {
+	return this.PackageName + ":" + this.GoPackageName + ":" + this.CsPackageName + ":" + this.TsPackageName
 }
 
 func NewModelPackageObject(file GeneratorFile) *ModelPackageObject {
@@ -438,6 +443,18 @@ type ModelError struct {
 	PackageName string
 }
 
+func (this *ModelError) SortString() string {
+	return strconv.Itoa(this.ErrorId)
+}
+
+func (this *ModelError) GetPackageName() string {
+	return this.PackageName
+}
+
+func (this *ModelError) HashString() string {
+	return this.ErrorName + "_" + strconv.Itoa(this.ErrorId)
+}
+
 func (this *ModelError) TsString(g *Generator) string {
 	ret := "\texport const " + "ERR_" + stringutil.SplitCamelCaseUpperSnake(this.ErrorName) + ` = new ErrMsg(` + strconv.Itoa(this.ErrorId) + `,"` + this.ErrorText + `")`
 	return ret
@@ -542,6 +559,18 @@ type ModelId struct {
 	PackageName  string
 	ClassObj     *ModelClassObject
 	RespClassObj *ModelClassObject
+}
+
+func (this *ModelId) SortString() string {
+	return strconv.Itoa(this.Id)
+}
+
+func (this *ModelId) GetPackageName() string {
+	return this.PackageName
+}
+
+func (this *ModelId) HashString() string {
+	return this.Name + ":" + strconv.Itoa(this.Id) + ":" + this.Resp
 }
 
 func (this *ModelId) Deps(g *Generator) []string {
@@ -802,9 +831,32 @@ type ModelEnumObject struct {
 	Comment   string
 }
 
+func (this *ModelEnumObject) SortString() string {
+	return this.EnumName
+}
+
+func (this *ModelEnumObject) GetPackageName() string {
+	return this.Package
+}
+
 func NewModelEnumObject(file GeneratorFile) *ModelEnumObject {
 	ret := &ModelEnumObject{DefaultGeneratorObj: DefaultGeneratorObj{}}
 	ret.DefaultGeneratorObj.init(OBJ_MODEL_ENUM, file)
+	return ret
+}
+
+func (this *ModelEnumObject) HashString() string {
+	ret := this.EnumName
+	lines := slice.Concat(this.lines, []*LineText{})
+	sort.Slice(lines, func(i, j int) bool {
+		return lines[i].GetValue() < lines[j].GetValue()
+	})
+	for _, l := range lines {
+		ret += ":"
+		ret += strconv.Itoa(l.GetValue())
+		ret += ":"
+		ret += l.Name
+	}
 	return ret
 }
 
@@ -1458,6 +1510,29 @@ type ModelClassObject struct {
 	ClassName string
 	Comment   string
 	Depends   []string
+}
+
+func (this *ModelClassObject) SortString() string {
+	return strconv.Itoa(int(this.TagId))
+}
+
+func (this *ModelClassObject) GetPackageName() string {
+	return this.Package
+}
+
+func (this *ModelClassObject) HashString() string {
+	ret := this.ClassName
+	fields := slice.Concat(this.Fields, []*ModelClassFields{})
+	sort.Slice(fields, func(i, j int) bool {
+		return fields[i].Name < fields[j].Name
+	})
+	for _, v := range fields {
+		ret += ":"
+		ret += v.Name
+		ret += ":"
+		ret += v.Type
+	}
+	return ret
 }
 
 func (this *ModelClassObject) Deps(g *Generator) []string {

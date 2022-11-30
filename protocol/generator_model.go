@@ -132,7 +132,7 @@ func (this *Generator) processModelObjects() error {
 	return nil
 }
 
-func (this *Generator) processModelPackages() error {
+func (this *Generator) ProcessModelPackages() error {
 	err := this.processModelObjects()
 	if err != nil {
 		this.GetLogger().Error(err.Error())

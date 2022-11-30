@@ -15,7 +15,7 @@ func (this *Generator) GenerateModel2Go() error {
 			util.Recover(r, false)
 		}
 	}()
-	err := this.processModelPackages()
+	err := this.ProcessModelPackages()
 	if err != nil {
 		this.GetLogger().Error(err.Error())
 		return err

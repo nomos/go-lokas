@@ -13,7 +13,7 @@ import (
 )
 
 func (this *Generator) GenerateModel2Ts() error {
-	err := this.processModelPackages()
+	err := this.ProcessModelPackages()
 	if err != nil {
 		this.GetLogger().Error(err.Error())
 		return err
