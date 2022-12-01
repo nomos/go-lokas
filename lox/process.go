@@ -57,7 +57,7 @@ type Process struct {
 	etcd           *etcdclient.Client
 	oss            *ossclient.Client
 	redis          *redisclient.Client
-	docker         *dockerclient.TLSClient
+	docker         *dockerclient.Client
 	config         lokas.IConfig
 	gameId         string
 	serverId       int32
@@ -412,7 +412,7 @@ func (this *Process) loadDockerCLI(config DockerConfig) error {
 		return nil
 	}
 	var err error
-	this.docker, err = dockerclient.NewTLSClient(config.Endpoint, config.CertPath)
+	this.docker, err = dockerclient.NewClient(config.Endpoint, config.CertPath)
 	if err != nil {
 		log.Error(err.Error())
 		return err
@@ -470,7 +470,7 @@ func (this *Process) GetOss() *ossclient.Client {
 	return this.oss
 }
 
-func (this *Process) GetDocker() (*dockerclient.TLSClient, error) {
+func (this *Process) GetDocker() (*dockerclient.Client, error) {
 	if this.docker == nil {
 		return nil, errors.New("invalid endpoint, certPath")
 	}

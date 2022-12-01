@@ -79,7 +79,7 @@ type IProcess interface {
 	GetRedis() *redisclient.Client                              //get redis client
 	GetEtcd() *etcdclient.Client                                //get etcd client
 	GetOss() *ossclient.Client                                  //get etcd client
-	GetDocker() (*dockerclient.TLSClient, error)                //get docker client
+	GetDocker() (*dockerclient.Client, error)                   //get docker client
 	GlobalMutex(key string, ttl int) (*etcdclient.Mutex, error) //create a distributed global mutex based on etcd
 	Config() IConfig                                            //get config
 	GameId() string                                             //get game id

@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/docker/docker/pkg/homedir"
 	"io"
 	"net"
 	"net/http"
@@ -15,6 +14,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/docker/docker/pkg/homedir"
 )
 
 const (
@@ -109,10 +110,10 @@ func defaultTransport() *http.Transport {
 	return &http.Transport{}
 }
 
-// NewTLSClient returns a Client instance ready for TLS communications with the givens
+// NewClient returns a Client instance ready for TLS communications with the givens
 // server endpoint, key and certificates, using a specific remote API version.
 // TODO: 🚧 Under construction...
-func NewTLSClient(endpoint string, dockerCertPath string) (*Client, error) {
+func NewClient(endpoint string, dockerCertPath string) (*Client, error) {
 	caFile := filepath.Join(dockerCertPath, "ca.pem")
 	certFile := filepath.Join(dockerCertPath, "cert.pem")
 	keyFile := filepath.Join(dockerCertPath, "key.pem")
