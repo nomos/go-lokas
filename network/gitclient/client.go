@@ -64,7 +64,7 @@ func (this *Client) CurrentTags() []*Tag {
 	tags, _ := this.repo.Tags()
 	ret := []*Tag{}
 	tags.ForEach(func(reference *plumbing.Reference) error {
-		tagName := reference.Name().String()
+		tagName := reference.Name().Short()
 		hash := reference.Hash().String()
 		if hash == head.Hash().String() {
 			ret = append(ret, &Tag{
@@ -83,7 +83,7 @@ func (this *Client) GetCommitByTagName(s string) *object.Commit {
 	tags := map[string]string{}
 	tagIter, _ := this.repo.Tags()
 	tagIter.ForEach(func(reference *plumbing.Reference) error {
-		tagName := reference.Name().String()
+		tagName := reference.Name().Short()
 		hash := reference.Hash().String()
 		tags[tagName] = hash
 		return nil
@@ -107,7 +107,7 @@ func (this *Client) GetTagsByCommit(commit string) []string {
 	tags, _ := this.repo.Tags()
 	ret := []string{}
 	tags.ForEach(func(reference *plumbing.Reference) error {
-		tagName := reference.Name().String()
+		tagName := reference.Name().Short()
 		if reference.Hash().String() == commit {
 			ret = append(ret, tagName)
 		}
@@ -128,7 +128,7 @@ func (this *Client) LatestTag() *Tag {
 	tagIter, _ := this.repo.Tags()
 
 	tagIter.ForEach(func(reference *plumbing.Reference) error {
-		tagName := reference.Name().String()
+		tagName := reference.Name().Short()
 		hash := reference.Hash().String()
 		if tags[hash] == nil {
 			tags[hash] = []*Tag{}
@@ -158,7 +158,7 @@ func (this *Client) LatestTags() []*Tag {
 	tags := map[string][]*Tag{}
 	tagIter, _ := this.repo.Tags()
 	tagIter.ForEach(func(reference *plumbing.Reference) error {
-		tagName := reference.Name().String()
+		tagName := reference.Name().Short()
 		hash := reference.Hash().String()
 		if tags[hash] == nil {
 			tags[hash] = []*Tag{}
