@@ -4,6 +4,13 @@ import (
 	"testing"
 )
 
+func TestNewClient(t *testing.T) {
+	_, err := NewClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestNewTSLClient(t *testing.T) {
 	type field struct {
 		endpoint       string

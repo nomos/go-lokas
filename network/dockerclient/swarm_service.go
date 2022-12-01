@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func (c *TLSClient) ListServices() ([]swarm.Service, error) {
+func (c *Client) ListServices() ([]swarm.Service, error) {
 	var services []swarm.Service
 	path := "/services?"
 	resp, err := c.do(http.MethodGet, path, doOptions{})

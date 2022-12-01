@@ -6,13 +6,14 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/docker/docker/pkg/homedir"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 )
 
@@ -29,37 +30,83 @@ var (
 	ErrConnectionRefused = errors.New("cannot connect to Docker endpoint")
 )
 
-type Client struct {
-	endpointURL *url.URL
-
-	HTTPClient *http.Client
-	TLSConfig  *tls.Config
+type Dialer interface {
+	Dial(network, address string) (net.Conn, error)
 }
 
-func NewClient(endpoint string) (*Client, error) {
-	//TODO: Select engine api version
-	client, err := NewVersionedClient(endpoint)
+type Client struct {
+	Dialer      Dialer
+	TLSConfig   *tls.Config
+	HTTPClient  *http.Client
+	endpointURL *url.URL
+}
+
+// NewClient returns a Client
+func NewClient() (*Client, error) {
+	dockerEnv, err := getDockerEnv()
 	if err != nil {
 		return nil, err
 	}
-	return client, nil
-}
+	endpoint := dockerEnv.dockerHost
+	if dockerEnv.dockerTLSVerify {
+		//TODO: TLS Client
+	}
 
-func NewVersionedClient(endpoint string) (*Client, error) {
 	u, err := parseEndPoint(endpoint)
 	if err != nil {
 		return nil, err
 	}
 	c := &Client{
+		Dialer:      &net.Dialer{},
 		endpointURL: u,
 		HTTPClient:  defaultClient(),
 	}
+	c.initializeLocalClient(defaultTransport)
 	return c, nil
+}
+
+type dockerEnv struct {
+	dockerHost      string
+	dockerCertPath  string
+	dockerTLSVerify bool
+}
+
+func getDockerEnv() (*dockerEnv, error) {
+	var err error
+	dockerHost := os.Getenv("DOCKER_HOST")
+	if dockerHost == "" {
+		dockerHost = defaultHost
+	}
+	dockerTLSVerify := os.Getenv("DOCKER_TLS_VERIFY") != ""
+	var dockerCertPath string
+	if dockerTLSVerify {
+		dockerCertPath = os.Getenv("DOCKER_CERT_PATH")
+		if dockerCertPath == "" {
+			home := homedir.Get()
+			if home == "" {
+				return nil, errors.New("environment variable HOME must be set if DOCKER_CERT_PATH is not set")
+			}
+			dockerCertPath = filepath.Join(home, ".docker")
+			dockerCertPath, err = filepath.Abs(dockerCertPath)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return &dockerEnv{
+		dockerHost:      dockerHost,
+		dockerCertPath:  dockerCertPath,
+		dockerTLSVerify: dockerTLSVerify,
+	}, nil
 }
 
 // defaultClient returns a new http.Client
 func defaultClient() *http.Client {
 	return &http.Client{}
+}
+
+func defaultTransport() *http.Transport {
+	return &http.Transport{}
 }
 
 // NewTLSClient returns a Client instance ready for TLS communications with the givens
@@ -99,38 +146,11 @@ func NewTLSClient(endpoint string, dockerCertPath string) (*Client, error) {
 }
 
 func parseEndPoint(endpoint string) (*url.URL, error) {
-	if endpoint != "" && !strings.Contains(endpoint, "://") {
-		endpoint = "tcp://" + endpoint
-	}
-
 	u, err := url.Parse(endpoint)
 	if err != nil {
 		return nil, ErrInvalidEndpoint
 	}
-
-	switch u.Scheme {
-	case "http", "https", "tcp":
-		_, port, err := net.SplitHostPort(u.Host)
-		if err != nil {
-			var e *net.AddrError
-			if errors.As(err, &e) {
-				if e.Err == "missing port in address" {
-					return u, nil
-				}
-			}
-			return nil, ErrInvalidEndpoint
-		}
-		number, err := strconv.ParseInt(port, 10, 64)
-		if err == nil && number > 0 && number < 65536 {
-			if u.Scheme == "tcp" {
-				u.Scheme = "http"
-			}
-			return u, nil
-		}
-		return nil, ErrInvalidEndpoint
-	default:
-		return nil, ErrInvalidEndpoint
-	}
+	return u, nil
 }
 
 type doOptions struct {
@@ -148,15 +168,8 @@ func (c *Client) do(method, path string, doOptions doOptions) (*http.Response, e
 		}
 		body = bytes.NewBuffer(buf)
 	}
-
-	protocol := c.endpointURL.Scheme
 	var u string
-	switch protocol {
-	case unixProtocol:
-	default:
-		u = c.getURL(path)
-	}
-
+	u = c.getLocalURL(path)
 	req, err := http.NewRequest(method, u, body)
 	if err != nil {
 		return nil, err
@@ -189,6 +202,12 @@ func (c *Client) do(method, path string, doOptions doOptions) (*http.Response, e
 	return resp, nil
 }
 
-func (c *Client) getURL(path string) string {
-	return ""
+// getLocalURL returns the URL needed to make an HTTP request over a UNIX.
+func (c *Client) getLocalURL(path string) string {
+	u := *c.endpointURL
+	u.Scheme = "http"
+	u.Host = "unix.sock"
+	u.Path = ""
+	urlStr := strings.TrimRight(u.String(), "/")
+	return fmt.Sprintf("%s%s", urlStr, path)
 }
