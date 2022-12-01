@@ -412,7 +412,7 @@ func (this *Process) loadDockerCLI(config DockerConfig) error {
 		return nil
 	}
 	var err error
-	this.docker, err = dockerclient.NewClient(config.Endpoint, config.CertPath)
+	this.docker, err = dockerclient.NewClient()
 	if err != nil {
 		log.Error(err.Error())
 		return err
