@@ -92,7 +92,8 @@ func (router *Router) RouteMsgToService(fromActorId util.ID, serviceType string,
 
 	serviceInfo, ok := router.GetProcess().GetServiceDiscoverMgr().FindServiceInfo(serviceType, serviceId, lineId)
 	if !ok {
-		log.Error("route msg err, not find service", zap.String("serviceType", serviceType), zap.Uint16("serviceId", serviceId), zap.Uint16("lineId", lineId))
+		cmd, _ := msg.GetId()
+		log.Error("route msg err, not find service", zap.Uint16("cmd", uint16(cmd)), zap.String("serviceType", serviceType), zap.Uint16("serviceId", serviceId), zap.Uint16("lineId", lineId))
 		return protocol.ERR_INTERNAL_SERVER
 	}
 
