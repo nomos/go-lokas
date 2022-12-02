@@ -1,6 +1,9 @@
 package dockerclient
 
 import (
+	"io"
+	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -57,4 +60,25 @@ func TestNewTSLClient(t *testing.T) {
 			//}
 		})
 	}
+}
+
+type FakeRoundTripper struct {
+	message  string
+	status   int
+	header   map[string]string
+	requests []*http.Request
+}
+
+func (rt *FakeRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
+	body := strings.NewReader(rt.message)
+	rt.requests = append(rt.requests, r)
+	res := &http.Response{
+		StatusCode: rt.status,
+		Body:       io.NopCloser(body),
+		Header:     make(http.Header),
+	}
+	for k, v := range rt.header {
+		res.Header.Set(k, v)
+	}
+	return res, nil
 }
