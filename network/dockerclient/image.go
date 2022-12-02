@@ -44,7 +44,7 @@ func (c *Client) ListImages() ([]APIImages, error) {
 func (c *Client) RemoveImage(name string) error {
 	resp, err := c.do(http.MethodDelete, "/images/"+name, doOptions{})
 	if err != nil {
-		var e *apiClientError
+		var e *Error
 		if errors.As(err, &e) && e.Status == http.StatusNotFound {
 			return ErrNoSuchImage
 		}
