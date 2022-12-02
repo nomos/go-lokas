@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net"
 	"net/http"
+	"net/url"
 	"reflect"
 	"testing"
 )
@@ -60,5 +61,25 @@ func TestListImages(t *testing.T) {
 	}
 	if !reflect.DeepEqual(images, expected) {
 		t.Errorf("ListImages: Wrong return value. Want %#v. Got %#v", expected, images)
+	}
+}
+
+func TestRemoveImage(t *testing.T) {
+	t.Parallel()
+	name := "test"
+	fakeRT := &FakeRoundTripper{message: "", status: http.StatusNoContent}
+	client := newTestClient(fakeRT)
+	err := client.RemoveImage(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := fakeRT.requests[0]
+	expectedMethod := http.MethodDelete
+	if req.Method != expectedMethod {
+		t.Errorf("RemoveImage: Wrong HTTP method. Want %s. Got %s.", expectedMethod, req.Method)
+	}
+	u, _ := url.Parse(client.getLocalURL("/images/" + name))
+	if req.URL.Path != u.Path {
+		t.Errorf("RemoveImage: Wrong request path. Want %q. Got %q.", u.Path, req.URL.Path)
 	}
 }

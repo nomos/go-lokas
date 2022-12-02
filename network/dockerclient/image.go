@@ -2,8 +2,12 @@ package dockerclient
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 )
+
+// ErrNoSuchImage is error returned when the image does not exist.
+var ErrNoSuchImage = errors.New("no such image")
 
 // APIImages represent an image returned to the ListImages call.
 type APIImages struct {
@@ -32,4 +36,19 @@ func (c *Client) ListImages() ([]APIImages, error) {
 		return nil, err
 	}
 	return images, nil
+}
+
+// RemoveImage remove an image by its name or ID.
+//
+// More: https://docs.docker.com/engine/api/v1.41/#tag/Image/operation/ImageDelete.
+func (c *Client) RemoveImage(name string) error {
+	resp, err := c.do(http.MethodDelete, "/images/"+name, doOptions{})
+	if err != nil {
+		var e *apiClientError
+		if errors.As(err, &e) && e.Status == http.StatusNotFound {
+			return ErrNoSuchImage
+		}
+	}
+	defer resp.Body.Close()
+	return nil
 }

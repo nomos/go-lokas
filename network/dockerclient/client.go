@@ -212,3 +212,13 @@ func (c *Client) getLocalURL(path string) string {
 	urlStr := strings.TrimRight(u.String(), "/")
 	return fmt.Sprintf("%s%s", urlStr, path)
 }
+
+// apiClientError represents failures in the API.
+type apiClientError struct {
+	Status  int
+	Message string
+}
+
+func (e *apiClientError) Error() string {
+	return fmt.Sprintf("API error (%d): %s", e.Status, e.Message)
+}
