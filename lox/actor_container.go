@@ -16,7 +16,7 @@ var _ lokas.IModule = (*ActorContainer)(nil)
 type ActorContainer struct {
 	process lokas.IProcess
 	Actors  map[util.ID]lokas.IActor
-	mu      sync.Mutex
+	mu      sync.RWMutex
 }
 
 func (this *ActorContainer) Type() string {
@@ -64,6 +64,8 @@ func NewActorContainer(process lokas.IProcess) *ActorContainer {
 }
 
 func (this *ActorContainer) GetActor(id util.ID) lokas.IActor {
+	this.mu.RLock()
+	defer this.mu.RUnlock()
 	return this.Actors[id]
 }
 
