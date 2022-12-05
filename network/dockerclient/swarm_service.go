@@ -6,6 +6,9 @@ import (
 	"net/http"
 )
 
+// ListServices returns a slices of services
+//
+// More: https://docs.docker.com/engine/api/v1.41/#tag/Service/operation/ServiceList
 func (c *Client) ListServices() ([]swarm.Service, error) {
 	var services []swarm.Service
 	path := "/services?"
