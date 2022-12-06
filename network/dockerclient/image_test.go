@@ -2,6 +2,7 @@ package dockerclient
 
 import (
 	"encoding/json"
+	"errors"
 	"net"
 	"net/http"
 	"net/url"
@@ -81,5 +82,14 @@ func TestRemoveImage(t *testing.T) {
 	u, _ := url.Parse(client.getLocalURL("/images/" + name))
 	if req.URL.Path != u.Path {
 		t.Errorf("RemoveImage: Wrong request path. Want %q. Got %q.", u.Path, req.URL.Path)
+	}
+}
+
+func TestRemoveImageNotFound(t *testing.T) {
+	t.Parallel()
+	client := newTestClient(&FakeRoundTripper{message: "no such image", status: http.StatusNotFound})
+	err := client.RemoveImage("guowei")
+	if !errors.Is(err, ErrNoSuchImage) {
+		t.Errorf("RemoveImage: Wrong err. Want %q. Got %q.", ErrNoSuchImage, err)
 	}
 }

@@ -51,13 +51,6 @@ func TestNewTSLClient(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			//got, err := NewClient(tt.field.endpoint, tt.field.dockerCertPath)
-			//if err != nil {
-			//	t.Fatal(err)
-			//}
-			//if dhost := got.HTTPClient.DaemonHost(); dhost != tt.want.endpoint {
-			//	t.Errorf("NewClient(tt.field.endpoint, tt.field.dockerCertPath) = %v, want %v", got, tt.want)
-			//}
 		})
 	}
 }
