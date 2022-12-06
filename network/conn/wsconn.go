@@ -82,10 +82,10 @@ func (this *WsPumper) readPump(conn *Conn) {
 	for {
 		_, data, err := wsConn.ReadMessage()
 		if err != nil {
-			log.Warn("wsConn read error", zap.String("err", err.Error()))
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNoStatusReceived, websocket.CloseAbnormalClosure) {
-				log.Info("wsConn read error unexpected", zap.String("err", err.Error()))
-			}
+			log.Debug("wsConn read error", zap.String("err", err.Error()))
+			// if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseNoStatusReceived, websocket.CloseAbnormalClosure) {
+			// 	log.Info("wsConn read error unexpected", zap.String("err", err.Error()))
+			// }
 			break
 		}
 

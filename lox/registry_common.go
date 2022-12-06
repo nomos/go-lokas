@@ -28,10 +28,12 @@ type CommonRegistry struct {
 	ActorsByType   map[string][]util.ID
 	ActorsByServer map[int32][]util.ID
 	Ts             time.Time
-	mu             sync.Mutex
+	mu             sync.RWMutex
 }
 
 func (this *CommonRegistry) GetActorRegistry(id util.ID) *ActorRegistry {
+	this.mu.RLock()
+	defer this.mu.RUnlock()
 	return this.Actors[id]
 }
 
