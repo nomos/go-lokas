@@ -1,12 +1,15 @@
 package gitclient
 
 import (
+	"bytes"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/storer"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util/slice"
+	"github.com/pkg/errors"
+	"os/exec"
 )
 
 type Client struct {
@@ -34,6 +37,10 @@ func (this *Client) SetPath(p string) error {
 }
 
 func (this *Client) IsClean() bool {
+	return this.isCleanShell()
+}
+
+func (this *Client) isClean() bool {
 	tree, err := this.repo.Worktree()
 	if err != nil {
 		log.Error(err.Error())
@@ -45,6 +52,27 @@ func (this *Client) IsClean() bool {
 		return false
 	}
 	return status.IsClean()
+}
+
+func (this *Client) isCleanShell() bool {
+	cmd := exec.Command("git", "status", "--porcelain")
+	cmd.Dir = this.path
+	var stdout bytes.Buffer
+	cmd.Stdout = &stdout
+	err := cmd.Run()
+	if err != nil {
+		var exitErr exec.ExitError
+		if errors.As(err, &exitErr) {
+			log.Errorf("git status failed: %s", exitErr.Stderr)
+			return false
+		}
+		log.Errorf("git status failed: %s", errors.WithStack(err))
+		return false
+	}
+	if stdout.Len() > 0 {
+		return false
+	}
+	return true
 }
 
 func (this *Client) CurrentBranch() string {
