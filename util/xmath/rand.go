@@ -98,6 +98,9 @@ func PickSomeWeightSelect[T WeightAble](weightList []T, num int, seed ...uint64)
 	var ret T
 	for i := 0; i < num; i++ {
 		_, ret, remain = PickOneWeightSelect(remain, seed...)
+		if len(seed) != 0 {
+			seed[0]++
+		}
 		results = append(results, ret)
 	}
 	return results, remain
@@ -170,29 +173,16 @@ func PickOne[T any](arr []T, seed ...uint64) (T, []T) {
 }
 
 func PickSome[T any](arr []T, num int, seed ...uint64) ([]T, []T) {
-	sr := true
-	if len(seed) == 0 {
-		sr = false
-	}
-	leng := len(arr)
-	var index int
 	retOrigin := make([]T, 0)
 	ret := make([]T, 0)
-	spliceArr := make([]int, 0)
 	for i := 0; i < num; i++ {
-		if sr {
-			index = int(math.Floor(float64(leng) * rand.Float64()))
-		} else {
-			index = int(math.Floor(float64(leng) * SRandom(seed[0]+uint64(i))))
+		var picked T
+		picked, retOrigin = PickOne(retOrigin, seed...)
+		if len(seed) != 0 {
+			seed[0]++
 		}
-		spliceArr = append(spliceArr, index)
-	}
-	for i := 0; i < leng; i++ {
-		if slice.Has(spliceArr, i) {
-			ret = append(ret, arr[i])
-			continue
-		}
-		retOrigin = append(retOrigin, arr[i])
+		ret = append(ret, picked)
+
 	}
 	return ret, retOrigin
 }
