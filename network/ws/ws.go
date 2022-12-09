@@ -21,7 +21,7 @@ type WsServer struct {
 	httpServer *httpserver.HttpServer
 }
 
-// NewServer create a new websocket server
+// NewWsServer create a new websocket server
 func NewWsServer(context *lokas.Context) *WsServer {
 	if context == nil || context.SessionCreator == nil {
 		panic("wsserver.NewServer: context is nil or context.SessionCreator is nil")
@@ -44,7 +44,7 @@ func NewWsServer(context *lokas.Context) *WsServer {
 	return server
 }
 
-// Start start websocket server, and start default http server if addr is not empty
+// Start websocket server, and start default http server if addr is not empty
 func (this *WsServer) Start(addr string) error {
 	if len(addr) > 0 {
 		httpServer := httpserver.NewHttpServer()
@@ -69,7 +69,7 @@ func (this *WsServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	conn.ServeIO()
 }
 
-// Stop stop websocket server, and the underline default http server
+// Stop websocket server, and the underline default http server
 func (this *WsServer) Stop() {
 	if this.httpServer != nil {
 		this.httpServer.Stop()

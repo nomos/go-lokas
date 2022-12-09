@@ -51,3 +51,22 @@ type APIContainers struct {
 	Labels     map[string]string `json:"Labels,omitempty"`
 	Networks   NetworkList       `json:"NetworkSettings,omitempty"`
 }
+
+// ContainerNotFound 容器没找到
+type ContainerNotFound struct {
+	ID  string
+	Err error
+}
+
+func (err *ContainerNotFound) Error() string {
+	return "No such container: " + err.ID
+}
+
+// ContainerNotRunning 容器未运行
+type ContainerNotRunning struct {
+	ID string
+}
+
+func (err *ContainerNotRunning) Error() string {
+	return "Container not running: " + err.ID
+}
