@@ -28,6 +28,7 @@ func NewClient(p string) (*Client, error) {
 }
 func (this *Client) SetPath(p string) error {
 	var err error
+	this.path = p
 	this.repo, err = git.PlainOpen(p)
 	if err != nil {
 		log.Error(err.Error())

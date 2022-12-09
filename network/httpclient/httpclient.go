@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/nomos/go-lokas/log"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -199,9 +200,14 @@ func DoPostEx(urlStr string, params url.Values, p interface{}) error {
 }
 
 func DoMultiPartPost(urlStr string, headers map[string]string, params url.Values, files url.Values) ([]byte, error) {
-	var err error
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
+	for key, values := range params {
+		err := writer.WriteField(key, values[0])
+		if err != nil {
+			log.Error(err.Error())
+		}
+	}
 	for key, values := range files {
 		fileName := values[0]
 		if strings.HasPrefix(fileName, "http://") {
@@ -228,22 +234,18 @@ func DoMultiPartPost(urlStr string, headers map[string]string, params url.Values
 			_, err = io.Copy(part, file)
 		}
 	}
-	for key, values := range params {
-		_ = writer.WriteField(key, values[0])
-	}
-	err = writer.Close()
+	err := writer.Close()
 	if err != nil {
 		return nil, err
 	}
-
 	req, err := http.NewRequest("POST", urlStr, body)
 	if err != nil {
 		return nil, err
 	}
 	for key, values := range headers {
-		req.Header.Add(key,values)
+		req.Header.Add(key, values)
 	}
-	req.Header.Add("Content-LineType", writer.FormDataContentType())
+	req.Header.Add("Content-Type", writer.FormDataContentType())
 	resp, err := DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -256,8 +258,8 @@ func DoMultiPartPost(urlStr string, headers map[string]string, params url.Values
 	return body2, nil
 }
 
-func DoMultiPartPostEx(urlStr string,headers map[string]string, params url.Values, files url.Values, p interface{}) error {
-	rb, err := DoMultiPartPost(urlStr,headers, params, files)
+func DoMultiPartPostEx(urlStr string, headers map[string]string, params url.Values, files url.Values, p interface{}) error {
+	rb, err := DoMultiPartPost(urlStr, headers, params, files)
 	if err != nil {
 		return err
 	}
