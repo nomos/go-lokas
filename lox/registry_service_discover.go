@@ -92,8 +92,12 @@ func (mgr *ServiceDiscoverMgr) FindRandServiceInfo(serviceType string, serviceId
 		for _, v := range mgr.serviceMap[serviceType][serviceId] {
 			infos = append(infos, v)
 		}
-		sort.Stable(infos)
 
+		if len(infos) == 0 {
+			return nil, false
+		}
+
+		sort.Stable(infos)
 		randIdx := rand.Intn(len(infos))
 
 		return infos[randIdx], true
