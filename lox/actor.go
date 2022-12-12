@@ -387,9 +387,9 @@ func (this *Actor) OnRecvData(dataMsg *protocol.RouteDataMsg) {
 	}
 
 	err = this.HandleMsg(dataMsg.FromActor, dataMsg.TransId, body)
-	if err != nil {
-		log.Error("handle msg err", zap.String("actorType", this.Type()), zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmd", uint16(dataMsg.Cmd)), zap.Any("body", body), zap.String("err", err.Error()))
-	}
+	// if err != nil {
+	// 	log.Error("handle msg err", zap.String("actorType", this.Type()), zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmd", uint16(dataMsg.Cmd)), zap.Any("body", body), zap.String("err", err.Error()))
+	// }
 
 }
 
