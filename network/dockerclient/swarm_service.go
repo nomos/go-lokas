@@ -55,3 +55,24 @@ func (c *Client) UpdateService(id string, opts UpdateServiceOptions) error {
 	}
 	return nil
 }
+
+// InspectService returns information about a service by its ID.
+//
+// More: https://docs.docker.com/engine/api/v1.41/#tag/Service/operation/ServiceInspect
+func (c *Client) InspectService(id string) (*swarm.Service, error) {
+	path := "/services/" + id
+	resp, err := c.do(http.MethodGet, path, doOptions{})
+	if err != nil {
+		var e *Error
+		if errors.As(err, &e) && e.Status == http.StatusNotFound {
+			return nil, &NoSuchService{ID: id}
+		}
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var service swarm.Service
+	if err := json.NewDecoder(resp.Body).Decode(&service); err != nil {
+		return nil, err
+	}
+	return &service, nil
+}
