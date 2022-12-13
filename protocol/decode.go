@@ -755,7 +755,7 @@ func UnmarshalJsonRouteMsg(data []byte) (*RouteMessage, error) {
 	bodyData := data[headerSize:routeMsg.Len]
 	body, err := GetTypeRegistry().GetInterfaceByTag(routeMsg.CmdId)
 	if err != nil {
-		log.Error("not find cmd", zap.Uint16("cmd", uint16(routeMsg.CmdId)), zap.String("err", err.Error()))
+		log.Error("not find cmd", zap.Uint16("cmdId", uint16(routeMsg.CmdId)), zap.String("err", err.Error()))
 		return nil, err
 	}
 	dec := json.NewDecoder(bytes.NewBuffer(bodyData))

@@ -239,7 +239,7 @@ func (this *Actor) ReceiveMessage(msg *protocol.RouteMessage) {
 
 func (this *Actor) ReceiveData(msg *protocol.RouteDataMsg) error {
 
-	// log.Debug("receive data", zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmd", recv.GetCmd()))
+	// log.Debug("receive data", zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmdId", recv.GetCmd()))
 
 	if msg.ReqType == protocol.REQ_TYPE_REPLAY {
 		this.ReplyDataChan <- msg
@@ -373,7 +373,7 @@ func (this *Actor) OnRecvData(dataMsg *protocol.RouteDataMsg) {
 
 	body, err := dataMsg.UnmarshalData()
 	if err != nil {
-		log.Error("route msg unmarsh err", zap.String("actorType", this.Type()), zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmd", uint16(dataMsg.Cmd)), zap.String("err", err.Error()))
+		log.Error("route msg unmarsh err", zap.String("actorType", this.Type()), zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmdId", uint16(dataMsg.Cmd)), zap.String("err", err.Error()))
 		return
 	}
 
@@ -388,7 +388,7 @@ func (this *Actor) OnRecvData(dataMsg *protocol.RouteDataMsg) {
 
 	err = this.HandleMsg(dataMsg.FromActor, dataMsg.TransId, body)
 	// if err != nil {
-	// 	log.Error("handle msg err", zap.String("actorType", this.Type()), zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmd", uint16(dataMsg.Cmd)), zap.Any("body", body), zap.String("err", err.Error()))
+	// 	log.Error("handle msg err", zap.String("actorType", this.Type()), zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmdId", uint16(dataMsg.Cmd)), zap.Any("body", body), zap.String("err", err.Error()))
 	// }
 
 }

@@ -311,7 +311,7 @@ func (msg *RouteDataMsg) MarshalData() ([]byte, error) {
 func (msg *RouteDataMsg) UnmarshalData() (ISerializable, error) {
 	body, err := GetTypeRegistry().GetInterfaceByTag(msg.Cmd)
 	if err != nil {
-		log.Error("not find cmd", zap.Uint16("cmd", uint16(msg.Cmd)), zap.String("err", err.Error()))
+		log.Error("not find cmd", zap.Uint16("cmdId", uint16(msg.Cmd)), zap.String("err", err.Error()))
 		return nil, err
 	}
 	dec := number_json.NewDecoder(bytes.NewBuffer(msg.BodyData))
