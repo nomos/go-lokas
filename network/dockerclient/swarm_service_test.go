@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/docker/docker/api/types/swarm"
 	"net/http"
+	"net/url"
 	"reflect"
 	"testing"
 )
@@ -108,5 +109,39 @@ func TestListServices(t *testing.T) {
 	}
 	if !reflect.DeepEqual(services, excepted) {
 		t.Errorf("ListService: Excepted %v. Got %v", excepted, services)
+	}
+}
+
+func TestUpdateService(t *testing.T) {
+	t.Parallel()
+	fakeRT := &FakeRoundTripper{message: "", status: http.StatusOK}
+	client := newTestClient(fakeRT)
+	id := "guowei"
+	update := UpdateServiceOptions{Version: 1}
+	err := client.UpdateService(id, update)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := fakeRT.requests[0]
+	if req.Method != http.MethodPost {
+		t.Errorf("UpdateService: Wrong HTTP method. Want %q. Got %q.", http.MethodPost, req.Method)
+	}
+	expectedURL, _ := url.Parse(client.getLocalURL("/services/" + id + "/update?version=1"))
+	if gotURI := req.URL.RequestURI(); gotURI != expectedURL.RequestURI() {
+		t.Errorf("UpdateService: Wrong path in request. Want %q. Got %q.", expectedURL.RequestURI(), gotURI)
+	}
+
+	expectedContentType := "application/json"
+	if contentType := req.Header.Get("Content-Type"); contentType != expectedContentType {
+		t.Errorf("UpdateService: Wrong content-type in request. Want %q. Got %q.", expectedContentType, contentType)
+	}
+
+	var out UpdateServiceOptions
+	if err := json.NewDecoder(req.Body).Decode(&out); err != nil {
+		t.Fatal(err)
+	}
+	update.Version = 0
+	if !reflect.DeepEqual(out, update) {
+		t.Errorf("UpdateService: wrong body got %v want %v", out, update)
 	}
 }

@@ -13,6 +13,8 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/docker/docker/pkg/homedir"
@@ -238,4 +240,32 @@ type Error struct {
 
 func (e *Error) Error() string {
 	return fmt.Sprintf("API error (%d): %s", e.Status, e.Message)
+}
+
+func queryStringVersion(opts interface{}) string {
+	value := reflect.ValueOf(opts)
+
+	items := url.Values(map[string][]string{})
+	for i := 0; i < value.NumField(); i++ {
+		field := value.Type().Field(i)
+		key := field.Tag.Get("queryString")
+		if key == "-" {
+			continue
+		} else if key == "" {
+			key = strings.ToLower(field.Name)
+		}
+		addQueryStringValue(items, key, value.Field(i))
+	}
+	return items.Encode()
+}
+
+func addQueryStringValue(items url.Values, key string, v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Uint64:
+		if v.Uint() > 0 {
+			items.Add(key, strconv.FormatUint(v.Uint(), 10))
+		}
+		return true
+	}
+	return false
 }
