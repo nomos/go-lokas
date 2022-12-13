@@ -3,7 +3,7 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
+	"github.com/nomos/go-lokas/protocol/encoding/number_json"
 
 	"reflect"
 	"time"
@@ -309,20 +309,18 @@ func (msg *RouteDataMsg) MarshalData() ([]byte, error) {
 }
 
 func (msg *RouteDataMsg) UnmarshalData() (ISerializable, error) {
-
 	body, err := GetTypeRegistry().GetInterfaceByTag(msg.Cmd)
 	if err != nil {
 		log.Error("not find cmd", zap.Uint16("cmd", uint16(msg.Cmd)), zap.String("err", err.Error()))
 		return nil, err
 	}
-	dec := json.NewDecoder(bytes.NewBuffer(msg.BodyData))
+	dec := number_json.NewDecoder(bytes.NewBuffer(msg.BodyData))
 	dec.UseNumber()
 	err = dec.Decode(body)
 	if err != nil {
 		log.Error(err.Error())
 		return nil, err
 	}
-
 	return body, nil
 }
 

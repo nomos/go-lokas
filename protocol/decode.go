@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/nomos/go-lokas/protocol/encoding/number_json"
 	"io"
 	"math"
 	"reflect"
@@ -54,7 +55,7 @@ func UnmarshalJsonMessage(data []byte) (*BinaryMessage, error) {
 		log.Error(err.Error())
 		return nil, err
 	}
-	dec := json.NewDecoder(bytes.NewBuffer(bodyData))
+	dec := number_json.NewDecoder(bytes.NewBuffer(bodyData))
 	dec.UseNumber()
 	err = dec.Decode(body)
 	if err != nil {
