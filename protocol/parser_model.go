@@ -1609,7 +1609,7 @@ using System;
 using System.Collections.Generic;
 using Funnel.Protocol;
 using Newtonsoft.Json;
-{Comment}
+
 namespace {CsPackageName}
 {
     public partial class {ClassName}
@@ -1618,6 +1618,9 @@ namespace {CsPackageName}
     }
 }
 `
+
+	ret = strings.Replace(ret, `{CsPackageName}`, this.CsPackage, -1)
+	ret = strings.Replace(ret, `{ClassName}`, this.ClassName, -1)
 	return ret
 }
 
