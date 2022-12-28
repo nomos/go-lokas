@@ -69,7 +69,7 @@ func (this *Generator) generateModel2CsClass(m *ModelClassObject) error {
 	p = path.Join(this.CsPath, m.ClassName)
 	p += ".impl.cs"
 	if !util.IsFileExist(p) {
-		err = ioutil.WriteFile(p, []byte(m.GoImplString(this)), 0644)
+		err = ioutil.WriteFile(p, []byte(m.CsImplString(this)), 0644)
 		if err != nil {
 			this.GetLogger().Error(err.Error())
 			return err
