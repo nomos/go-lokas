@@ -1603,6 +1603,23 @@ func (this *ModelClassObject) ToTsClassHeader(g *Generator, object *TsClassObjec
 	ret := "export class " + this.ClassName + " extends " + compStr + " {"
 	return ret
 }
+func (this *ModelClassObject) CsImplString(g *Generator) string {
+	ret := `//this is a generate file,do not modify it!
+using System;
+using System.Collections.Generic;
+using Funnel.Protocol;
+using Newtonsoft.Json;
+{Comment}
+namespace {CsPackageName}
+{
+    public partial class {ClassName}
+    {
+
+    }
+}
+`
+	return ret
+}
 
 func (this *ModelClassObject) CsString(g *Generator) string {
 	ret := `//this is a generate file,do not modify it!

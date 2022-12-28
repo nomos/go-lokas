@@ -38,12 +38,12 @@ type Generator struct {
 	ModelErrorObjects   map[int]*ModelError
 	ModelPackages       map[string]*ModelPackageObject
 	TsGenerateFilePaths []string
-
-	TsModels       []*TsModelFile
-	TsIds          *TsIdsFile
-	TsEnums        *TsEnumFile
-	TsClassObjects []*TsClassObject
-	TsEnumObjects  []*TsEnumObject
+	CsImpl              bool
+	TsModels            []*TsModelFile
+	TsIds               *TsIdsFile
+	TsEnums             *TsEnumFile
+	TsClassObjects      []*TsClassObject
+	TsEnumObjects       []*TsEnumObject
 
 	//Schemas []*ModelClassObject
 
