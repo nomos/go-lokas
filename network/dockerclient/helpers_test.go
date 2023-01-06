@@ -7,7 +7,7 @@ import (
 
 func expectNoFoundContainer(t *testing.T, id string, err error) {
 	t.Helper()
-	var containerErr *ContainerNotRunning
+	var containerErr *ContainerNotFound
 	if !errors.As(err, &containerErr) {
 		t.Fatalf("Container: Wrong error information. Want %v. Got %v.", containerErr, err)
 	}
