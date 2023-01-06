@@ -53,6 +53,7 @@ var (
 
 func (this ErrCode) Error() string {
 	return predefined_errors[this] + "(" + strconv.Itoa(int(this)) + ")"
+
 }
 
 func (this ErrCode) ErrCode() int {
@@ -73,6 +74,15 @@ func (this ErrCode) Is(err error) bool {
 		}
 	}
 	return false
+}
+
+func (this ErrCode) Message() string {
+	msg, ok := predefined_errors[this]
+	if !ok {
+		return "未知代号(" + strconv.Itoa(int(this)) + ")"
+	} else {
+		return msg
+	}
 }
 
 var predefined_errors = map[ErrCode]string{}
