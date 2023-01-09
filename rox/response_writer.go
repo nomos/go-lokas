@@ -121,6 +121,9 @@ func (this *responseWriter) AddContent(k string, v interface{}) {
 }
 
 func (this *responseWriter) WriteContent() error {
+	if len(this.msg) == 0 {
+		return nil
+	}
 	msg, err := json.Marshal(this.msg)
 	if err != nil {
 		log.Error(err.Error())
