@@ -2,13 +2,17 @@ package lox
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/nats-io/nats.go"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/ecs"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/lox/flog"
+	"github.com/nomos/go-lokas/mq"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/timer"
@@ -73,6 +77,11 @@ type Actor struct {
 
 	Ctx    context.Context
 	Cancel context.CancelFunc
+
+	MQChan chan *nats.Msg
+	Sub    *mq.ActorSubscriber
+
+	isStarted bool
 }
 
 func (this *Actor) Send(id util.ProcessId, msg *protocol.RouteMessage) error {
@@ -172,12 +181,24 @@ func (this *Actor) SetProcess(process lokas.IProcess) {
 }
 
 func (this *Actor) StartMessagePump() {
+
+	if this.isStarted {
+		log.Warn("actor has started message pump", zap.String("type", this.Type()), zap.Uint64("actorId", uint64(this.GetId())))
+		return
+	}
+
+	this.isStarted = true
+
 	// this.MsgChan = make(chan *protocol.RouteMessage, 100)
 	// this.ReplyChan = make(chan *protocol.RouteMessage, 100)
 	this.DoneChan = make(chan struct{})
 
 	// this.DataChan = make(chan *protocol.RouteRecv, 100)
 	// this.ReplyDataChan = make(chan *protocol.RouteRecv, 100)
+
+	this.MQChan = make(chan *nats.Msg, 128)
+
+	this.CreateSubscriber()
 
 	go func() {
 	MSG_LOOP:
@@ -193,6 +214,8 @@ func (this *Actor) StartMessagePump() {
 			case msg := <-this.TimeHandler.EventChan():
 				out := msg.(*timer.TimeEventMsg)
 				out.Callback(out.TimeNoder)
+			case mqMsg := <-this.MQChan:
+				this.OnRecvMQ(mqMsg)
 			case <-this.DoneChan:
 				break MSG_LOOP
 			case <-this.Ctx.Done():
@@ -206,6 +229,14 @@ func (this *Actor) StartMessagePump() {
 
 		this.TimeHandler.DelTimer()
 		this.TimeHandler = nil
+
+		if this.Sub != nil {
+			this.Sub.Drain()
+			this.Sub = nil
+		}
+
+		close(this.MQChan)
+		this.MQChan = nil
 
 		log.Debug("actor stop ", zap.String("type", this.Type()), zap.Uint64("actorId", uint64(this.GetId())))
 	}()
@@ -227,6 +258,7 @@ func (this *Actor) StartMessagePump() {
 		close(this.ReplyChan)
 		this.ReplyChan = nil
 	}()
+
 }
 
 func (this *Actor) ReceiveMessage(msg *protocol.RouteMessage) {
@@ -393,6 +425,54 @@ func (this *Actor) OnRecvData(dataMsg *protocol.RouteDataMsg) {
 
 }
 
+func (this *Actor) OnRecvMQ(mqMsg *nats.Msg) (errRet error) {
+	// var retMsg protocol.ISerializable
+	defer func() {
+		if errRet == nil {
+			return
+		}
+
+		var errMsg *protocol.ErrMsg
+		errCode, ok := errRet.(protocol.ErrCode)
+		if !ok {
+			desc := fmt.Sprintf("%s(%s)", errCode.Error(), errRet.Error())
+			errMsg = protocol.NewErrorMsg(int32(protocol.ERR_MQ_ERROR), desc)
+		} else {
+			errMsg = errCode.NewErrMsg()
+		}
+		mq.TryReplyMessage(mqMsg, errMsg)
+	}()
+
+	if this.MsgHandler == nil {
+		return protocol.ERR_MSG_HANDLER_NOT_FOUND
+	}
+	recvMsg, err := mq.UnmarshalMsg(mqMsg.Data)
+	if err != nil {
+		return protocol.ERR_MQ_UNMARSHAL_ERROR
+	}
+
+	retMsg, err := this.MsgHandler(0, 0, recvMsg)
+
+	if mqMsg.Reply == "" {
+		return nil
+	}
+
+	if err != nil {
+		if v, ok := err.(protocol.ErrCode); ok {
+			retMsg = v.NewErrMsg()
+		} else {
+			retMsg = protocol.ERR_INTERNAL_ERROR.NewErrMsg()
+		}
+	}
+
+	if retMsg == nil {
+		return protocol.ERR_MQ_NOT_RELPY
+	}
+	mq.TryReplyMessage(mqMsg, retMsg)
+
+	return nil
+}
+
 func (this *Actor) SendReply(actorId util.ID, transId uint32, msg protocol.ISerializable) error {
 	_, err := msg.GetId()
 	if err != nil {
@@ -449,4 +529,43 @@ func (this *Actor) Call(actorId util.ID, req protocol.ISerializable) (protocol.I
 			return ctx.GetResp().(protocol.ISerializable), nil
 		}
 	}
+}
+
+func (this *Actor) CreateSubscriber() (err error) {
+	this.Sub, err = mq.CreateActorSubscriber(this, this.MQChan)
+	return err
+}
+
+func (this *Actor) Subscribe(key string) error {
+	if strings.HasPrefix(key, "actor") || strings.HasPrefix(key, "service") {
+
+		log.Error("mq subscribe err, key not begin with 'actor' or 'service'", zap.Uint64("actorId", uint64(this.GetId())), zap.String("key", key))
+		return protocol.ERR_MQ_SUBJ_PREFIX_ERR
+	}
+
+	if this.Sub == nil {
+		log.Warn("actor is not create subscriber", zap.Uint64("actorId", uint64(this.GetId())), zap.String("key", key))
+		return nil
+	}
+
+	return this.Sub.Subscribe(key)
+}
+
+func (this *Actor) Unsubscribe(key string) error {
+	if strings.HasPrefix(key, "actor") || strings.HasPrefix(key, "service") {
+
+		log.Error("mq unsubscribe err, key not begin with 'actor' or 'service'", zap.Uint64("actorId", uint64(this.GetId())), zap.String("key", key))
+		return protocol.ERR_MQ_SUBJ_PREFIX_ERR
+	}
+
+	if this.Sub == nil {
+		log.Warn("actor is not create subscriber", zap.Uint64("actorId", uint64(this.GetId())), zap.String("key", key))
+		return nil
+	}
+
+	return this.Sub.Unsubscribe(key)
+}
+
+func (this *Actor) Publish(key string, msg protocol.ISerializable) error {
+	return mq.Publsih(key, msg)
 }

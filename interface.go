@@ -127,6 +127,10 @@ type IActor interface {
 	Update(dt time.Duration, now time.Time)
 
 	ReceiveData(recv *protocol.RouteDataMsg) error
+
+	Subscribe(key string) error
+	Unsubscribe(key string) error
+	Publish(key string, msg protocol.ISerializable) error
 }
 
 // IEntity entity of ecs system,container of IComponent

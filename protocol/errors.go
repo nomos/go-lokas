@@ -28,11 +28,23 @@ var (
 
 	ERR_REGISTER_ROUTE_USER_DUPLICATED = CreateError(-7101, "user route register duplicate")
 
-	ERR_ETCD_ERROR   = CreateError(201, "数据错误")
-	ERR_DB_ERROR     = CreateError(202, "数据库错误")
-	ERR_CONFIG_ERROR = CreateError(203, "配置错误")
+	ERR_ETCD_ERROR       = CreateError(201, "数据错误")
+	ERR_DB_ERROR         = CreateError(202, "数据库错误")
+	ERR_CONFIG_ERROR     = CreateError(203, "配置错误")
+	ERR_ACTOR_ID_INVALID = CreateError(211, "actorId无效")
 
-	ERR_MSG_LEN_INVALID = CreateError(301, "数据长度无效")
+	ERR_MSG_LEN_INVALID       = CreateError(301, "数据长度无效")
+	ERR_MSG_HANDLER_NOT_FOUND = CreateError(302, "处理函数为空")
+
+	ERR_MQ_ERROR               = CreateError(401, "消息队列错误")
+	ERR_MQ_NOT_CONNECT         = CreateError(402, "消息队列未开启")
+	ERR_MQ_ADD_ACTOR_DUPLICATE = CreateError(403, "消息队列重复添加玩家")
+	ERR_MQ_SUBJ_NOT_FIND       = CreateError(404, "消息队列subj未找到")
+	ERR_MQ_MARSHAL_ERROR       = CreateError(405, "消息队列序列化错误")
+	ERR_MQ_UNMARSHAL_ERROR     = CreateError(406, "消息队列反序列化错误")
+	ERR_MQ_REQUEST_ERROR       = CreateError(407, "消息队列请求出错")
+	ERR_MQ_NOT_RELPY           = CreateError(408, "消息队列请求回复为空")
+	ERR_MQ_SUBJ_PREFIX_ERR     = CreateError(409, "消息队列Key前缀错误")
 
 	//cs error
 	ERR_INTERNAL_SERVER        = CreateError(901, "服务器繁忙")

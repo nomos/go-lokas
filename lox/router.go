@@ -62,7 +62,7 @@ func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 
 		err = this.process.Send(pid, msg)
 		if err != nil {
-			log.Error("send to process err", zap.Uint16("toPid", uint16(msg.ToPid)), zap.String("err", err.Error()))
+			log.Debug("send to process err, not find process", zap.Uint16("pid", uint16(pid)), zap.Uint16("toPid", uint16(msg.ToPid)), zap.Uint16("cmdId", uint16(msg.InnerId)), zap.Uint32("tansId", msg.TransId), zap.Uint64("fromActorId", uint64(msg.FromActor)), zap.Uint64("toActorId", uint64(msg.ToActor)), zap.String("err", err.Error()))
 			// if !msg.Req {
 			// 	// TODO RPC MSG
 			// 	origin := this.GetProcess().GetActor(msg.FromActor)
@@ -93,7 +93,7 @@ func (router *Router) RouteMsgToService(fromActorId util.ID, serviceType string,
 	serviceInfo, ok := router.GetProcess().GetServiceDiscoverMgr().FindServiceInfo(serviceType, serviceId, lineId)
 	if !ok {
 		cmd, _ := msg.GetId()
-		log.Error("route msg err, not find service", zap.Uint16("cmdId", uint16(cmd)), zap.String("serviceType", serviceType), zap.Uint16("serviceId", serviceId), zap.Uint16("lineId", lineId))
+		log.Debug("route msg err, not find service", zap.Uint16("cmdId", uint16(cmd)), zap.String("serviceType", serviceType), zap.Uint16("serviceId", serviceId), zap.Uint16("lineId", lineId))
 		return protocol.ERR_INTERNAL_SERVER
 	}
 

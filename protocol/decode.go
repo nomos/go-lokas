@@ -6,11 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/nomos/go-lokas/protocol/encoding/number_json"
 	"io"
 	"math"
 	"reflect"
 	"time"
+
+	"github.com/nomos/go-lokas/protocol/encoding/number_json"
 
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/util"
@@ -768,6 +769,34 @@ func UnmarshalJsonRouteMsg(data []byte) (*RouteMessage, error) {
 	routeMsg.Body = body
 
 	return routeMsg, nil
+}
+
+func UnmarshalBody(cmdId BINARY_TAG, body []byte, t TYPE) (ISerializable, error) {
+	if t == JSON {
+		return UnmarshJsonBody(cmdId, body)
+	} else if t == BINARY {
+		return nil, errors.New("todo binary format")
+	} else {
+		return nil, fmt.Errorf("undefined protocol(%d)", cmdId)
+	}
+}
+
+func UnmarshJsonBody(cmdId BINARY_TAG, body []byte) (ISerializable, error) {
+
+	outMsg, err := GetTypeRegistry().GetInterfaceByTag(cmdId)
+	if err != nil {
+		log.Error("not find cmd", zap.Uint16("cmdId", uint16(cmdId)), zap.String("err", err.Error()))
+		return nil, err
+	}
+	dec := json.NewDecoder(bytes.NewBuffer(body))
+	dec.UseNumber()
+	err = dec.Decode(outMsg)
+	if err != nil {
+		log.Error("decode json error", zap.Uint16("cmdId", uint16(cmdId)), zap.String("err", err.Error()))
+		return nil, err
+	}
+
+	return outMsg, nil
 }
 
 func unmarshalRouteMsgHeader(data []byte) (*RouteMessage, int, error) {
