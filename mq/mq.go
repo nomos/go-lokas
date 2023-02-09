@@ -41,7 +41,7 @@ func Instance() *MsgQueue {
 func Init(config lokas.IConfig) error {
 
 	if config == nil {
-		log.Error("mq not find config")
+		log.Warn("mq not find config")
 		return protocol.ERR_CONFIG_ERROR
 	}
 
