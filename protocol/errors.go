@@ -7,7 +7,7 @@ import (
 type ErrCode int
 
 var (
-	ERR_SUCC = CreateError(0, "successful")
+	ERR_SUCC = CreateError(0, "操作成功")
 
 	//inner error
 	ERR_TYPE_NOT_FOUND  = CreateError(-1, "type not found")
