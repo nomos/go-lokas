@@ -82,6 +82,9 @@ func PickOneWeightSelect[T WeightAble](weightList []T, seed ...uint64) (int, T, 
 	var i int
 	for i = 0; i < len(weightList); i++ {
 		weight := weightList[i].Weight()
+		if weight == 0 {
+			continue
+		}
 		if weight >= r {
 			break
 		} else {
@@ -118,6 +121,9 @@ func WeightSelect[T WeightAble](weightList []T, seed ...uint64) (int, T) {
 	var i int
 	for i = 0; i < len(weightList); i++ {
 		weight := weightList[i].Weight()
+		if weight == 0 {
+			continue
+		}
 		if weight >= r {
 			break
 		} else {
