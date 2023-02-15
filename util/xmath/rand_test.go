@@ -20,3 +20,17 @@ func TestPickOneWeightSelect(t *testing.T) {
 	results, remain = PickSomeWeightSelect(arr, 3)
 	log.Infof(results, remain)
 }
+
+func TestWeightSelect(t *testing.T) {
+
+	arr := []WeightAbleFloat{1, 2, 3, 4, 5, 6}
+	picked := map[WeightAbleFloat]int{}
+	var seed uint64 = 8
+	for i := 0; i < 100; i++ {
+		_, v := WeightSelect(arr, seed+uint64(i))
+		picked[v]++
+	}
+	for k, v := range picked {
+		log.Infof(k, v)
+	}
+}

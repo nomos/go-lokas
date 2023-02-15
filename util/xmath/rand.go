@@ -114,22 +114,23 @@ func WeightSelect[T WeightAble](weightList []T, seed ...uint64) (int, T) {
 		log.Panic("weight list must > 0")
 	}
 	sum := 0.0
+	weightListAdded := []float64{}
 	for i := 0; i < len(weightList); i++ {
 		sum += weightList[i].Weight()
+		weightListAdded = append(weightListAdded, sum)
 	}
 	r := SRandom(seed...) * sum
 	var i int
 	var j int
-	for i = 0; i < len(weightList); i++ {
+	for i = 0; i < len(weightListAdded); i++ {
 		weight := weightList[i].Weight()
 		if weight == 0 {
 			continue
 		}
+		weightAdded := weightListAdded[i]
 		j = i
-		if weight >= r {
+		if weightAdded >= r {
 			break
-		} else {
-			r -= weight
 		}
 	}
 	return j, weightList[j]
