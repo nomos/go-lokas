@@ -119,18 +119,20 @@ func WeightSelect[T WeightAble](weightList []T, seed ...uint64) (int, T) {
 	}
 	r := SRandom(seed...) * sum
 	var i int
+	var j int
 	for i = 0; i < len(weightList); i++ {
 		weight := weightList[i].Weight()
 		if weight == 0 {
 			continue
 		}
+		j = i
 		if weight >= r {
 			break
 		} else {
 			r -= weight
 		}
 	}
-	return i, weightList[i]
+	return j, weightList[j]
 }
 
 func Shuffle[T any](arr []T, seed ...uint64) []T {
