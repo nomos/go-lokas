@@ -46,6 +46,8 @@ var (
 	ERR_MQ_NOT_RELPY           = CreateError(408, "消息队列请求回复为空")
 	ERR_MQ_SUBJ_PREFIX_ERR     = CreateError(409, "消息队列Key前缀错误")
 
+	ERR_SERVICE_NOT_FOUND = CreateError(410, "服务器未找到")
+
 	//cs error
 	ERR_INTERNAL_SERVER        = CreateError(901, "服务器繁忙")
 	ERR_TOKEN_EXPIRED          = CreateError(1001, "Token已过期")

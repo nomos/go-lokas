@@ -569,3 +569,7 @@ func (this *Actor) Unsubscribe(key string) error {
 func (this *Actor) Publish(key string, msg protocol.ISerializable) error {
 	return mq.Publsih(key, msg)
 }
+
+func (this *Actor) Request(key string, msg protocol.ISerializable) (protocol.ISerializable, error) {
+	return mq.Request(key, msg)
+}

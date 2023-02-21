@@ -131,6 +131,7 @@ type IActor interface {
 	Subscribe(key string) error
 	Unsubscribe(key string) error
 	Publish(key string, msg protocol.ISerializable) error
+	Request(key string, msg protocol.ISerializable) (protocol.ISerializable, error)
 }
 
 // IEntity entity of ecs system,container of IComponent

@@ -40,10 +40,12 @@ func Instance() *MsgQueue {
 
 func Init(config lokas.IConfig) error {
 
-	if config == nil {
+	if config == nil || config.Sub("db") == nil || config.Sub("db").Sub("nats") == nil {
 		log.Warn("mq not find config")
 		return protocol.ERR_CONFIG_ERROR
 	}
+
+	config = config.Sub("db").Sub("nats")
 
 	url := config.GetString("url")
 	if url == "" {
@@ -173,7 +175,10 @@ func RequestToActorOne(actorId util.ID, msg protocol.ISerializable) (protocol.IS
 		return nil, protocol.ERR_MQ_MARSHAL_ERROR
 	}
 	mqMsg, err := ins.nc.Request(fmt.Sprintf(KEY_ACTOR_BASE, actorId), data, 5*time.Second)
-	if err != nil {
+
+	if err == nats.ErrNoResponders {
+		return nil, protocol.ERR_ACTOR_NOT_FOUND
+	} else if err != nil {
 		log.Warn("nats request err", zap.Uint64("actorId", uint64(actorId)), zap.String("err", err.Error()))
 		return nil, protocol.ERR_MQ_REQUEST_ERROR
 	}
@@ -203,12 +208,48 @@ func Publsih(key string, msg protocol.ISerializable) error {
 	}
 
 	err = ins.nc.Publish(key, data)
-	if err != nil {
+
+	if err == nats.ErrNoResponders {
+		return protocol.ERR_ACTOR_NOT_FOUND
+	} else if err != nil {
 		log.Error("mq publish err", zap.String("key", key), zap.Any("msg", msg))
 		return protocol.ERR_MQ_ERROR
 	}
 
 	return nil
+}
+
+func Request(key string, msg protocol.ISerializable) (protocol.ISerializable, error) {
+	if ins == nil {
+		log.Warn("mq not connect")
+		return nil, protocol.ERR_MQ_NOT_CONNECT
+	}
+
+	data, err := ins.MarshalMsg(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	recvMsg, err := ins.nc.Request(key, data, 5*time.Second)
+
+	if err == nats.ErrNoResponders {
+		return nil, protocol.ERR_ACTOR_NOT_FOUND
+	} else if err != nil {
+		log.Error("mq request err", zap.String("key", key), zap.Any("msg", msg))
+		return nil, protocol.ERR_MQ_ERROR
+	}
+
+	retMsg, err := UnmarshalMsg(recvMsg.Data)
+	if err != nil {
+		log.Error("mq umarsh ret msg err", zap.Any("retMsg", retMsg), zap.String("err", err.Error()))
+		return nil, protocol.ERR_MQ_UNMARSHAL_ERROR
+	}
+
+	if errMsg, ok := retMsg.(*protocol.ErrMsg); ok {
+		return nil, errMsg
+	}
+
+	return retMsg, nil
 }
 
 func Flush() error {
@@ -230,7 +271,13 @@ func PublishToActorOne(actorId util.ID, msg protocol.ISerializable) error {
 	if err != nil {
 		return protocol.ERR_MQ_MARSHAL_ERROR
 	}
-	return ins.nc.Publish(fmt.Sprintf(KEY_ACTOR_BASE, actorId), data)
+
+	err = ins.nc.Publish(fmt.Sprintf(KEY_ACTOR_BASE, actorId), data)
+	if err == nats.ErrNoResponders {
+		return protocol.ERR_ACTOR_NOT_FOUND
+	}
+
+	return err
 }
 
 func PublishToService(serviceType string, serviceId uint16, msg protocol.ISerializable) error {
@@ -243,5 +290,10 @@ func PublishToService(serviceType string, serviceId uint16, msg protocol.ISerial
 	if err != nil {
 		return protocol.ERR_MQ_MARSHAL_ERROR
 	}
-	return ins.nc.Publish(fmt.Sprintf(KEY_SERVICE_ID, serviceType, serviceId), data)
+	err = ins.nc.Publish(fmt.Sprintf(KEY_SERVICE_ID, serviceType, serviceId), data)
+	if err == nats.ErrNoResponders {
+		return protocol.ERR_SERVICE_NOT_FOUND
+	}
+
+	return err
 }
