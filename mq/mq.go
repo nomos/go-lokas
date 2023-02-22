@@ -49,7 +49,7 @@ func Init(config lokas.IConfig) error {
 
 	url := config.GetString("url")
 	if url == "" {
-		log.Error("mq config not find url")
+		log.Warn("mq config not find url")
 		return protocol.ERR_CONFIG_ERROR
 	}
 
