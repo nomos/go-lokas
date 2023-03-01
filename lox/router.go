@@ -34,14 +34,14 @@ func (this *Router) SetProcess(process lokas.IProcess) {
 
 func (this *Router) RouteMsg(msg *protocol.RouteMessage) {
 	if msg.ToActor.IsValidProcessId() {
-		log.Debug("Router:isProcessId", zap.Uint16("cmdId", uint16(msg.InnerId)), zap.Uint32("transId", msg.TransId), zap.Uint64("fromActor", uint64(msg.FromActor)), zap.Uint64("toActor", uint64(msg.ToActor)))
+		//log.Debug("Router:isProcessId", zap.Uint16("cmdId", uint16(msg.InnerId)), zap.Uint32("transId", msg.TransId), zap.Uint64("fromActor", uint64(msg.FromActor)), zap.Uint64("toActor", uint64(msg.ToActor)))
 	} else if msg.ToActor != 0 {
 		a := this.process.GetActor(msg.ToActor)
 		// log.Debug("route message", zap.Uint16("cmdId", uint16(msg.InnerId)), zap.Uint32("transId", msg.TransId), zap.Uint64("fromActor", uint64(msg.FromActor)), zap.Uint64("toActor", uint64(msg.ToActor)))
 
 		if a != nil {
 			a.ReceiveMessage(msg)
-			log.Debug("router message local", zap.Uint16("cmdId", uint16(msg.InnerId)), zap.Uint32("transId", msg.TransId), zap.Uint64("fromActor", uint64(msg.FromActor)), zap.Uint64("toActor", uint64(msg.ToActor)))
+			//log.Debug("router message local", zap.Uint16("cmdId", uint16(msg.InnerId)), zap.Uint32("transId", msg.TransId), zap.Uint64("fromActor", uint64(msg.FromActor)), zap.Uint64("toActor", uint64(msg.ToActor)))
 			return
 		}
 

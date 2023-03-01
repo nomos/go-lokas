@@ -160,8 +160,8 @@ func (this *PassiveSession) clientLoop() {
 				log.Error("unmarshal client message error",
 					zap.Any("cmdId", cmdId),
 				)
-				msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
-				_, err := this.Conn.Write(msg)
+				msg1, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
+				_, err = this.Conn.Write(msg1)
 				if err != nil {
 					log.Error(err.Error())
 				}
@@ -174,29 +174,29 @@ func (this *PassiveSession) clientLoop() {
 					return
 				}
 
-				var err error
 				var ret interface{}
 				if this.AuthFunc != nil {
 					ret, err = this.AuthFunc(msg.Body.(*protocol.HandShake).Data)
 				}
 				if err != nil {
 					log.Error(err.Error())
-					msg, err := protocol.MarshalMessage(msg.TransId, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
-					if err != nil {
-						log.Error(err.Error())
+					msg1, err1 := protocol.MarshalMessage(msg.TransId, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
+					if err1 != nil {
+						log.Error(err1.Error())
 						this.Conn.Wait()
 						this.Conn.Close()
 						return
 					}
 					log.Info("Auth Failed", zap.Any("cmdId", uint16(cmdId)))
-					this.Conn.Write(msg)
+					this.Conn.Write(msg1)
 					this.Conn.Wait()
 					this.Conn.Close()
 					return
 				}
 
 				if ret != nil {
-					body, err := json.Marshal(ret)
+					var body []byte
+					body, err = json.Marshal(ret)
 					if err != nil {
 						log.Error(err.Error())
 						return
@@ -229,7 +229,7 @@ func (this *PassiveSession) clientLoop() {
 				//ping:=msg.Body.(*Protocol.Ping)
 				//log.Info("receive ping",zap.Int64("client_session_id",this.GetId().Int64()))
 				pong := &protocol.Pong{Time: time.Now()}
-				data, err := protocol.MarshalMessage(msg.TransId, pong, this.Protocol)
+				data, err = protocol.MarshalMessage(msg.TransId, pong, this.Protocol)
 				if err != nil {
 					log.Error(err.Error())
 					this.Conn.Wait()

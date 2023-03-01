@@ -346,7 +346,7 @@ func (this *Actor) HandleMsg(actorId util.ID, transId uint32, msg protocol.ISeri
 				Append(flog.TransId(transId))...,
 		)
 	} else {
-		log.Info("Actor:handleMsg", flog.ActorReceiveMsgInfo(this, msg, transId, actorId)...)
+		log.Debug("Actor:handleMsg", flog.ActorReceiveMsgInfo(this, msg, transId, actorId)...)
 	}
 	if this.MsgHandler != nil {
 		resp, err := this.MsgHandler(actorId, transId, msg)
