@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/nomos/go-lokas/log/flog"
 	"regexp"
 	"strconv"
 	"time"
 
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"go.etcd.io/etcd/api/v3/mvccpb"
@@ -496,7 +496,7 @@ func (this *Registry) RegisterActorRemote(actor lokas.IActor) error {
 		}
 
 		// arr := flog.FuncInfo(this, "RegisterActorRemote").Append(flog.Result(res.Header.String()))
-		log.Debug("register actor remote", zap.String("actorType", actor.Type()), zap.Uint64("actorId", uint64(actor.GetId())), flog.Result(res.Header.String()))
+		log.Debug("register actor remote", lokas.LogActorInfo(actor).Append(flog.Result(res.Header.String()))...)
 	}
 	return nil
 }

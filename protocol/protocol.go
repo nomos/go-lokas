@@ -145,6 +145,10 @@ func NewRouteMsg(fromActor util.ID, toActor util.ID, transId uint32, msg ISerial
 	return ret
 }
 
+func (this *RouteMessage) LogInfo() log.ZapFields {
+	return LogActorRouterMsgInfo(this.CmdId, this.TransId, this.FromActor, this.ToActor, this.ToPid, this.Req)
+}
+
 func (this *RouteMessage) GetId() (BINARY_TAG, error) {
 	return TAG_BinaryMessage, nil
 }
@@ -286,6 +290,10 @@ func UnmarshalRouteDataMsg(data []byte, protocolType TYPE, fromPid util.ProcessI
 	routeMsg.ReqType = uint8(data[24])
 
 	return routeMsg, nil
+}
+
+func (msg *RouteDataMsg) LogInfo() log.ZapFields {
+	return LogActorRouterMsgInfo(msg.Cmd, msg.TransId, msg.FromActor, msg.ToActor, msg.ToPid, msg.ReqType == REQ_TYPE_MAIN)
 }
 
 func (msg *RouteDataMsg) MarshalData() ([]byte, error) {

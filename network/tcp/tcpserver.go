@@ -7,7 +7,7 @@ import (
 
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
+	"github.com/nomos/go-lokas/log/flog"
 	"github.com/nomos/go-lokas/network/conn"
 	"github.com/nomos/go-lokas/network/internal/hub"
 	"github.com/nomos/go-lokas/util"

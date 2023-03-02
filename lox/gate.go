@@ -2,11 +2,11 @@ package lox
 
 import (
 	"context"
+	"github.com/nomos/go-lokas/log/flog"
 	"sync"
 
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/network/tcp"
 	"github.com/nomos/go-lokas/network/ws"

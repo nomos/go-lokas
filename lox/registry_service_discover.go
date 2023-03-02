@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/nomos/go-lokas/log/flog"
 	"math/rand"
 	"regexp"
 	"sort"
@@ -211,7 +212,8 @@ func (mgr *ServiceDiscoverMgr) delServiceFromEtcd(kv *mvccpb.KeyValue) error {
 			delete(mgr.serviceMap[serviceType][uint16(serviceId)], uint16(lineId))
 		}
 	}
-
-	log.Info("del service from etcd", zap.String("serviceType", serviceType), zap.String("serviceId", matchs[idIdx]), zap.String("lineId", matchs[lineIdx]))
+	serviceIdFind, _ := strconv.ParseUint(matchs[idIdx], 10, 64)
+	LineIdFind, _ := strconv.ParseUint(matchs[lineIdx], 10, 64)
+	log.Info("del service from etcd", flog.ServiceInfo(serviceType, uint16(serviceIdFind), uint16(LineIdFind))...)
 	return nil
 }

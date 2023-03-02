@@ -1,11 +1,11 @@
 package lox
 
 import (
+	"github.com/nomos/go-lokas/log/flog"
 	"sync"
 
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/util"
 	"go.uber.org/zap"
 )
@@ -73,11 +73,11 @@ func (this *ActorContainer) StartActor(actor lokas.IActor) error {
 	log.Info("starting", zap.String("module", actor.Type()))
 	err := actor.Start()
 	if err != nil {
-		log.Error("ActorContainer:StartActor:error", flog.ActorInfo(actor).Append(flog.Error(err))...)
+		log.Error("ActorContainer:StartActor:error", lokas.LogActorInfo(actor).Append(flog.Error(err))...)
 		this.RemoveActor(actor)
 		return err
 	} else {
-		log.Info("ActorContainer:StartActor:success", flog.ActorInfo(actor)...)
+		log.Info("ActorContainer:StartActor:success", lokas.LogActorInfo(actor)...)
 		err = actor.OnStart()
 		if err != nil {
 			log.Error(err.Error())
@@ -107,7 +107,6 @@ func (this *ActorContainer) AddActor(actor lokas.IActor) {
 	this.Actors[actor.GetId()] = actor
 	// this.process.RegisterActors()
 
-	// log.Debug("container add actor", zap.String("actorType", actor.Type()), zap.Uint64("actorId", uint64(actor.GetId())))
 }
 
 func (this *ActorContainer) RemoveActor(actor lokas.IActor) {
@@ -124,7 +123,6 @@ func (this *ActorContainer) RemoveActorById(id util.ID) lokas.IActor {
 		this.process.RegisterActors()
 		this.StopActor(actor)
 
-		// log.Debug("container remove actor", zap.String("actorType", actor.Type()), zap.Uint64("actorId", uint64(actor.GetId())))
 		return actor
 	}
 	return nil

@@ -3,7 +3,7 @@ package lox
 import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
+	"github.com/nomos/go-lokas/log/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"go.uber.org/zap"
@@ -199,7 +199,7 @@ func (this *ProxySession) startMessagePumpPassive() {
 				msg, err := protocol.UnmarshalMessage(data, this.Protocol)
 				if err != nil {
 					log.Error("unmarshal client message error",
-						zap.Any("cmdId", cmdId),
+						zap.Uint16("cmdid", uint16(cmdId)),
 					)
 					msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
 					_, err := this.Conn.Write(msg)
@@ -317,7 +317,7 @@ func (this *ProxySession) startMessagePumpActive() {
 				msg, err := protocol.UnmarshalMessage(data, this.Protocol)
 				if err != nil {
 					log.Error("unmarshal client message error",
-						zap.Any("cmdId", cmdId),
+						zap.Uint16("cmdid", uint16(cmdId)),
 					)
 					msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
 					_, err := this.Conn.Write(msg)

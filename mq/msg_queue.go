@@ -93,7 +93,7 @@ func (this *MsgQueue) addActorSubscriber(actor lokas.IActor, ch chan *nats.Msg) 
 	defer this.muActor.Unlock()
 
 	if _, ok := this.actorSubscriberMap[actor.GetId()]; ok {
-		log.Error("mq actor add duplicate", zap.Uint64("actorId", uint64(actor.GetId())))
+		log.Error("mq actor add duplicate", zap.Int64("actorid", actor.GetId().Int64()))
 		return nil, protocol.ERR_MQ_ADD_ACTOR_DUPLICATE
 	}
 
