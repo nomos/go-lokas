@@ -77,6 +77,10 @@ func FromActorId(id util.ID) zap.Field {
 	return zap.Int64("from_actor_id", id.Int64())
 }
 
+func ActorId(id util.ID) zap.Field {
+	return zap.Int64("actorid", id.Int64())
+}
+
 func ToPid(id util.ProcessId) zap.Field {
 	return zap.Int64("to_pid", id.Int64())
 }

@@ -1,31 +1,29 @@
 package network
 
 import (
-	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/ecs"
+	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	"go.uber.org/zap"
 	"time"
 )
 
 var _ lokas.ISession = &DefaultSession{}
 
-func NewDefaultSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManager,opts ...SessionOption) *DefaultSession {
+func NewDefaultSession(conn lokas.IConn, id util.ID, manager lokas.ISessionManager, opts ...SessionOption) *DefaultSession {
 	s := &DefaultSession{
-		ID:id,
+		ID:       id,
 		Messages: make(chan []byte, 100),
 		Conn:     conn,
 		manager:  manager,
 		done:     make(chan struct{}),
 	}
-	for _,o:=range opts {
+	for _, o := range opts {
 		o(s)
 	}
 	return s
 }
-
 
 type SessionOption func(*DefaultSession)
 
@@ -116,7 +114,7 @@ func (this *DefaultSession) OnDestroy() error {
 	panic("implement me")
 }
 
-func (this *DefaultSession) GetId()util.ID {
+func (this *DefaultSession) GetId() util.ID {
 	return this.ID
 }
 
@@ -126,17 +124,17 @@ func (this *DefaultSession) GetConn() lokas.IConn {
 
 func (this *DefaultSession) OnOpen(conn lokas.IConn) {
 	this.start()
-	if this.OnOpenFunc !=nil {
+	if this.OnOpenFunc != nil {
 		this.OnOpenFunc(conn)
 	}
 	log.Warn("OnOpen")
-	if this.manager!=nil {
+	if this.manager != nil {
 		this.manager.AddSession(this.ID, this)
 	}
 }
 
 func (this *DefaultSession) OnClose(conn lokas.IConn) {
-	if this.manager!=nil {
+	if this.manager != nil {
 		this.manager.RemoveSession(this.ID)
 	}
 	log.Warn("OnClose")
@@ -146,13 +144,13 @@ func (this *DefaultSession) OnClose(conn lokas.IConn) {
 	this.stop()
 }
 
-func (this *DefaultSession) closeSession(){
-	if this.manager!=nil {
+func (this *DefaultSession) closeSession() {
+	if this.manager != nil {
 		this.manager.RemoveSession(this.ID)
 	}
 }
 
-func (this *DefaultSession) Write(data []byte)error{
+func (this *DefaultSession) Write(data []byte) error {
 	_, err := this.Conn.Write(data)
 	return err
 }
@@ -165,7 +163,7 @@ func (this *DefaultSession) OnRecv(conn lokas.IConn, data []byte) {
 }
 
 func (this *DefaultSession) handleMsg(msg *protocol.BinaryMessage) {
-	if this.MsgHandler !=nil {
+	if this.MsgHandler != nil {
 		this.MsgHandler(msg)
 	}
 }
@@ -179,18 +177,11 @@ func (this *DefaultSession) start() {
 				msg, err := protocol.UnmarshalBinaryMessage(data)
 				if err != nil {
 					log.Error("unmarshal client message error",
-						zap.Any("cmdId", cmdId),
+						protocol.LogCmdId(cmdId),
 					)
 					this.Conn.Close()
 					return
 				}
-				//if err != nil {
-				//	log.Error("route client message to server error, CmdId: %d, error: %s",
-				//		zap.Any("cmdId", cmdId),
-				//		zap.Any("err", err),
-				//	)
-				//	this.IConn.Close()
-				//}
 				this.handleMsg(msg)
 			case <-this.done:
 				this.closeSession()
@@ -199,8 +190,8 @@ func (this *DefaultSession) start() {
 	}()
 }
 
-func (this *DefaultSession) stop(){
-	this.done<- struct{}{}
+func (this *DefaultSession) stop() {
+	this.done <- struct{}{}
 }
 
 func (this *DefaultSession) HandleMessage(f func(msg *protocol.BinaryMessage)) {

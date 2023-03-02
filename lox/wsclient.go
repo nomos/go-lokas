@@ -12,7 +12,6 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/log/flog"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util/events"
@@ -69,9 +68,7 @@ func (this *WsClient) OnRecv(conn lokas.IConn, data []byte) {
 	cmdId := protocol.GetCmdId16(data)
 	msg, err := protocol.UnmarshalMessage(data, this.Protocol)
 	if err != nil {
-		log.Error("unmarshal client message error",
-			flog.FuncInfo(this, "start").Append(zap.Any("cmdid", cmdId))...,
-		)
+		log.Error("unmarshal client message error", protocol.LogCmdId(cmdId))
 		return
 	}
 

@@ -158,7 +158,7 @@ func TryReplyMessage(mqMsg *nats.Msg, msg protocol.ISerializable) error {
 	out, err := ins.MarshalMsg(msg)
 	if err != nil {
 		cmdId, _ := msg.GetId()
-		log.Error("mq marshal msg err", zap.Uint16("cmdid", uint16(cmdId)))
+		log.Error("mq marshal msg err", protocol.LogCmdId(cmdId))
 		return protocol.ERR_MQ_MARSHAL_ERROR
 	}
 

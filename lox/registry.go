@@ -364,7 +364,7 @@ func (this *Registry) delServiceFromEtcd(kv *mvccpb.KeyValue) error {
 	}
 
 	this.GlobalRegistry.RemoveService(serviceType, uint16(serviceId))
-	log.Info("del service", zap.String("serviceType", serviceType), zap.Uint64("serviceId", serviceId))
+	log.Info("del service", flog.ServiceInfo(serviceType, uint16(serviceId), 0)...)
 	return nil
 }
 

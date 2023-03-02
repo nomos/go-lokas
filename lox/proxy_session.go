@@ -6,7 +6,6 @@ import (
 	"github.com/nomos/go-lokas/log/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	"go.uber.org/zap"
 	"time"
 )
 
@@ -185,7 +184,7 @@ func (this *ProxySession) startMessagePumpPassive() {
 				//第一个包必须是握手包
 				if !this.Verified && cmdId != protocol.TAG_HandShake {
 					msg, _ := protocol.MarshalMessage(0, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
-					log.Errorf("Auth Failed", cmdId)
+					log.Warn("Auth Failed", lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...)
 					_, err := this.Conn.Write(msg)
 					if err != nil {
 						log.Error(err.Error())
@@ -198,9 +197,7 @@ func (this *ProxySession) startMessagePumpPassive() {
 				}
 				msg, err := protocol.UnmarshalMessage(data, this.Protocol)
 				if err != nil {
-					log.Error("unmarshal client message error",
-						zap.Uint16("cmdid", uint16(cmdId)),
-					)
+					log.Error("unmarshal client message error", lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...)
 					msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
 					_, err := this.Conn.Write(msg)
 					if err != nil {
@@ -220,7 +217,7 @@ func (this *ProxySession) startMessagePumpPassive() {
 					if err != nil {
 						log.Error(err.Error())
 						msg, _ := protocol.MarshalMessage(msg.TransId, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
-						log.Errorf("Auth Failed", cmdId)
+						log.Error("Auth Failed", lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...)
 						_, err := this.Conn.Write(msg)
 						if err != nil {
 							log.Error(err.Error())
@@ -303,7 +300,7 @@ func (this *ProxySession) startMessagePumpActive() {
 				//第一个包必须是握手包
 				if !this.Verified && cmdId != protocol.TAG_HandShake {
 					msg, _ := protocol.MarshalMessage(0, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
-					log.Errorf("Auth Failed", cmdId)
+					log.Error("Auth Failed", lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...)
 					_, err := this.Conn.Write(msg)
 					if err != nil {
 						log.Error(err.Error())
@@ -316,9 +313,7 @@ func (this *ProxySession) startMessagePumpActive() {
 				}
 				msg, err := protocol.UnmarshalMessage(data, this.Protocol)
 				if err != nil {
-					log.Error("unmarshal client message error",
-						zap.Uint16("cmdid", uint16(cmdId)),
-					)
+					log.Error("unmarshal client message error", lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...)
 					msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
 					_, err := this.Conn.Write(msg)
 					if err != nil {
@@ -338,7 +333,7 @@ func (this *ProxySession) startMessagePumpActive() {
 					if err != nil {
 						log.Error(err.Error())
 						msg, _ := protocol.MarshalMessage(msg.TransId, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
-						log.Errorf("Auth Failed", cmdId)
+						log.Error("Auth Failed", lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...)
 						_, err := this.Conn.Write(msg)
 						if err != nil {
 							log.Error(err.Error())

@@ -9,7 +9,6 @@ import (
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	"go.uber.org/zap"
 )
 
 type PassiveSessionOption func(*PassiveSession)
@@ -149,7 +148,7 @@ func (this *PassiveSession) clientLoop() {
 					this.Conn.Close()
 					return
 				}
-				log.Errorf("Auth Failed", cmdId)
+				log.Error("Auth Failed", lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...)
 				this.Conn.Write(msg)
 				this.Conn.Wait()
 				this.Conn.Close()
@@ -158,7 +157,7 @@ func (this *PassiveSession) clientLoop() {
 			msg, err := protocol.UnmarshalMessage(data, this.Protocol)
 			if err != nil {
 				log.Error("unmarshal client message error",
-					zap.Uint16("cmdid", uint16(cmdId)),
+					lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...,
 				)
 				msg1, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
 				_, err = this.Conn.Write(msg1)
@@ -187,7 +186,7 @@ func (this *PassiveSession) clientLoop() {
 						this.Conn.Close()
 						return
 					}
-					log.Info("Auth Failed", zap.Uint16("cmdid", uint16(cmdId)))
+					log.Warn("Auth Failed", lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...)
 					this.Conn.Write(msg1)
 					this.Conn.Wait()
 					this.Conn.Close()

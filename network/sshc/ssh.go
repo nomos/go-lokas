@@ -288,7 +288,7 @@ func (this *SshClient) runCmd(cmd string, pwd bool) *promise.Promise {
 			}
 			resolve(nil)
 		} else {
-			log.Warnf("runCmd", zap.String("cmdId", cmd))
+			log.Warnf("runCmd", cmd)
 			this.readPump(session, cmd, false)
 			err = session.Run(cmd)
 			if err != nil {
