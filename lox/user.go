@@ -15,10 +15,10 @@ import (
 var _ lokas.IModel = (*User)(nil)
 
 func UserId(user *User) zap.Field {
-	return zap.Int64("user_id", user.Id.Int64())
+	return zap.Int64("userid", user.Id.Int64())
 }
 func UserRefreshToken(user *User) zap.Field {
-	return zap.String("refresh_token", user.RefreshToken)
+	return zap.String("refreshtoken", user.RefreshToken)
 }
 
 func UserToken(user *User) zap.Field {
