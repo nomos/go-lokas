@@ -212,6 +212,6 @@ func (mgr *ServiceDiscoverMgr) delServiceFromEtcd(kv *mvccpb.KeyValue) error {
 		}
 	}
 
-	log.Info("del service from etcd", zap.String("serviceType", serviceType), zap.String("serviceId", matchs[idIdx]), zap.String("lineId", matchs[lineIdx]))
+	log.Info("del service from etcd", zap.String("serviceType", serviceType), zap.Uint16("serviceId", uint16(serviceId)), zap.Uint16("lineId", uint16(lineId)))
 	return nil
 }
