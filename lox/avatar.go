@@ -2,6 +2,7 @@ package lox
 
 import (
 	"github.com/nomos/go-lokas/log/flog"
+	"go.uber.org/zap"
 	"runtime"
 
 	"github.com/nomos/go-lokas"
@@ -53,10 +54,9 @@ func (this *Avatar) handleMsg(actorId util.ID, transId uint32, msg protocol.ISer
 	defer func() {
 		if r := recover(); r != nil {
 			if err, ok := r.(error); ok {
-				log.Error(err.Error())
-				buf := make([]byte, 1<<14)
+				buf := make([]byte, 1<<12)
 				runtime.Stack(buf, true)
-				log.Error(string(buf))
+				log.Error("avatar routine panic detail", lokas.LogAvatarInfo(this).Append(flog.Error(err), zap.String("stack", string(buf)))...)
 			}
 		}
 	}()

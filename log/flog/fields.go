@@ -17,6 +17,10 @@ func AvatarId(id util.ID) zap.Field {
 	return zap.Int64("avatarid", id.Int64())
 }
 
+func GateId(id util.ID) zap.Field {
+	return zap.Int64("gateid", id.Int64())
+}
+
 func UserId(id util.ID) zap.Field {
 	return zap.Int64("userid", id.Int64())
 }

@@ -88,13 +88,13 @@ func (this *ActorContainer) StartActor(actor lokas.IActor) error {
 }
 
 func (this *ActorContainer) StopActor(actor lokas.IActor) {
-	log.Info("stoping", zap.String("module", actor.Type()))
+	log.Info("stoping", lokas.LogActorInfo(actor)...)
 	go func() {
 		err := actor.Stop()
 		if err != nil {
-			log.Error("Actor stop error type:" + actor.Type() + " Id:" + actor.GetId().String() + " err:" + err.Error())
+			log.Error("Actor stop error type", lokas.LogActorInfo(actor).Append(flog.Error(err))...)
 		} else {
-			log.Info("stop success", zap.String("module", actor.Type()))
+			log.Info("stop success", lokas.LogActorInfo(actor)...)
 			actor.OnStop()
 		}
 	}()
