@@ -112,6 +112,10 @@ type IActorInfo interface {
 	Type() string
 }
 
+type ILogInfo interface {
+	LogInfo() log.ZapFields
+}
+
 //IActor standard interface for actor
 type IActor interface {
 	IEntity

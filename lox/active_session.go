@@ -4,7 +4,7 @@ import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/ecs"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
+	"github.com/nomos/go-lokas/log/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"go.uber.org/zap"
@@ -35,12 +35,12 @@ type ActiveSession struct {
 	process     lokas.IProcess
 	Messages    chan []byte
 	Conn        lokas.IConn
-	Protocol 	protocol.TYPE
+	Protocol    protocol.TYPE
 	manager     lokas.ISessionManager
 	done        chan struct{}
 	OnCloseFunc func(conn lokas.IConn)
 	OnOpenFunc  func(conn lokas.IConn)
-	OnVerified func(conn lokas.IConn)
+	OnVerified  func(conn lokas.IConn)
 	MsgHandler  func(msg *protocol.BinaryMessage)
 	timeout     time.Duration
 	pingIndex   uint32
@@ -127,7 +127,7 @@ func (this *ActiveSession) OnClose(conn lokas.IConn) {
 	if this.manager != nil {
 		this.manager.RemoveSession(this.ID)
 	}
-	log.Warn("OnClose",flog.FuncInfo(this,"OnClose")...)
+	log.Warn("OnClose", flog.FuncInfo(this, "OnClose")...)
 	if this.OnCloseFunc != nil {
 		this.OnCloseFunc(conn)
 	}
@@ -177,7 +177,7 @@ func (this *ActiveSession) start() {
 			case <-ticker.C:
 				ping := &protocol.Ping{Time: time.Now()}
 				this.pingIndex++
-				data, _ := protocol.MarshalMessage(this.pingIndex, ping,this.Protocol)
+				data, _ := protocol.MarshalMessage(this.pingIndex, ping, this.Protocol)
 				_, err := this.Conn.Write(data)
 				if err != nil {
 					log.Error(err.Error())
@@ -185,10 +185,10 @@ func (this *ActiveSession) start() {
 				}
 			case data := <-this.Messages:
 				cmdId := protocol.GetCmdId16(data)
-				msg, err := protocol.UnmarshalMessage(data,this.Protocol)
+				msg, err := protocol.UnmarshalMessage(data, this.Protocol)
 				if err != nil {
 					log.Error("unmarshal client message error",
-						flog.FuncInfo(this,"start").Append(zap.Any("cmdId", cmdId))...
+						flog.FuncInfo(this, "start").Append(zap.Uint16("cmdid", uint16(cmdId)))...,
 					)
 					return
 				}
@@ -198,15 +198,14 @@ func (this *ActiveSession) start() {
 				}
 				//if err != nil {
 				//	log.Error("route client message to server error, CmdId: %d, error: %s",
-				//		zap.Any("cmdId", cmdId),
 				//		zap.Any("err", err),
 				//	)
 				//	this.IConn.Close()
 				//}
-				log.Infof("handleMsg",msg)
+				log.Infof("handleMsg", msg)
 				this.handleMsg(msg)
 			case <-this.done:
-				log.Warn("closing",flog.FuncInfo(this,"start")...)
+				log.Warn("closing", flog.FuncInfo(this, "start")...)
 				this.closeSession()
 				break Loop
 			}
@@ -215,7 +214,7 @@ func (this *ActiveSession) start() {
 }
 
 func (this *ActiveSession) stop() {
-	if this.done!=nil {
+	if this.done != nil {
 		this.done <- struct{}{}
 		this.done = nil
 	}

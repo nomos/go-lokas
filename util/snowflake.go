@@ -203,7 +203,6 @@ func (n *Snowflake) Generate() ID {
 	)
 
 	n.mu.Unlock()
-	//log.Infof("生成Id",zap.Any("GetId",r))
 	return r
 }
 

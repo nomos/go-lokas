@@ -23,7 +23,7 @@ func (this *ActorSubscriber) Subscribe(subj string) error {
 
 	ns, err := this.mq.nc.ChanSubscribe(subj, this.MsgChan)
 	if err != nil {
-		log.Error("mq actor add subscribe err", zap.Uint64("actorId", uint64(this.ActorId)), zap.String("subj", subj), zap.String("error", err.Error()))
+		log.Error("mq actor add subscribe err", zap.Int64("actorid", this.ActorId.Int64()), zap.String("subj", subj), zap.String("error", err.Error()))
 		return protocol.ERR_MQ_ERROR
 	}
 

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/nomos/go-lokas/log/flog"
 	"io"
 	"math"
 	"reflect"
@@ -82,8 +83,8 @@ func UnmarshalBinaryMessage(data []byte) (*BinaryMessage, error) {
 	body, err := unmarshalBodyByTag(header.CmdId, data)
 	if err != nil {
 		log.Error("unmarshalBinaryMessage body error",
-			zap.Any("cmdId", header.CmdId),
-			zap.Uint32("transId", header.TransId),
+			LogCmdId(header.CmdId),
+			flog.TransId(header.TransId),
 			zap.String("error", err.Error()),
 		)
 		return nil, err
@@ -756,7 +757,7 @@ func UnmarshalJsonRouteMsg(data []byte) (*RouteMessage, error) {
 	bodyData := data[headerSize:routeMsg.Len]
 	body, err := GetTypeRegistry().GetInterfaceByTag(routeMsg.CmdId)
 	if err != nil {
-		log.Error("not find cmd", zap.Uint16("cmdId", uint16(routeMsg.CmdId)), zap.String("err", err.Error()))
+		log.Error("not find cmd", LogCmdId(routeMsg.CmdId), zap.String("err", err.Error()))
 		return nil, err
 	}
 	dec := json.NewDecoder(bytes.NewBuffer(bodyData))
@@ -785,14 +786,14 @@ func UnmarshJsonBody(cmdId BINARY_TAG, body []byte) (ISerializable, error) {
 
 	outMsg, err := GetTypeRegistry().GetInterfaceByTag(cmdId)
 	if err != nil {
-		log.Error("not find cmd", zap.Uint16("cmdId", uint16(cmdId)), zap.String("err", err.Error()))
+		log.Error("not find cmd", LogCmdId(cmdId), zap.String("err", err.Error()))
 		return nil, err
 	}
 	dec := json.NewDecoder(bytes.NewBuffer(body))
 	dec.UseNumber()
 	err = dec.Decode(outMsg)
 	if err != nil {
-		log.Error("decode json error", zap.Uint16("cmdId", uint16(cmdId)), zap.String("err", err.Error()))
+		log.Error("decode json error", LogCmdId(cmdId), zap.String("err", err.Error()))
 		return nil, err
 	}
 

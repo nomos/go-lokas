@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/nomos/go-lokas/log/flog"
 
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/util"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	clientv3 "go.etcd.io/etcd/client/v3"
@@ -183,7 +183,7 @@ func (this *AvatarSession) Deserialize(a lokas.IProcess) error {
 	this.GameId = sess.GameId
 	this.ServerId = sess.ServerId
 	this.GateId = sess.GateId
-	log.Warn("AvatarSession Deserialize", flog.AvatarSessionInfo(this).Append(zap.Any("res", res.Kvs))...)
+	log.Warn("AvatarSession Deserialize", lokas.LogAvatarSessionInfo(this).Append(zap.Any("res", res.Kvs))...)
 	return nil
 }
 
@@ -211,12 +211,12 @@ func (this *AvatarSession) SetGateId(id util.ID) {
 }
 
 func (this *AvatarSession) Serialize(a lokas.IProcess) error {
-	log.Info("Serialize AvatarSession", flog.AvatarSessionInfo(this)...)
+	log.Info("Serialize AvatarSession", lokas.LogAvatarSessionInfo(this)...)
 	etcd := a.GetEtcd()
 	key := AVATAR_SESSION_KEY.Assemble(this.Id)
 	mutexKey := MUTEX_AVATAR_SESSION_KEY.Assemble(this.Id)
 	s, _ := json.Marshal(this)
-	log.Warn("AvatarSession:Serialize", flog.AvatarSessionInfo(this).Append(zap.String("key", key))...)
+	log.Warn("AvatarSession:Serialize", lokas.LogAvatarSessionInfo(this).Append(zap.String("key", key))...)
 	mutex, err := a.GlobalMutex(mutexKey, 6)
 	if err != nil {
 		log.Error(err.Error())

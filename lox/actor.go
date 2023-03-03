@@ -3,6 +3,7 @@ package lox
 import (
 	"context"
 	"fmt"
+	"github.com/nomos/go-lokas/log/flog"
 	"strings"
 	"sync"
 	"time"
@@ -11,7 +12,6 @@ import (
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/ecs"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/mq"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/protocol"
@@ -82,6 +82,10 @@ type Actor struct {
 	Sub    *mq.ActorSubscriber
 
 	isStarted bool
+}
+
+func (this *Actor) LogInfo() log.ZapFields {
+	return lokas.LogActorInfo(this)
 }
 
 func (this *Actor) Send(id util.ProcessId, msg *protocol.RouteMessage) error {
@@ -183,7 +187,7 @@ func (this *Actor) SetProcess(process lokas.IProcess) {
 func (this *Actor) StartMessagePump() {
 
 	if this.isStarted {
-		log.Warn("actor has started message pump", zap.String("type", this.Type()), zap.Uint64("actorId", uint64(this.GetId())))
+		log.Warn("actor has started message pump", this.LogInfo()...)
 		return
 	}
 
@@ -205,7 +209,6 @@ func (this *Actor) StartMessagePump() {
 		for {
 			select {
 			case <-this.Timer.C:
-				// log.Debug("timer", zap.String("type", this.Type()), zap.Uint64("actorId", uint64(this.GetId())))
 				this.Update(0, time.Now())
 			case rMsg := <-this.MsgChan:
 				this.OnMessage(rMsg)
@@ -238,7 +241,7 @@ func (this *Actor) StartMessagePump() {
 		close(this.MQChan)
 		this.MQChan = nil
 
-		log.Debug("actor stop ", zap.String("type", this.Type()), zap.Uint64("actorId", uint64(this.GetId())))
+		log.Debug("actor stop ", this.LogInfo()...)
 	}()
 
 	go func() {
@@ -270,8 +273,6 @@ func (this *Actor) ReceiveMessage(msg *protocol.RouteMessage) {
 }
 
 func (this *Actor) ReceiveData(msg *protocol.RouteDataMsg) error {
-
-	// log.Debug("receive data", zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmdId", recv.GetCmd()))
 
 	if msg.ReqType == protocol.REQ_TYPE_REPLAY {
 		this.ReplyDataChan <- msg
@@ -339,14 +340,14 @@ func (this *Actor) HandleMsg(actorId util.ID, transId uint32, msg protocol.ISeri
 	}
 	if id == protocol.TAG_Error {
 		log.Warn("Actor:handleMsg:errmsg",
-			flog.ActorInfo(this).
-				Concat(flog.ErrorInfo(msg.(*protocol.ErrMsg))).
-				Concat(flog.MsgInfo(msg)).
+			this.LogInfo().
+				Concat(protocol.LogErrorInfo(msg.(*protocol.ErrMsg))).
+				Concat(protocol.LogMsgInfo(msg)).
 				Append(flog.FromActorId(actorId)).
 				Append(flog.TransId(transId))...,
 		)
 	} else {
-		log.Info("Actor:handleMsg", flog.ActorReceiveMsgInfo(this, msg, transId, actorId)...)
+		log.Debug("Actor:handleMsg", lokas.LogActorReceiveMsgInfo(this, msg, transId, actorId)...)
 	}
 	if this.MsgHandler != nil {
 		resp, err := this.MsgHandler(actorId, transId, msg)
@@ -388,7 +389,7 @@ func (this *Actor) OnMessage(msg *protocol.RouteMessage) {
 		err := this.HandleMsg(msg.FromActor, msg.TransId, msg.Body)
 		if err != nil {
 			log.Error("Actor:OnMessage:Error",
-				flog.ActorReceiveMsgInfo(this, msg.Body, msg.TransId, msg.FromActor).
+				msg.LogInfo().
 					Append(flog.Error(err))...,
 			)
 		}
@@ -405,7 +406,7 @@ func (this *Actor) OnRecvData(dataMsg *protocol.RouteDataMsg) {
 
 	body, err := dataMsg.UnmarshalData()
 	if err != nil {
-		log.Error("route msg unmarsh err", zap.String("actorType", this.Type()), zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmdId", uint16(dataMsg.Cmd)), zap.String("err", err.Error()))
+		log.Error("route msg unmarsh err", this.LogInfo().Append(protocol.LogCmdId(dataMsg.Cmd)).Append(flog.Error(err))...)
 		return
 	}
 
@@ -419,9 +420,6 @@ func (this *Actor) OnRecvData(dataMsg *protocol.RouteDataMsg) {
 	}
 
 	err = this.HandleMsg(dataMsg.FromActor, dataMsg.TransId, body)
-	// if err != nil {
-	// 	log.Error("handle msg err", zap.String("actorType", this.Type()), zap.Uint64("actorId", uint64(this.GetId())), zap.Uint16("cmdId", uint16(dataMsg.Cmd)), zap.Any("body", body), zap.String("err", err.Error()))
-	// }
 
 }
 
@@ -514,7 +512,7 @@ func (this *Actor) Call(actorId util.ID, req protocol.ISerializable) (protocol.I
 	case <-ctx.Done():
 		switch ctx.Err() {
 		case context.DeadlineExceeded:
-			log.Warn("DeadlineExceeded", flog.ActorSendMsgInfo(this, req, transId, actorId)...)
+			log.Warn("DeadlineExceeded", lokas.LogActorSendMsgInfo(this, req, transId, actorId)...)
 			this.removeContext(transId)
 			return nil, protocol.ERR_RPC_TIMEOUT
 		default:
@@ -539,12 +537,12 @@ func (this *Actor) CreateSubscriber() (err error) {
 func (this *Actor) Subscribe(key string) error {
 	if strings.HasPrefix(key, "actor") || strings.HasPrefix(key, "service") {
 
-		log.Error("mq subscribe err, key not begin with 'actor' or 'service'", zap.Uint64("actorId", uint64(this.GetId())), zap.String("key", key))
+		log.Error("mq subscribe err, key not begin with 'actor' or 'service'", this.LogInfo().Append(zap.String("key", key))...)
 		return protocol.ERR_MQ_SUBJ_PREFIX_ERR
 	}
 
 	if this.Sub == nil {
-		log.Warn("actor is not create subscriber", zap.Uint64("actorId", uint64(this.GetId())), zap.String("key", key))
+		log.Warn("actor is not create subscriber", this.LogInfo().Append(zap.String("key", key))...)
 		return nil
 	}
 
@@ -554,12 +552,12 @@ func (this *Actor) Subscribe(key string) error {
 func (this *Actor) Unsubscribe(key string) error {
 	if strings.HasPrefix(key, "actor") || strings.HasPrefix(key, "service") {
 
-		log.Error("mq unsubscribe err, key not begin with 'actor' or 'service'", zap.Uint64("actorId", uint64(this.GetId())), zap.String("key", key))
+		log.Error("mq unsubscribe err, key not begin with 'actor' or 'service'", this.LogInfo().Append(zap.String("key", key))...)
 		return protocol.ERR_MQ_SUBJ_PREFIX_ERR
 	}
 
 	if this.Sub == nil {
-		log.Warn("actor is not create subscriber", zap.Uint64("actorId", uint64(this.GetId())), zap.String("key", key))
+		log.Warn("actor is not create subscriber", this.LogInfo().Append(zap.String("key", key))...)
 		return nil
 	}
 

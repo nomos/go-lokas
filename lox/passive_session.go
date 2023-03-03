@@ -2,14 +2,13 @@ package lox
 
 import (
 	"encoding/json"
+	"github.com/nomos/go-lokas/log/flog"
 	"time"
 
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
-	"go.uber.org/zap"
 )
 
 type PassiveSessionOption func(*PassiveSession)
@@ -88,7 +87,7 @@ func (this *PassiveSession) GetConn() lokas.IConn {
 }
 
 func (this *PassiveSession) StartMessagePump() {
-	log.Info("PassiveSession:StartMessagePump", flog.ActorInfo(this)...)
+	log.Info("PassiveSession:StartMessagePump", lokas.LogActorInfo(this)...)
 
 	this.MsgChan = make(chan *protocol.RouteMessage, 100)
 	this.doneClient = make(chan struct{})
@@ -149,7 +148,7 @@ func (this *PassiveSession) clientLoop() {
 					this.Conn.Close()
 					return
 				}
-				log.Errorf("Auth Failed", cmdId)
+				log.Error("Auth Failed", lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...)
 				this.Conn.Write(msg)
 				this.Conn.Wait()
 				this.Conn.Close()
@@ -158,10 +157,10 @@ func (this *PassiveSession) clientLoop() {
 			msg, err := protocol.UnmarshalMessage(data, this.Protocol)
 			if err != nil {
 				log.Error("unmarshal client message error",
-					zap.Any("cmdId", cmdId),
+					lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...,
 				)
-				msg, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
-				_, err := this.Conn.Write(msg)
+				msg1, _ := protocol.NewError(protocol.ERR_MSG_FORMAT).Marshal()
+				_, err = this.Conn.Write(msg1)
 				if err != nil {
 					log.Error(err.Error())
 				}
@@ -174,29 +173,29 @@ func (this *PassiveSession) clientLoop() {
 					return
 				}
 
-				var err error
 				var ret interface{}
 				if this.AuthFunc != nil {
 					ret, err = this.AuthFunc(msg.Body.(*protocol.HandShake).Data)
 				}
 				if err != nil {
 					log.Error(err.Error())
-					msg, err := protocol.MarshalMessage(msg.TransId, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
-					if err != nil {
-						log.Error(err.Error())
+					msg1, err1 := protocol.MarshalMessage(msg.TransId, protocol.NewError(protocol.ERR_AUTH_FAILED), this.Protocol)
+					if err1 != nil {
+						log.Error(err1.Error())
 						this.Conn.Wait()
 						this.Conn.Close()
 						return
 					}
-					log.Info("Auth Failed", zap.Any("cmdId", uint16(cmdId)))
-					this.Conn.Write(msg)
+					log.Warn("Auth Failed", lokas.LogActorInfo(this).Append(protocol.LogCmdId(cmdId))...)
+					this.Conn.Write(msg1)
 					this.Conn.Wait()
 					this.Conn.Close()
 					return
 				}
 
 				if ret != nil {
-					body, err := json.Marshal(ret)
+					var body []byte
+					body, err = json.Marshal(ret)
 					if err != nil {
 						log.Error(err.Error())
 						return
@@ -229,7 +228,7 @@ func (this *PassiveSession) clientLoop() {
 				//ping:=msg.Body.(*Protocol.Ping)
 				//log.Info("receive ping",zap.Int64("client_session_id",this.GetId().Int64()))
 				pong := &protocol.Pong{Time: time.Now()}
-				data, err := protocol.MarshalMessage(msg.TransId, pong, this.Protocol)
+				data, err = protocol.MarshalMessage(msg.TransId, pong, this.Protocol)
 				if err != nil {
 					log.Error(err.Error())
 					this.Conn.Wait()
@@ -274,7 +273,7 @@ func (this *PassiveSession) OnMessage(msg *protocol.RouteMessage) {
 		err := this.HandleMsg(msg.FromActor, msg.TransId, msg.Body)
 		if err != nil {
 			log.Error("Actor:OnMessage:Error",
-				flog.ActorReceiveMsgInfo(this, msg.Body, msg.TransId, msg.FromActor).
+				lokas.LogActorReceiveMsgInfo(this, msg.Body, msg.TransId, msg.FromActor).
 					Append(flog.Error(err))...,
 			)
 		}
@@ -301,7 +300,7 @@ func (this *PassiveSession) stop() {
 
 func (this *PassiveSession) OnOpen(conn lokas.IConn) {
 	this.StartMessagePump()
-	log.Info("PassiveSession:OnOpen", flog.ActorInfo(this)...)
+	log.Info("PassiveSession:OnOpen", lokas.LogActorInfo(this)...)
 	if this.Manager != nil {
 		this.Manager.AddSession(this.GetId(), this)
 	}
@@ -314,7 +313,7 @@ func (this *PassiveSession) OnClose(conn lokas.IConn) {
 	if this.Manager != nil {
 		this.Manager.RemoveSession(this.GetId())
 	}
-	log.Info("PassiveSession:OnClose", flog.ActorInfo(this)...)
+	log.Info("PassiveSession:OnClose", lokas.LogActorInfo(this)...)
 	if this.OnCloseFunc != nil {
 		this.OnCloseFunc(conn)
 	}

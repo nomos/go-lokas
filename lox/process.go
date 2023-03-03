@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/nomos/go-lokas/log/flog"
 	"strconv"
 	"sync"
 
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/network/dockerclient"
 	"github.com/nomos/go-lokas/network/etcdclient"
 	"github.com/nomos/go-lokas/network/ossclient"
@@ -254,12 +254,12 @@ func (this *Process) LoadAllModule(conf lokas.IProcessConfig) error {
 
 func (this *Process) StartAllModule() error {
 	for _, mod := range this.modules {
-		log.Info("starting", flog.FuncInfo(this, "StartAllModule").Append(flog.Module(mod))...)
+		log.Info("starting", flog.FuncInfo(this, "StartAllModule").Append(lokas.LogModule(mod))...)
 		err := mod.Start()
 		if err != nil {
 			return err
 		}
-		log.Info("success", flog.FuncInfo(this, "StartAllModule").Append(flog.Module(mod))...)
+		log.Info("success", flog.FuncInfo(this, "StartAllModule").Append(lokas.LogModule(mod))...)
 	}
 	return nil
 }
@@ -267,14 +267,14 @@ func (this *Process) StartAllModule() error {
 func (this *Process) StopAllModule() error {
 	log.Warn("StopAllModule", zap.Any("modules", this.modules))
 	for _, mod := range this.modules {
-		log.Info("stop", flog.FuncInfo(this, "StopAllModule").Append(flog.Module(mod))...)
+		log.Info("stop", flog.FuncInfo(this, "StopAllModule").Append(lokas.LogModule(mod))...)
 		err := mod.Stop()
 		if err != nil {
 			return err
 		}
 		log.Info("success",
 			flog.FuncInfo(this, "StopAllModule").
-				Append(flog.Module(mod))...,
+				Append(lokas.LogModule(mod))...,
 		)
 	}
 	return nil
@@ -365,7 +365,7 @@ func (this *Process) loadMongo(config MongoConfig) error {
 	this.mongo = client.Database(config.Database)
 	log.Info("success",
 		flog.FuncInfo(this, "loadMongo").
-			Concat(flog.ActorInfo(this)).
+			Concat(lokas.LogActorInfo(this)).
 			Append(flog.DataBase(config.Database)).
 			Append(flog.Address(url))...,
 	)
@@ -437,7 +437,7 @@ func (this *Process) Stop() error {
 	}
 	log.Warn("success",
 		flog.FuncInfo(this, "Stop").
-			Concat(flog.ActorInfo(this))...,
+			Concat(lokas.LogActorInfo(this))...,
 	)
 	return nil
 }

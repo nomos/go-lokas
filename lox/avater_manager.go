@@ -3,13 +3,13 @@ package lox
 import (
 	"context"
 	"errors"
+	"github.com/nomos/go-lokas/log/flog"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
-	"github.com/nomos/go-lokas/lox/flog"
 	"github.com/nomos/go-lokas/protocol"
 	"github.com/nomos/go-lokas/util"
 	"go.mongodb.org/mongo-driver/bson"
@@ -136,7 +136,7 @@ func (this *AvatarManager) CreateAvatar(id util.ID) error {
 func (this *AvatarManager) logRetention(avatar lokas.IAvatar) {
 	regtime := avatar.GetId().Time()
 	timeDelta := time.Now().Sub(regtime) / (time.Hour * 24)
-	log.Warn("retention day", flog.AvatarInfo(avatar).Append(zap.String("register_day", util.FormatTimeToISOString(regtime))).Append(zap.Int64("register_avatar", avatar.GetId().Int64())).Append(flog.RegElapsedDay(int(timeDelta)))...)
+	log.Warn("retention day", lokas.LogAvatarInfo(avatar).Append(zap.String("register_day", util.FormatTimeToISOString(regtime))).Append(zap.Int64("register_avatar", avatar.GetId().Int64())).Append(flog.RegElapsedDay(int(timeDelta)))...)
 }
 
 func (this *AvatarManager) RemoveAvatar(id util.ID) {

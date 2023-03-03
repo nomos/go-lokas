@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/nomos/go-lokas/log/flog"
 	"sync"
 	"time"
 
@@ -56,7 +57,7 @@ func (register *ServiceRegister) registerEtcd() error {
 
 	strServiceInfo, err := json.Marshal(register.serviceInfo)
 	if err != nil {
-		log.Error(protocol.ERR_REGISTER_SERVICE_INFO_INVALID.Error(), zap.Any("serviceInfo", register.serviceInfo))
+		log.Error(protocol.ERR_REGISTER_SERVICE_INFO_INVALID.Error(), lokas.LogServiceInfo(register.serviceInfo)...)
 		return protocol.ERR_REGISTER_SERVICE_INFO_INVALID
 	}
 
@@ -94,7 +95,7 @@ func (register *ServiceRegister) registerEtcd() error {
 	})
 
 	if err2 != nil {
-		log.Error(err2.Error(), zap.Any("serviceInfo", register.serviceInfo))
+		log.Error(err2.Error(), lokas.LogServiceInfo(register.serviceInfo)...)
 		return err2
 	}
 
@@ -105,7 +106,7 @@ func (register *ServiceRegister) keepAliveEtcd() error {
 	_, err := register.etcdClient.Lease.KeepAliveOnce(context.TODO(), register.leaseId)
 	if err != nil {
 		if err == rpctypes.ErrLeaseNotFound {
-			log.Warn("lease not found, register again", zap.Any("serverInfo", register.serviceInfo))
+			log.Warn("lease not found, register again", lokas.LogServiceInfo(register.serviceInfo)...)
 			register.registerEtcd()
 			err = nil
 		}
@@ -117,7 +118,7 @@ func (register *ServiceRegister) keepAliveEtcd() error {
 func (register *ServiceRegister) updateEtcd() error {
 	strServiceInfo, err := json.Marshal(register.serviceInfo)
 	if err != nil {
-		log.Error(protocol.ERR_REGISTER_SERVICE_INFO_INVALID.Error(), zap.Any("serviceInfo", register.serviceInfo))
+		log.Error(protocol.ERR_REGISTER_SERVICE_INFO_INVALID.Error(), lokas.LogServiceInfo(register.serviceInfo)...)
 		return protocol.ERR_REGISTER_SERVICE_INFO_INVALID
 	}
 
@@ -125,7 +126,7 @@ func (register *ServiceRegister) updateEtcd() error {
 	_, err2 := register.etcdClient.KV.Put(context.TODO(), strKey, string(strServiceInfo), clientv3.WithLease(register.leaseId))
 
 	if err2 != nil {
-		log.Warn("etcd err", zap.Any("serviceInfo", register.serviceInfo), zap.String("err", err2.Error()))
+		log.Warn("etcd err", lokas.LogServiceInfo(register.serviceInfo).Append(flog.Error(err2))...)
 	}
 	return err2
 
@@ -134,7 +135,7 @@ func (register *ServiceRegister) updateEtcd() error {
 func (mgr *ServiceRegisterMgr) Register(info *lokas.ServiceInfo) error {
 
 	if mgr.hasRegister(info.ServiceType, info.ServiceId, info.LineId) {
-		log.Warn(protocol.ERR_REGISTER_SERVICE_DUPLICATED.Error(), zap.Any("serviceInfo", info))
+		log.Warn(protocol.ERR_REGISTER_SERVICE_DUPLICATED.Error(), lokas.LogServiceInfo(info)...)
 		return protocol.ERR_REGISTER_SERVICE_DUPLICATED
 	}
 

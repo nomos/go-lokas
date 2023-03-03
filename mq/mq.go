@@ -145,7 +145,7 @@ func CreateActorSubscriber(actor lokas.IActor, ch chan *nats.Msg) (*ActorSubscri
 
 	sub.SubscribeForActor()
 
-	log.Debug("add mq subscribe", zap.String("type", actor.Type()), zap.Uint64("actorId", uint64(actor.GetId())))
+	log.Debug("add mq subscribe", zap.String("type", actor.Type()), zap.Int64("actorid", actor.GetId().Int64()))
 
 	return sub, nil
 }
@@ -158,7 +158,7 @@ func TryReplyMessage(mqMsg *nats.Msg, msg protocol.ISerializable) error {
 	out, err := ins.MarshalMsg(msg)
 	if err != nil {
 		cmdId, _ := msg.GetId()
-		log.Error("mq marshal msg err", zap.Uint16("cmdId", uint16(cmdId)))
+		log.Error("mq marshal msg err", protocol.LogCmdId(cmdId))
 		return protocol.ERR_MQ_MARSHAL_ERROR
 	}
 
@@ -179,7 +179,7 @@ func RequestToActorOne(actorId util.ID, msg protocol.ISerializable) (protocol.IS
 	if err == nats.ErrNoResponders {
 		return nil, protocol.ERR_ACTOR_NOT_FOUND
 	} else if err != nil {
-		log.Warn("nats request err", zap.Uint64("actorId", uint64(actorId)), zap.String("err", err.Error()))
+		log.Warn("nats request err", zap.Int64("actorid", actorId.Int64()), zap.String("err", err.Error()))
 		return nil, protocol.ERR_MQ_REQUEST_ERROR
 	}
 

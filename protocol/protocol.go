@@ -3,6 +3,7 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
+	"github.com/nomos/go-lokas/log/flog"
 	"github.com/nomos/go-lokas/protocol/encoding/number_json"
 
 	"reflect"
@@ -143,6 +144,10 @@ func NewRouteMsg(fromActor util.ID, toActor util.ID, transId uint32, msg ISerial
 		ret.Req = true
 	}
 	return ret
+}
+
+func (this *RouteMessage) LogInfo() log.ZapFields {
+	return LogActorRouterMsgInfo(this.CmdId, this.TransId, this.FromActor, this.ToActor, this.ToPid, this.Req)
 }
 
 func (this *RouteMessage) GetId() (BINARY_TAG, error) {
@@ -288,6 +293,10 @@ func UnmarshalRouteDataMsg(data []byte, protocolType TYPE, fromPid util.ProcessI
 	return routeMsg, nil
 }
 
+func (msg *RouteDataMsg) LogInfo() log.ZapFields {
+	return LogActorRouterMsgInfo(msg.Cmd, msg.TransId, msg.FromActor, msg.ToActor, msg.ToPid, msg.ReqType == REQ_TYPE_MAIN)
+}
+
 func (msg *RouteDataMsg) MarshalData() ([]byte, error) {
 	var buff bytes.Buffer
 	binary.Write(&buff, binary.LittleEndian, uint16(0))
@@ -311,7 +320,7 @@ func (msg *RouteDataMsg) MarshalData() ([]byte, error) {
 func (msg *RouteDataMsg) UnmarshalData() (ISerializable, error) {
 	body, err := GetTypeRegistry().GetInterfaceByTag(msg.Cmd)
 	if err != nil {
-		log.Error("not find cmd", zap.Uint16("cmdId", uint16(msg.Cmd)), zap.String("err", err.Error()))
+		log.Error("not find cmd", msg.LogInfo().Append(flog.Error(err))...)
 		return nil, err
 	}
 	dec := number_json.NewDecoder(bytes.NewBuffer(msg.BodyData))
