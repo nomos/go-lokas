@@ -143,9 +143,9 @@ func (this REGEXP_LINE_ENUM) Enum() Enum {
 	return Enum(this)
 }
 
-func GetAllLineRegExpEnums()IEnumCollection{
-	var ret IEnumCollection =[]IEnum{}
-	for i:=0;i<len(line_regexp_map);i++ {
+func GetAllLineRegExpEnums() IEnumCollection {
+	var ret IEnumCollection = []IEnum{}
+	for i := 0; i < len(line_regexp_map); i++ {
 		ret = append(ret, REGEXP_LINE_ENUM(i))
 	}
 	return ret
@@ -335,7 +335,7 @@ func init() {
 	line_regexp_map[LINE_CONF_RECUR] = regexp.MustCompile(`(recursive)\s*[=]\s*(\w+)\s*`)
 	line_regexp_replace_value[LINE_CONF_RECUR] = "$2"
 
-	line_regexp_map[LINE_TS_IMPORT_SINGLELINE] = regexp.MustCompile(`\s*import\s+([*]\s*as\s*)?([{]?[,|\w|\s]+[}]?\s*(from|[=])\s*)?\"?[\w+|.|/]+\"?[;|\s]*`)
+	line_regexp_map[LINE_TS_IMPORT_SINGLELINE] = regexp.MustCompile(`\s*import\s+(type\s+)?([*]\s*as\s*)?([{]?[,|\w|\s]+[}]?\s*(from|[=])\s*)?\"?[\w+|@|.|/]+\"?[;|\s]*`)
 	line_regexp_map[LINE_TS_IMPORT_CLOSURE_START] = regexp.MustCompile(`\s*import\s+[{]\s*\s*`)
 	line_regexp_map[LINE_TS_IMPORT_OBJ] = regexp.MustCompile(`\s*[\w|\s]+[,]?\s*`)
 	line_regexp_map[LINE_TS_IMPORT_CLOSURE_END] = regexp.MustCompile(`[}]\s*from\s*"[\w+|.|/]+"[;|\s]*`)
