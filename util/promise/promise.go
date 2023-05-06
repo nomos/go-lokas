@@ -82,40 +82,6 @@ func (this *Timeout) execute(duration time.Duration, f func(*Timeout)) {
 	}()
 }
 
-func SetTimeout(duration time.Duration, f func(*Timeout)) *Timeout {
-	ret := &Timeout{
-		isClose: true,
-	}
-	ret.execute(duration, f)
-	return ret
-}
-
-func SetInterval(duration time.Duration, f func(*Interval)) *Interval {
-	ret := &Interval{
-		interval:  duration,
-		ticker:    time.NewTicker(duration),
-		closeChan: nil,
-		f:         f,
-	}
-	go func() {
-		for {
-			select {
-			case <-ret.ticker.C:
-				f(ret)
-			case <-ret.closeChan:
-				close(ret.closeChan)
-				return
-			}
-		}
-	}()
-	return ret
-}
-
-func Await(p *Promise) (interface{}, error) {
-	return p.Await()
-
-}
-
 func (this *Promise) CalTime() *Promise {
 	this.calTime = true
 	return this
@@ -123,26 +89,6 @@ func (this *Promise) CalTime() *Promise {
 
 func (this *Promise) Elapse() time.Duration {
 	return this.elapseTime
-}
-
-func Async(executor func(resolve func(interface{}), reject func(interface{}))) *Promise {
-	var promise = &Promise{
-		pending:  true,
-		executor: executor,
-		result:   nil,
-		err:      nil,
-		mutex:    sync.Mutex{},
-		wg:       sync.WaitGroup{},
-	}
-
-	promise.wg.Add(1)
-
-	go func() {
-		defer promise.handlePanic()
-		promise.executor(promise.Resolve, promise.Reject)
-	}()
-
-	return promise
 }
 
 func (this *Promise) Resolve(resolution interface{}) {
@@ -242,6 +188,59 @@ func (this *Promise) AsCallback(f func(interface{}, error)) {
 type resolutionHelper struct {
 	index int
 	data  interface{}
+}
+
+func SetTimeout(duration time.Duration, f func(*Timeout)) *Timeout {
+	ret := &Timeout{
+		isClose: true,
+	}
+	ret.execute(duration, f)
+	return ret
+}
+
+func SetInterval(duration time.Duration, f func(*Interval)) *Interval {
+	ret := &Interval{
+		interval:  duration,
+		ticker:    time.NewTicker(duration),
+		closeChan: nil,
+		f:         f,
+	}
+	go func() {
+		for {
+			select {
+			case <-ret.ticker.C:
+				f(ret)
+			case <-ret.closeChan:
+				close(ret.closeChan)
+				return
+			}
+		}
+	}()
+	return ret
+}
+
+func Async(executor func(resolve func(interface{}), reject func(interface{}))) *Promise {
+	var promise = &Promise{
+		pending:  true,
+		executor: executor,
+		result:   nil,
+		err:      nil,
+		mutex:    sync.Mutex{},
+		wg:       sync.WaitGroup{},
+	}
+
+	promise.wg.Add(1)
+
+	go func() {
+		defer promise.handlePanic()
+		promise.executor(promise.Resolve, promise.Reject)
+	}()
+
+	return promise
+}
+
+func Await(p *Promise) (interface{}, error) {
+	return p.Await()
 }
 
 func Each(promises ...*Promise) *Promise {

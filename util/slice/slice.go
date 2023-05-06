@@ -18,6 +18,15 @@ func New[T any](v ...T) []T {
 	return v
 }
 
+func ConvertInterface[T interface{}](arr interface{}) []T {
+	ret := []T{}
+	arr1 := arr.([]interface{})
+	for _, v := range arr1 {
+		ret = append(ret, v.(T))
+	}
+	return ret
+}
+
 func RemoveDuplicate[T comparable](arr []T) []T {
 	ret := []T{}
 	for _, v := range arr {
