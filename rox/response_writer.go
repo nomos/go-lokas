@@ -35,6 +35,8 @@ type ResponseWriter interface {
 
 	AddData(k string, v interface{})
 
+	SetData(v interface{})
+
 	AddContext(k string, v interface{})
 
 	GetContext(k string) interface{}
