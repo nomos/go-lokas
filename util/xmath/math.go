@@ -39,6 +39,10 @@ func Abs[T Signed](a T) T {
 	return a
 }
 
+func Sqrt[T Number](a T) T {
+	return T(math.Sqrt(float64(a)))
+}
+
 func Pow[T Number](x, y T) T {
 	var ret T = 1
 	for y > 0 {

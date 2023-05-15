@@ -3,6 +3,8 @@ package colors
 import (
 	"bytes"
 	"encoding/binary"
+	"image/color"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -14,34 +16,75 @@ type Color struct {
 	A byte
 }
 
-func NewColor(r,g,b byte) Color{
-	return NewColorRGBA(r,g,b,255)
+func NewColor(r, g, b byte) Color {
+	return NewColorRGBA(r, g, b, 255)
 }
 
-func (this Color) Equal(c Color)bool{
-	return this.R == c.R&&this.G==c.G&&this.B==c.B&&this.A==c.A
-}
-
-func byteDiff(a,b byte)byte {
-	if a>b {
-		return a-b
+func NewColorAnyArg(arg ...interface{}) Color {
+	if len(arg) == 1 {
+		if reflect.TypeOf(arg[0]).Kind() == reflect.String {
+			return NewColorHexString(arg[0].(string))
+		}
+		return arg[0].(Color)
+	} else if len(arg) == 3 {
+		return NewColor(byte(arg[0].(int)), byte(arg[1].(int)), byte(arg[2].(int)))
+	} else if len(arg) == 4 {
+		return NewColorRGBA(byte(arg[0].(int)), byte(arg[1].(int)), byte(arg[2].(int)), byte(arg[3].(int)))
 	}
-	return b-a
+	return Color{}
 }
 
-func maxbyte(b... byte)byte{
-	var max byte =0
-	for _,v:=range b {
-		if v>max {
+func (this Color) EqualAny(arg ...interface{}) bool {
+	if len(arg) == 1 {
+		switch arg[0].(type) {
+		case Color:
+			c := arg[0].(Color)
+			return this.R == c.R && this.G == c.G && this.B == c.B && this.A == c.A
+		case string:
+			c := NewColorHexString(arg[0].(string))
+			return this.R == c.R && this.G == c.G && this.B == c.B && this.A == c.A
+		}
+		return false
+	} else if len(arg) == 3 {
+		c := NewColor(byte(arg[0].(int)), byte(arg[1].(int)), byte(arg[2].(int)))
+		return this.R == c.R && this.G == c.G && this.B == c.B && this.A == c.A
+	} else if len(arg) == 4 {
+		c := NewColorRGBA(byte(arg[0].(int)), byte(arg[1].(int)), byte(arg[2].(int)), byte(arg[3].(int)))
+		return this.R == c.R && this.G == c.G && this.B == c.B && this.A == c.A
+	}
+	return false
+}
+
+func (this Color) Equal(c Color) bool {
+	return this.R == c.R && this.G == c.G && this.B == c.B && this.A == c.A
+}
+
+func (this Color) EqualTolerantAny(t byte, arg ...interface{}) bool {
+	c := NewColorAnyArg(arg...)
+	max := maxbyte(byteDiff(this.R, c.R), byteDiff(this.G, c.G), byteDiff(this.B, c.B))
+	return max <= t
+}
+
+func (this Color) EqualTolerant(c Color, t byte) bool {
+	max := maxbyte(byteDiff(this.R, c.R), byteDiff(this.G, c.G), byteDiff(this.B, c.B))
+	return max <= t
+}
+
+func byteDiff(a, b byte) byte {
+	if a > b {
+		return a - b
+	}
+	return b - a
+}
+
+func maxbyte(b ...byte) byte {
+	var max byte = 0
+	for _, v := range b {
+		if v > max {
 			max = v
 		}
 	}
 	return max
-}
-
-func (this Color) EqualTolerant(c Color,t byte)bool{
-	max:=maxbyte(byteDiff(this.R,c.R),byteDiff(this.G,c.G),byteDiff(this.B,c.B))
-	return max<=t
 }
 
 func NewColorRGBA(r, g, b, a byte) Color {
@@ -49,26 +92,26 @@ func NewColorRGBA(r, g, b, a byte) Color {
 	return ret
 }
 
-func NewColorHSV(h,s,v float64) Color{
-	r,g,b:=Hsv2Rgb(h,s,v)
-	return NewColor(r,g,b)
+func NewColorHSV(h, s, v float64) Color {
+	r, g, b := Hsv2Rgb(h, s, v)
+	return NewColor(r, g, b)
 }
 
-func NewColorHSL(h,s,l float64) Color{
-	r,g,b:=Hsv2Rgb(h,s,l)
-	return NewColor(r,g,b)
+func NewColorHSL(h, s, l float64) Color {
+	r, g, b := Hsv2Rgb(h, s, l)
+	return NewColor(r, g, b)
 }
 
-func NewColorHexString(hex string) Color{
-	r,g,b:=Hex2Rgb(hex)
-	return NewColor(r,g,b)
+func NewColorHexString(hex string) Color {
+	r, g, b := Hex2Rgb(hex)
+	return NewColor(r, g, b)
 }
 
 func NewColorUint32(v uint32) Color {
 	bytebuf := bytes.NewBuffer([]byte{})
 	binary.Write(bytebuf, binary.BigEndian, v)
-	arr:=bytebuf.Bytes()
-	return NewColorRGBA(arr[0],arr[1],arr[2],arr[3])
+	arr := bytebuf.Bytes()
+	return NewColorRGBA(arr[0], arr[1], arr[2], arr[3])
 }
 
 func (this Color) RGB() (byte, byte, byte) {
@@ -77,6 +120,10 @@ func (this Color) RGB() (byte, byte, byte) {
 
 func (this Color) RGBA() (byte, byte, byte, byte) {
 	return this.R, this.G, this.B, this.A
+}
+
+func (this Color) ToRGBA() color.RGBA {
+	return color.RGBA{this.R, this.G, this.B, this.A}
 }
 
 func (this Color) SetRGBA(r, g, b, a byte) {
@@ -233,6 +280,6 @@ func (this Color) SetHSV(h, s, v float64) {
 	this.B = b
 }
 
-func (this Color) Uint32()uint32{
-	return uint32(this.R)<<24+uint32(this.G)<<16+uint32(this.B)<<8+uint32(this.A)
+func (this Color) Uint32() uint32 {
+	return uint32(this.R)<<24 + uint32(this.G)<<16 + uint32(this.B)<<8 + uint32(this.A)
 }
