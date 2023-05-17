@@ -92,7 +92,9 @@ func ReadDataFromEtcd(addr string, path string) (*bytes.Buffer, error) {
 		return nil, errors.New("etcd disconnect addr:" + addr)
 	}
 	defer client.Client.Close()
-	resp, err := client.Get(context.TODO(), path)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	resp, err := client.Get(ctx, path)
 	if err != nil {
 		log.Error(err.Error())
 		return nil, err
@@ -128,7 +130,9 @@ func (this *AppConfig) LoadFromRemote() error {
 	} else {
 		client := etcdclient.New(etcdclient.WithEndPoints(this.etcdAddr))
 		defer client.Client.Close()
-		resp, err := client.Get(context.TODO(), this.etcdPath)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+		resp, err := client.Get(ctx, this.etcdPath)
 		if err != nil {
 			log.Error(err.Error())
 			return err

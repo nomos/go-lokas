@@ -60,8 +60,8 @@ func Init(config lokas.IConfig) error {
 	}
 
 	conn, err := nats.Connect(url,
-		// nats.RetryOnFailedConnect(true),
-		// nats.ReconnectWait(2*time.Second),
+		nats.RetryOnFailedConnect(true),
+		nats.ReconnectWait(2*time.Second),
 		nats.DisconnectErrHandler(func(c *nats.Conn, err error) {
 			log.Debug("nats disconnected ", zap.String("err", err.Error()))
 		}),
