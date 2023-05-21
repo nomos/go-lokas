@@ -412,6 +412,30 @@ func (this *Pong) Serializable() ISerializable {
 	return this
 }
 
+func NewOK() *OK {
+	return &OK{}
+}
+
+type OK struct {
+	Msg string
+}
+
+func (this *OK) Unmarshal(from []byte) error {
+	return Unmarshal(from, this)
+}
+
+func (this *OK) Marshal() ([]byte, error) {
+	return MarshalBinary(this)
+}
+
+func (this *OK) GetId() (BINARY_TAG, error) {
+	return TAG_OK, nil
+}
+
+func (this *OK) Serializable() ISerializable {
+	return this
+}
+
 var _ ISerializable = &HandShake{}
 
 type HandShake struct {

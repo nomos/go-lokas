@@ -49,6 +49,7 @@ const (
 	TAG_Pong          BINARY_TAG = 44
 	TAG_HandShake     BINARY_TAG = 45
 	TAG_RouteMessage  BINARY_TAG = 46
+	TAG_OK            BINARY_TAG = 48
 	//内建类型
 
 )

@@ -804,6 +804,9 @@ func (this *ModelIdsObject) CheckLine(line *LineText) bool {
 			}
 			if line.GetTagName() != "" {
 				p.Resp = line.GetTagName()
+				if p.Resp == "OK" {
+					p.Resp = "protocol.OK"
+				}
 			}
 			this.Ids[line.GetValue()] = p
 			return true

@@ -2,10 +2,10 @@ package lox
 
 import (
 	"context"
+	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log/flog"
 	"sync"
 
-	"github.com/nomos/go-lokas"
 	"github.com/nomos/go-lokas/log"
 	"github.com/nomos/go-lokas/network"
 	"github.com/nomos/go-lokas/network/tcp"
@@ -95,7 +95,7 @@ func (this *Gate) LoadCustom(host, port string, protocolType protocol.TYPE, conn
 		sessionFunc = this.SessionCreatorFunc
 	}
 	if this.connType == Websocket {
-		log.Info("creating ws gate on " + this.Protocol.String() + " Protocol")
+		log.Info("creating ws gate on " + this.Protocol.String() + " Protocol Host:" + this.Host + " Port:" + this.Port)
 		context := &lokas.Context{
 			SessionCreator:    sessionFunc,
 			Splitter:          protocol.Split,
@@ -107,7 +107,7 @@ func (this *Gate) LoadCustom(host, port string, protocolType protocol.TYPE, conn
 		this.server = ws.NewWsServer(context)
 	}
 	if this.connType == TCP {
-		log.Info("creating tcp gate on " + this.Protocol.String() + " Protocol")
+		log.Info("creating tcp gate on " + this.Protocol.String() + " Protocol Host:" + this.Host + " Port:" + this.Port)
 		context := &lokas.Context{
 			SessionCreator:    sessionFunc,
 			Splitter:          protocol.Split,

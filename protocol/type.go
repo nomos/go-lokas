@@ -237,6 +237,8 @@ func GetTypeRegistry() *TypeRegistry {
 			singleton.RegistryType(TAG_Ping, reflect.TypeOf((*Ping)(nil)).Elem())
 			singleton.RegistryType(TAG_Pong, reflect.TypeOf((*Pong)(nil)).Elem())
 			singleton.RegistryType(TAG_HandShake, reflect.TypeOf((*HandShake)(nil)).Elem())
+			singleton.RegistryType(TAG_Pong, reflect.TypeOf((*Pong)(nil)).Elem())
+			singleton.RegistryType(TAG_OK, reflect.TypeOf((*OK)(nil)).Elem())
 		})
 	}
 	return singleton
