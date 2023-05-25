@@ -171,8 +171,8 @@ func GetOneWithCondition[T any](slice []T, f func(index int, elem T) bool) T {
 }
 
 func RemoveWithCondition[T any](slice []T, f func(index int, elem T) bool) ([]T, []T) {
-	ret := append(slice[:0])
-	remove := append(slice[:0])
+	ret := []T{}
+	remove := []T{}
 	for i, v := range slice {
 		if !f(i, v) {
 			ret = append(ret, v)
