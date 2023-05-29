@@ -37,7 +37,7 @@ func NewModelPackageObject(file GeneratorFile) *ModelPackageObject {
 	return ret
 }
 
-//TODO
+// TODO
 func (this *ModelPackageObject) GoString(g *Generator) string {
 	ret0 := `//this is a generated file,do not modify it!!!
 package {PackageName}
@@ -1204,7 +1204,7 @@ type ModelClassFields struct {
 	Comment string
 }
 
-//TODO:dep
+// TODO:dep
 func (this *ModelClassFields) Deps(g *Generator) []string {
 	protos := []string{}
 	t := MatchModelProtoTag(this.Type)
@@ -1896,11 +1896,11 @@ type ModelFile struct {
 	TsPackage string
 }
 
-func (this *ModelFile) Generate() *promise.Promise {
+func (this *ModelFile) Generate() *promise.Promise[interface{}] {
 	return nil
 }
 
-func (this *ModelFile) Parse() *promise.Promise {
+func (this *ModelFile) Parse() *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_MODEL_PACKAGE)
 		log.Infof("parseModelPackage", offset, success)

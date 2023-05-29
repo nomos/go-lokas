@@ -18,40 +18,40 @@ func NewGoIdRegObject(file GeneratorFile) *GoIdRegObject {
 func (this *GoIdRegObject) CheckLine(line *LineText) bool {
 
 	if this.state == 0 {
-		if this.TryAddLine(line,LINE_GO_INIT_FUNC_HEADER) {
+		if this.TryAddLine(line, LINE_GO_INIT_FUNC_HEADER) {
 			this.state = 1
 			return true
 		}
 		return false
 	} else if this.state == 1 {
-		if this.TryAddLine(line,LINE_EMPTY) {
+		if this.TryAddLine(line, LINE_EMPTY) {
 			return true
 		}
-if this.TryAddLine(line,LINE_COMMENT) {
+		if this.TryAddLine(line, LINE_COMMENT) {
 			return true
 		}
-		if this.TryAddLine(line,LINE_CLOSURE_END) {
+		if this.TryAddLine(line, LINE_CLOSURE_END) {
 			this.state = 2
 			return true
 		}
-		if this.TryAddLine(line,LINE_GO_TAG_REGISTRY) {
-			tagName:=line.GetTagName()
-			structName:=line.GetStructName()
-			pkgName:=line.GetPkgName()
-			typ:=line.GetTypeName()
+		if this.TryAddLine(line, LINE_GO_TAG_REGISTRY) {
+			tagName := line.GetTagName()
+			structName := line.GetStructName()
+			pkgName := line.GetPkgName()
+			typ := line.GetTypeName()
 			this.file.(*GoIdsFile).AssignedTypes = append(this.file.(*GoIdsFile).AssignedTypes, &GoAssignedId{
-				Tag:    tagName,
-				Struct: structName,
-				Value:  0,
+				Tag:     tagName,
+				Struct:  structName,
+				Value:   0,
 				Package: pkgName,
-				Line:line.LineNum,
+				Line:    line.LineNum,
 			})
 			log.WithFields(log.Fields{
-				"line": line.LineNum,
-				"text": line.Text,
-				"tagName": tagName,
+				"line":       line.LineNum,
+				"text":       line.Text,
+				"tagName":    tagName,
 				"structName": structName,
-				"type": typ,
+				"type":       typ,
 			}).Info("LINE_GO_TAG_REGISTRY")
 			return true
 		}
@@ -64,11 +64,11 @@ if this.TryAddLine(line,LINE_COMMENT) {
 }
 
 type GoAssignedId struct {
-	Tag    string
-	Struct string
+	Tag     string
+	Struct  string
 	Package string
-	Value  int
-	Line int
+	Value   int
+	Line    int
 }
 
 type GoIdObject struct {
@@ -84,44 +84,44 @@ func NewGoIdObject(file GeneratorFile) *GoIdObject {
 func (this *GoIdObject) CheckLine(line *LineText) bool {
 
 	if this.state == 0 {
-		if this.TryAddLine(line,LINE_GO_CONST_CLOSURE_START) {
+		if this.TryAddLine(line, LINE_GO_CONST_CLOSURE_START) {
 			this.state = 1
 			return true
 		}
 		return false
 	} else if this.state == 1 {
-		if this.TryAddLine(line,LINE_EMPTY) {
+		if this.TryAddLine(line, LINE_EMPTY) {
 			return true
 		}
-if this.TryAddLine(line,LINE_COMMENT) {
+		if this.TryAddLine(line, LINE_COMMENT) {
 			return true
 		}
-		if this.TryAddLine(line,LINE_BRACKET_END) {
+		if this.TryAddLine(line, LINE_BRACKET_END) {
 			this.state = 2
 			return true
 		}
-		if this.TryAddLine(line,LINE_GO_TAG_DEFINER) {
+		if this.TryAddLine(line, LINE_GO_TAG_DEFINER) {
 			structName := line.GetStructName()
-			tagName:=line.GetTagName()
-			value:=line.GetValue()
+			tagName := line.GetTagName()
+			value := line.GetValue()
 			log.WithFields(log.Fields{
-				"line": line.LineNum,
-				"text": line.Text,
+				"line":       line.LineNum,
+				"text":       line.Text,
 				"structName": structName,
-				"tagName": tagName,
-				"value": value,
+				"tagName":    tagName,
+				"value":      value,
 			}).Info("LINE_GO_TAG_DEFINER")
-			if value >this.GetFile().(*GoIdsFile).MaxId {
+			if value > this.GetFile().(*GoIdsFile).MaxId {
 				this.GetFile().(*GoIdsFile).MaxId = value
 			}
-			if value<this.GetFile().(*GoIdsFile).MinId {
+			if value < this.GetFile().(*GoIdsFile).MinId {
 				this.GetFile().(*GoIdsFile).MinId = value
 			}
 			this.GetFile().(*GoIdsFile).AssignedIds = append(this.GetFile().(*GoIdsFile).AssignedIds, &GoAssignedId{
 				Tag:    tagName,
 				Struct: structName,
 				Value:  value,
-				Line:line.LineNum,
+				Line:   line.LineNum,
 			})
 			return true
 		}
@@ -135,25 +135,25 @@ if this.TryAddLine(line,LINE_COMMENT) {
 
 type GoIdsFile struct {
 	*DefaultGeneratorFile
-	TagName string
-	Offset  int
+	TagName       string
+	Offset        int
 	AssignedIds   []*GoAssignedId
 	AssignedTypes []*GoAssignedId
-	MinId int
-	MaxId int
+	MinId         int
+	MaxId         int
 }
 
 var _ GeneratorFile = (*GoIdsFile)(nil)
 
 func NewGoIdsFile(generator *Generator) *GoIdsFile {
-	ret := &GoIdsFile{DefaultGeneratorFile: NewGeneratorFile(generator),AssignedIds: []*GoAssignedId{},AssignedTypes:[]*GoAssignedId{}}
+	ret := &GoIdsFile{DefaultGeneratorFile: NewGeneratorFile(generator), AssignedIds: []*GoAssignedId{}, AssignedTypes: []*GoAssignedId{}}
 	ret.GeneratorFile = ret
 	ret.FileType = FILE_GO_IDS
-	ret.GetLogger().Warnf("GoIdsFile",ret.FileType.String())
+	ret.GetLogger().Warnf("GoIdsFile", ret.FileType.String())
 	return ret
 }
 
-func (this *GoIdsFile) Parse() *promise.Promise {
+func (this *GoIdsFile) Parse() *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_GO_PACKAGE)
 		this.GetLogger().Infof("parseGoModelPackage", offset, success)
@@ -169,7 +169,7 @@ func (this *GoIdsFile) Parse() *promise.Promise {
 	})
 }
 
-func (this *GoIdsFile) Generate() *promise.Promise {
+func (this *GoIdsFile) Generate() *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		resolve(nil)
 	})

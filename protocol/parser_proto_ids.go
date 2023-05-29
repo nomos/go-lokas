@@ -42,10 +42,10 @@ func (this *ProtoIdsObj) CheckLine(line *LineText) bool {
 	return false
 }
 
-func (this *ProtoIdsObj) Check(line *LineText){
-	this.Id,_ = strconv.Atoi(LINE_PROTO_ID.RegReplaceValue(line.Text))
-	this.ProtoName =LINE_PROTO_ID.RegReplaceName(line.Text)
-	this.file.(*ProtoIdsFile).AddId(this.ProtoName,this.Id)
+func (this *ProtoIdsObj) Check(line *LineText) {
+	this.Id, _ = strconv.Atoi(LINE_PROTO_ID.RegReplaceValue(line.Text))
+	this.ProtoName = LINE_PROTO_ID.RegReplaceName(line.Text)
+	this.file.(*ProtoIdsFile).AddId(this.ProtoName, this.Id)
 }
 
 type ProtoIdsFile struct {
@@ -58,26 +58,26 @@ var _ GeneratorFile = (*ProtoIdsFile)(nil)
 func NewProtoIdsFile(generator *Generator) *ProtoIdsFile {
 	ret := &ProtoIdsFile{
 		DefaultGeneratorFile: NewGeneratorFile(generator),
-		Ids:make(map[int]string),
+		Ids:                  make(map[int]string),
 	}
 	ret.GeneratorFile = ret
 	ret.FileType = FILE_PROTO_IDS
 	return ret
 }
 
-func (this *ProtoIdsFile) Generate() *promise.Promise {
+func (this *ProtoIdsFile) Generate() *promise.Promise[interface{}] {
 	return nil
 }
 
-func (this *ProtoIdsFile) AddId(s string,id int) {
+func (this *ProtoIdsFile) AddId(s string, id int) {
 	this.Ids[id] = s
 }
 
-func (this *ProtoIdsFile) Parse() *promise.Promise {
+func (this *ProtoIdsFile) Parse() *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-		offset, success := this.parse(0,OBJ_PROTO_PACKAGE)
+		offset, success := this.parse(0, OBJ_PROTO_PACKAGE)
 		this.GetLogger().Warnf("parseProtoPackage", offset, success)
-		offset, success = this.parse(offset, OBJ_COMMENT,OBJ_PROTO_IDS)
+		offset, success = this.parse(offset, OBJ_COMMENT, OBJ_PROTO_IDS)
 		//offset, success = this.parseGoImports(offset, nil)
 		//this.GetLogger().Warnf("parseGoImports", offset, success)
 		//offset, success = this.parseGoMain(offset, nil)

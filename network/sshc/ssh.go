@@ -38,7 +38,7 @@ func (this *ShellSession) SetCmd(cmd *shell.ShellCommand) {
 	this.cmd = cmd
 }
 
-func (this *ShellSession) Run(cmd string, isExpect bool) *promise.Promise {
+func (this *ShellSession) Run(cmd string, isExpect bool) *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		if this.cmd == nil {
 			this.cmd = shell.New(true, cmd, isExpect)
@@ -188,7 +188,7 @@ func (this *SshClient) recycleSftp(client *sftp.Client) {
 	this.sftps = append(this.sftps, client)
 }
 
-func (this *SshClient) Connect() *promise.Promise {
+func (this *SshClient) Connect() *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		var err error
 		this.client, err = ssh.Dial("tcp", this.addr, &ssh.ClientConfig{
@@ -221,7 +221,7 @@ func (this *SshClient) IsConnect() bool {
 	return this.connected
 }
 
-func (this *SshClient) Disconnect() *promise.Promise {
+func (this *SshClient) Disconnect() *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		if this.client == nil {
 			resolve(nil)
@@ -250,7 +250,7 @@ func (this *SshClient) Disconnect() *promise.Promise {
 	})
 }
 
-func (this *SshClient) runShellCmd(cmd string, expect bool) *promise.Promise {
+func (this *SshClient) runShellCmd(cmd string, expect bool) *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		go func() {
 			_, err := this.defaultShellSession.Run(cmd, expect).Await()
@@ -263,15 +263,15 @@ func (this *SshClient) runShellCmd(cmd string, expect bool) *promise.Promise {
 	})
 }
 
-func (this *SshClient) RunShellCmd(cmd string, expect bool) *promise.Promise {
+func (this *SshClient) RunShellCmd(cmd string, expect bool) *promise.Promise[interface{}] {
 	return this.runShellCmd(cmd, expect)
 }
 
-func (this *SshClient) RunShellCmdPwd() *promise.Promise {
+func (this *SshClient) RunShellCmdPwd() *promise.Promise[interface{}] {
 	return this.runShellCmd("pwd", false)
 }
 
-func (this *SshClient) runCmd(cmd string, pwd bool) *promise.Promise {
+func (this *SshClient) runCmd(cmd string, pwd bool) *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		session, err := this.client.NewSession()
 		if err != nil {
@@ -300,13 +300,13 @@ func (this *SshClient) runCmd(cmd string, pwd bool) *promise.Promise {
 	})
 }
 
-func (this *SshClient) RunCmd(cmd string) *promise.Promise {
+func (this *SshClient) RunCmd(cmd string) *promise.Promise[interface{}] {
 	return this.runCmd(cmd, false).Then(func(interface{}) interface{} {
 		return this.RunCmdPwd()
 	})
 }
 
-func (this *SshClient) RunCmdPwd() *promise.Promise {
+func (this *SshClient) RunCmdPwd() *promise.Promise[interface{}] {
 	return this.runCmd("", true)
 }
 

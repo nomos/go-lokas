@@ -48,9 +48,9 @@ func (this FileType) String() string {
 }
 
 type GeneratorFile interface {
-	GetLogger()log.ILogger
-	Parse() *promise.Promise
-	Load(string) *promise.Promise
+	GetLogger() log.ILogger
+	Parse() *promise.Promise[interface{}]
+	Load(string) *promise.Promise[interface{}]
 	GetFilePath() string
 	GetTsRelativePath() string
 	GetGoRelativePath() string
@@ -67,7 +67,7 @@ type DefaultGeneratorFile struct {
 	FileType   FileType
 	FilePath   string
 	IsDir      bool
-	Generator    *Generator
+	Generator  *Generator
 	DirPath    string
 	FileName   string
 	LineLength int
@@ -75,14 +75,14 @@ type DefaultGeneratorFile struct {
 	Objects    []GeneratorObject
 }
 
-func NewGeneratorFile(generator    *Generator) *DefaultGeneratorFile {
+func NewGeneratorFile(generator *Generator) *DefaultGeneratorFile {
 	ret := &DefaultGeneratorFile{}
 	ret.Generator = generator
 	ret.reset()
 	return ret
 }
 
-func (this *DefaultGeneratorFile) CheckFinish(offset int)bool {
+func (this *DefaultGeneratorFile) CheckFinish(offset int) bool {
 	return len(this.Lines) == offset
 }
 
@@ -94,12 +94,12 @@ func (this *DefaultGeneratorFile) SetGenerator(generator *Generator) {
 	this.Generator = generator
 }
 
-func (this *DefaultGeneratorFile) GetTsRelativePath()string {
-	return strings.Replace(this.FilePath,this.Generator.TsPath,"",-1)
+func (this *DefaultGeneratorFile) GetTsRelativePath() string {
+	return strings.Replace(this.FilePath, this.Generator.TsPath, "", -1)
 }
 
-func (this *DefaultGeneratorFile) GetGoRelativePath()string {
-	return strings.Replace(this.FilePath,this.Generator.GoPath,"",-1)
+func (this *DefaultGeneratorFile) GetGoRelativePath() string {
+	return strings.Replace(this.FilePath, this.Generator.GoPath, "", -1)
 }
 
 func (this *DefaultGeneratorFile) GetFile() GeneratorFile {
@@ -117,7 +117,7 @@ func (this *DefaultGeneratorFile) reset() {
 	this.Objects = make([]GeneratorObject, 0)
 }
 
-func (this *DefaultGeneratorFile) GetLogger()log.ILogger{
+func (this *DefaultGeneratorFile) GetLogger() log.ILogger {
 	return this.Generator.GetLogger()
 }
 
@@ -148,7 +148,7 @@ func (this *DefaultGeneratorFile) load(path string) error {
 	lineNo := 0
 	for {
 		line, err := buf.ReadString('\n')
-		line = strings.ReplaceAll(line,"\r","")
+		line = strings.ReplaceAll(line, "\r", "")
 		line = strings.TrimRight(line, "\n")
 		//line = strings.TrimSpace(line)
 		this.Lines = append(this.Lines, &LineText{
@@ -174,7 +174,7 @@ func (this *DefaultGeneratorFile) load(path string) error {
 func (this *DefaultGeneratorFile) parseEmpty(num int, lastObj GeneratorObject) (int, bool) {
 	if num > len(this.Lines)-1 {
 		this.GetLogger().Warn("reach end of file")
-		if lastObj!=nil&&len(lastObj.Lines()) > 0 {
+		if lastObj != nil && len(lastObj.Lines()) > 0 {
 			this.AddObject(lastObj)
 		}
 		return num, lastObj != nil
@@ -200,7 +200,7 @@ func (this *DefaultGeneratorFile) parseEmpty(num int, lastObj GeneratorObject) (
 func (this *DefaultGeneratorFile) parseComment(num int, lastObj GeneratorObject) (int, bool) {
 	if num > len(this.Lines)-1 {
 		this.GetLogger().Warn("reach end of file")
-		if lastObj!=nil&&len(lastObj.Lines()) > 0 {
+		if lastObj != nil && len(lastObj.Lines()) > 0 {
 			this.AddObject(lastObj)
 		}
 		return num, lastObj != nil
@@ -223,7 +223,7 @@ func (this *DefaultGeneratorFile) parseComment(num int, lastObj GeneratorObject)
 	return num, false
 }
 
-func (this *DefaultGeneratorFile) Load(path string) *promise.Promise {
+func (this *DefaultGeneratorFile) Load(path string) *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		go func() {
 			err := this.load(path)
@@ -237,8 +237,8 @@ func (this *DefaultGeneratorFile) Load(path string) *promise.Promise {
 	})
 }
 
-func (this *DefaultGeneratorFile) Parse() *promise.Promise {
-	return promise.Reject(errors.New("have no implement"))
+func (this *DefaultGeneratorFile) Parse() *promise.Promise[interface{}] {
+	return promise.Reject[interface{}](errors.New("have no implement"))
 }
 
 func (this *DefaultGeneratorFile) GetObj(objType ObjectType) []GeneratorObject {
@@ -251,7 +251,7 @@ func (this *DefaultGeneratorFile) GetObj(objType ObjectType) []GeneratorObject {
 	return ret
 }
 
-type GenerateObjRemoveCondition func(object GeneratorObject)bool
+type GenerateObjRemoveCondition func(object GeneratorObject) bool
 
 func (this *DefaultGeneratorFile) RemoveObjByCondition(condition GenerateObjRemoveCondition) {
 	result := make([]GeneratorObject, 0)
@@ -280,8 +280,8 @@ func (this *DefaultGeneratorFile) AddObject(obj GeneratorObject) {
 }
 
 func (this *DefaultGeneratorFile) InsertObject(pos int, obj GeneratorObject) {
-	objsCopy:=make([]GeneratorObject,len(this.Objects))
-	copy(objsCopy,this.Objects)
+	objsCopy := make([]GeneratorObject, len(this.Objects))
+	copy(objsCopy, this.Objects)
 	rPart := objsCopy[pos:]
 	this.Objects = this.Objects[0:pos]
 	this.Objects = append(this.Objects, obj)
@@ -300,11 +300,11 @@ func (this *DefaultGeneratorFile) InsertAfter(obj GeneratorObject, after Generat
 	this.GetLogger().Panic("cant found obj")
 }
 
-func (this *DefaultGeneratorFile) RemoveAutoGenHeader(){
+func (this *DefaultGeneratorFile) RemoveAutoGenHeader() {
 	this.RemoveObjByCondition(func(object GeneratorObject) bool {
 		if object.ObjectType() == OBJ_COMMENT {
-			lines:=object.GetLines(LINE_COMMENT)
-			if len(lines) ==1 {
+			lines := object.GetLines(LINE_COMMENT)
+			if len(lines) == 1 {
 				if lines[0].Text == "//this is a generate file,do not edit it" {
 					return true
 				}
@@ -315,15 +315,15 @@ func (this *DefaultGeneratorFile) RemoveAutoGenHeader(){
 	})
 }
 
-func (this *DefaultGeneratorFile) Generate(typ FileType) *promise.Promise {
+func (this *DefaultGeneratorFile) Generate(typ FileType) *promise.Promise[interface{}] {
 	return nil
 }
 
-func (this *DefaultGeneratorFile) MarshalToFile(path string) *promise.Promise {
+func (this *DefaultGeneratorFile) MarshalToFile(path string) *promise.Promise[interface{}] {
 	return nil
 }
 
-func (this *DefaultGeneratorFile) parseMultiple(num int, lastObj GeneratorObject, objs ... ObjectType) (int, bool) {
+func (this *DefaultGeneratorFile) parseMultiple(num int, lastObj GeneratorObject, objs ...ObjectType) (int, bool) {
 	if num > len(this.Lines)-1 {
 		this.GetLogger().Warn("reach end of file")
 		if lastObj != nil && len(lastObj.Lines()) > 0 {
@@ -349,7 +349,7 @@ func (this *DefaultGeneratorFile) parseMultiple(num int, lastObj GeneratorObject
 				return this.parseMultiple(num, lastObj, objs...)
 			}
 		}
-		this.GetLogger().Panicf("parse multiple error",line.Text,line.LineNum)
+		this.GetLogger().Panicf("parse multiple error", line.Text, line.LineNum)
 	} else {
 		if lastObj.CheckLine(line) {
 			num++

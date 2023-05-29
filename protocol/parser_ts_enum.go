@@ -65,11 +65,11 @@ func NewTsEnumFile(generator *Generator) *TsEnumFile {
 	return ret
 }
 
-func (this *TsEnumFile) Generate() *promise.Promise {
+func (this *TsEnumFile) Generate() *promise.Promise[interface{}] {
 	return nil
 }
 
-func (this *TsEnumFile) Parse() *promise.Promise {
+func (this *TsEnumFile) Parse() *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_TS_IMPORTS)
 		this.GetLogger().Warnf("parseTsImports", offset, success)

@@ -73,11 +73,9 @@ func (this *GoImportObject) CheckLine(line *LineText) bool {
 	return false
 }
 
-
-
 type GoInterfaceObject struct {
 	DefaultGeneratorObj
-	state         int
+	state int
 }
 
 func NewGoInterfaceObject(file GeneratorFile) *GoInterfaceObject {
@@ -85,7 +83,6 @@ func NewGoInterfaceObject(file GeneratorFile) *GoInterfaceObject {
 	ret.DefaultGeneratorObj.init(OBJ_GO_INTERFACE, file)
 	return ret
 }
-
 
 func (this *GoInterfaceObject) CheckLine(line *LineText) bool {
 	if this.state == 0 {
@@ -449,11 +446,11 @@ func NewGoModelFile(generator *Generator) *GoModelFile {
 	return ret
 }
 
-func (this *GoModelFile) Generate() *promise.Promise {
+func (this *GoModelFile) Generate() *promise.Promise[interface{}] {
 	return nil
 }
 
-func (this *GoModelFile) Parse() *promise.Promise {
+func (this *GoModelFile) Parse() *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_GO_PACKAGE)
 		this.GetLogger().Infof("parseGoModelPackage", offset, success)

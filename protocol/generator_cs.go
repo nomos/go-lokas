@@ -9,14 +9,14 @@ import (
 	"path"
 )
 
-func (this *Generator) LoadCsFolder(p string) *promise.Promise {
+func (this *Generator) LoadCsFolder(p string) *promise.Promise[interface{}] {
 	this.CsPath = p
 	err := os.MkdirAll(this.CsPath, os.ModePerm)
 	if err != nil {
 		this.GetLogger().Error(err.Error())
-		return promise.Reject(nil)
+		return promise.Reject[interface{}](nil)
 	}
-	return promise.Resolve(nil)
+	return promise.Resolve[interface{}](nil)
 }
 
 func (this *Generator) GenerateModel2Cs() error {

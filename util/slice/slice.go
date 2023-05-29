@@ -143,6 +143,13 @@ func Has[T comparable](arr []T, item ...T) bool {
 	return true
 }
 
+func AppendWithCondition[T interface{}](item T, arr []T, f func(item T, arr []T) bool) []T {
+	if f(item, arr) {
+		arr = append(arr, item)
+	}
+	return arr
+}
+
 func AppendOnce[T comparable](arr []T, item T) []T {
 	if !Has(arr, item) {
 		arr = append(arr, item)

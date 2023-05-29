@@ -39,8 +39,8 @@ type TcpClient struct {
 	Protocol     protocol.TYPE
 	context      lokas.IReqContext
 	reqContexts  map[uint32]lokas.IReqContext
-	openPending  *promise.Promise
-	closePending *promise.Promise
+	openPending  *promise.Promise[interface{}]
+	closePending *promise.Promise[interface{}]
 	mu           sync.Mutex
 	ctxMutex     sync.Mutex
 }
@@ -96,7 +96,7 @@ func (this *TcpClient) connect() error {
 	return nil
 }
 
-func (this *TcpClient) Connect(addr string) *promise.Promise {
+func (this *TcpClient) Connect(addr string) *promise.Promise[interface{}] {
 	this.addr = addr
 	this.mu.Lock()
 	defer this.mu.Unlock()
@@ -129,7 +129,7 @@ func (this *TcpClient) Connect(addr string) *promise.Promise {
 	if this.openPending != nil {
 		return this.openPending
 	} else {
-		return promise.Resolve(nil)
+		return promise.Resolve[interface{}]("")
 	}
 }
 
@@ -143,7 +143,7 @@ func (this *TcpClient) ClearContext(err error) {
 	this.context = nil
 }
 
-func (this *TcpClient) Disconnect(b bool) *promise.Promise {
+func (this *TcpClient) Disconnect(b bool) *promise.Promise[interface{}] {
 	if this.closePending != nil {
 		return this.closePending
 	}
@@ -189,7 +189,7 @@ func (this *TcpClient) OnClose(conn lokas.IConn) {
 	this.Emit("close")
 }
 
-func (this *TcpClient) Request(req interface{}) *promise.Promise {
+func (this *TcpClient) Request(req interface{}) *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		if this.Opening {
 			_, err := this.Connect(this.addr).Await()
@@ -214,7 +214,7 @@ func (this *TcpClient) Request(req interface{}) *promise.Promise {
 	})
 }
 
-func (this *TcpClient) OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise {
+func (this *TcpClient) OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		timeout := promise.SetTimeout(time, func(t *promise.Timeout) {
 			reject(context.DeadlineExceeded)

@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-func (this *Generator) LoadModelFolder(p ...string) *promise.Promise {
+func (this *Generator) LoadModelFolder(p ...string) *promise.Promise[interface{}] {
 	this.ModelPaths = p
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		err := this.LoadModels(p)

@@ -37,7 +37,7 @@ func (this *Generator) GenerateModel2Ts() error {
 	return nil
 }
 
-func (this *Generator) LoadTsFolder(p string) *promise.Promise {
+func (this *Generator) LoadTsFolder(p string) *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		err := this.LoadTsIds(p)
 		if err != nil {

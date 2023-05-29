@@ -37,8 +37,8 @@ type WsClient struct {
 	MsgHandler     func(msg *protocol.BinaryMessage)
 	done           chan struct{}
 	contextMutex   sync.Mutex
-	openingPending *promise.Promise
-	closePending   *promise.Promise
+	openingPending *promise.Promise[interface{}]
+	closePending   *promise.Promise[interface{}]
 }
 
 func NewWsClient() *WsClient {
@@ -102,7 +102,7 @@ func (this *WsClient) MessageHandler(msg *protocol.BinaryMessage) {
 	}
 }
 
-func (this *WsClient) Connect(addr string) *promise.Promise {
+func (this *WsClient) Connect(addr string) *promise.Promise[interface{}] {
 	addr = "ws://" + addr + "/ws"
 	if this.addr != "" && this.addr != addr {
 		return this.Close().Catch(func(err error) interface{} {
@@ -125,7 +125,7 @@ func (this *WsClient) ClearContext() {
 	}
 }
 
-func (this *WsClient) Disconnect(force bool) *promise.Promise {
+func (this *WsClient) Disconnect(force bool) *promise.Promise[interface{}] {
 	if this.isOpen {
 		this.isOpen = false
 
@@ -157,9 +157,9 @@ func (this *WsClient) onerror() {
 
 }
 
-func (this *WsClient) Open() *promise.Promise {
+func (this *WsClient) Open() *promise.Promise[interface{}] {
 	if this.isOpen {
-		return promise.Resolve(nil)
+		return promise.Resolve[interface{}]("")
 	}
 	if this.openingPending == nil {
 		this.openingPending = promise.Async(func(resolve func(interface{}), reject func(interface{})) {
@@ -187,7 +187,7 @@ func (this *WsClient) Open() *promise.Promise {
 	return this.openingPending
 }
 
-func (this *WsClient) Close() *promise.Promise {
+func (this *WsClient) Close() *promise.Promise[interface{}] {
 	this.isOpen = false
 	if this.closePending == nil {
 		this.closePending = promise.Async(func(resolve func(interface{}), reject func(interface{})) {
@@ -296,7 +296,7 @@ func (this *WsClient) SetMessageHandler(handler func(msg *protocol.BinaryMessage
 	this.MsgHandler = handler
 }
 
-func (this *WsClient) Request(req interface{}) *promise.Promise {
+func (this *WsClient) Request(req interface{}) *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		if this.Opening {
 			_, err := this.Open().Await()
@@ -373,7 +373,7 @@ func (this *WsClient) OnRecvMessage(cmdId protocol.BINARY_TAG, transId uint32, m
 	this.Emit(events.EventName("CmdId"+strconv.Itoa(int(cmdId))), msg, transId)
 }
 
-func (this *WsClient) OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise {
+func (this *WsClient) OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		timeout := promise.SetTimeout(time, func(timeout *promise.Timeout) {
 			reject("timeout")

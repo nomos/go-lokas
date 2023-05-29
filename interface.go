@@ -55,7 +55,7 @@ const (
 	ACTOR_STOPPED
 )
 
-//IProcess the interface for application entry
+// IProcess the interface for application entry
 type IProcess interface {
 	IRegistry
 	IActorContainer
@@ -89,7 +89,7 @@ type IProcess interface {
 
 }
 
-//IProxy universal module interface for connection
+// IProxy universal module interface for connection
 type IProxy interface {
 	Send(id util.ProcessId, msg *protocol.RouteMessage) error
 
@@ -116,7 +116,7 @@ type ILogInfo interface {
 	LogInfo() log.ZapFields
 }
 
-//IActor standard interface for actor
+// IActor standard interface for actor
 type IActor interface {
 	IEntity
 	// IProxy
@@ -199,13 +199,13 @@ type IRuntime interface {
 	MarkDirtyEntity(e IEntity)
 }
 
-//IModuleCtor module export interface
+// IModuleCtor module export interface
 type IModuleCtor interface {
 	Type() string
 	Create() IModule
 }
 
-//IModule module interface
+// IModule module interface
 type IModule interface {
 	Type() string
 	Load(conf IConfig) error
@@ -247,7 +247,7 @@ type IServiceDiscoverMgr interface {
 	FindRandServiceInfo(serviceType string, serviceId uint16, lineId uint16) (*ServiceInfo, bool)
 }
 
-//IRouter interface for router
+// IRouter interface for router
 type IRouter interface {
 	RouteMsg(msg *protocol.RouteMessage)
 	RouteMsgLocal(msg *protocol.RouteMessage) error
@@ -264,7 +264,7 @@ type IRouter interface {
 	RouteDataMsgLocal(dataMsg *protocol.RouteDataMsg) error
 }
 
-//IContext context interface
+// IContext context interface
 type IContext interface {
 	Get(key string) interface{}
 	GetIdType(key string) util.ID
@@ -297,7 +297,7 @@ type ITaskPipeLine interface {
 	Insert(flow ITaskPipeLine, idx int) ITaskPipeLine
 	Remove(flow ITaskPipeLine) ITaskPipeLine
 	RemoveAt(idx int) ITaskPipeLine
-	Execute() *promise.Promise
+	Execute() *promise.Promise[interface{}]
 	SetInput(context IContext)
 	GetInput() IContext
 	SetExecFunc(f func() (IContext, err error))
@@ -342,17 +342,17 @@ type IProcessConfig interface {
 	GetDockerCLI() interface{}
 }
 
-//INetClient interface for client
+// INetClient interface for client
 type INetClient interface {
 	SendMessage(transId uint32, msg interface{})
 	SetProtocol(p protocol.TYPE)
-	Connect(addr string) *promise.Promise
-	Disconnect(bool) *promise.Promise
-	Request(req interface{}) *promise.Promise
+	Connect(addr string) *promise.Promise[interface{}]
+	Disconnect(bool) *promise.Promise[interface{}]
+	Request(req interface{}) *promise.Promise[interface{}]
 	SetMessageHandler(handler func(msg *protocol.BinaryMessage))
 	GetContext(uint32) IReqContext
 	Connected() bool
-	OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise
+	OnRecvCmd(cmdId protocol.BINARY_TAG, time time.Duration) *promise.Promise[interface{}]
 	OnRecv(conn IConn, data []byte)
 }
 
@@ -376,8 +376,8 @@ type IReqContext interface {
 }
 
 type ITestCase interface {
-	Test() *promise.Promise
-	TestWithContext(ctx IContext) *promise.Promise
+	Test() *promise.Promise[interface{}]
+	TestWithContext(ctx IContext) *promise.Promise[interface{}]
 	Name() string
 	SetName(string)
 	GetTestCase(num int) ITestCase
@@ -386,7 +386,7 @@ type ITestCase interface {
 	GetLength() int
 }
 
-//ISession connection session interface
+// ISession connection session interface
 type ISession interface {
 	GetId() util.ID
 	GetConn() IConn                 // get corresponding IConn

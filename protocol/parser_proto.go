@@ -71,25 +71,25 @@ func (this *ProtoPackageObj) CheckLine(line *LineText) bool {
 
 type ProtoField struct {
 	Repeated bool
-	Map bool
-	Proto bool
-	Enum bool
-	KeyType string
-	Type string
-	Id int
+	Map      bool
+	Proto    bool
+	Enum     bool
+	KeyType  string
+	Type     string
+	Id       int
 }
 
 type ProtoMsgObject struct {
 	DefaultGeneratorObj
 	ProtoName string
-	ProtoId int
-	Fields []*ProtoField
+	ProtoId   int
+	Fields    []*ProtoField
 }
 
 func NewProtoMsgObject(file GeneratorFile) *ProtoMsgObject {
 	ret := &ProtoMsgObject{
 		DefaultGeneratorObj: DefaultGeneratorObj{},
-		Fields: []*ProtoField{},
+		Fields:              []*ProtoField{},
 	}
 	ret.DefaultGeneratorObj.init(OBJ_PROTO_MSG, file)
 	return ret
@@ -132,9 +132,9 @@ func (this *ProtoMsgObject) CheckLine(line *LineText) bool {
 	return false
 }
 
-func (this *ProtoMsgObject) CheckField(line *LineText){
+func (this *ProtoMsgObject) CheckField(line *LineText) {
 	s := COMMENT_REGEXP.ReplaceAllString(line.Text, "$1")
-	field:=&ProtoField{
+	field := &ProtoField{
 		Repeated: false,
 		Map:      false,
 		Proto:    false,
@@ -142,36 +142,36 @@ func (this *ProtoMsgObject) CheckField(line *LineText){
 		Type:     "",
 		Id:       0,
 	}
-	isMap:=LINE_PROTO_FIELD.RegExp().ReplaceAllString(s,"$2")!=""
+	isMap := LINE_PROTO_FIELD.RegExp().ReplaceAllString(s, "$2") != ""
 	if isMap {
 		field.Map = true
-		field.KeyType = LINE_PROTO_FIELD.RegExp().ReplaceAllString(s,"$3")
-		field.Type = LINE_PROTO_FIELD.RegExp().ReplaceAllString(s,"$4")
+		field.KeyType = LINE_PROTO_FIELD.RegExp().ReplaceAllString(s, "$3")
+		field.Type = LINE_PROTO_FIELD.RegExp().ReplaceAllString(s, "$4")
 		if !MatchGoProtoTag(field.Type) {
 			field.Proto = true
 		}
-		this.Fields = append(this.Fields,  field)
+		this.Fields = append(this.Fields, field)
 		return
 	}
-	field.Repeated = LINE_PROTO_FIELD.RegExp().ReplaceAllString(s,"$7")!=""
-	field.Type = LINE_PROTO_FIELD.RegExp().ReplaceAllString(s,"$9")
+	field.Repeated = LINE_PROTO_FIELD.RegExp().ReplaceAllString(s, "$7") != ""
+	field.Type = LINE_PROTO_FIELD.RegExp().ReplaceAllString(s, "$9")
 	if !MatchGoProtoTag(field.Type) {
 		field.Proto = true
 	}
-	this.Fields = append(this.Fields,  field)
+	this.Fields = append(this.Fields, field)
 }
 
 type ProtoEnumObject struct {
 	DefaultGeneratorObj
-	Alias bool
+	Alias  bool
 	Fields []*ProtoField
 }
 
 func NewProtoEnumObject(file GeneratorFile) *ProtoEnumObject {
 	ret := &ProtoEnumObject{
 		DefaultGeneratorObj: DefaultGeneratorObj{},
-		Alias: false,
-		Fields: []*ProtoField{},
+		Alias:               false,
+		Fields:              []*ProtoField{},
 	}
 	ret.DefaultGeneratorObj.init(OBJ_PROTO_ENUM, file)
 	return ret
@@ -211,7 +211,7 @@ func (this *ProtoEnumObject) CheckLine(line *LineText) bool {
 		}
 		this.GetLogger().Panic("parse ProtoEnumObject error")
 	} else if this.state == 2 {
-		this.GetLogger().Warnf("field",this.Fields)
+		this.GetLogger().Warnf("field", this.Fields)
 		return false
 	}
 	this.GetLogger().Panic("parse ProtoEnumObject error")
@@ -220,7 +220,7 @@ func (this *ProtoEnumObject) CheckLine(line *LineText) bool {
 
 func (this *ProtoEnumObject) CheckField(line *LineText) {
 	s := COMMENT_REGEXP.ReplaceAllString(line.Text, "$1")
-	field:=&ProtoField{
+	field := &ProtoField{
 		Repeated: false,
 		Map:      false,
 		Proto:    false,
@@ -229,10 +229,9 @@ func (this *ProtoEnumObject) CheckField(line *LineText) {
 		Id:       0,
 	}
 	field.KeyType = LINE_PROTO_ENUM_FIELD.RegReplaceName(s)
-	field.Id,_ = strconv.Atoi(LINE_PROTO_ENUM_FIELD.RegReplaceValue(s))
+	field.Id, _ = strconv.Atoi(LINE_PROTO_ENUM_FIELD.RegReplaceValue(s))
 	this.Fields = append(this.Fields, field)
 }
-
 
 type ProtoFile struct {
 	*DefaultGeneratorFile
@@ -247,17 +246,17 @@ func NewProtoFile(generator *Generator) *ProtoFile {
 	return ret
 }
 
-func (this *ProtoFile) Generate() *promise.Promise {
+func (this *ProtoFile) Generate() *promise.Promise[interface{}] {
 	return nil
 }
 
-func (this *ProtoFile) Parse() *promise.Promise {
+func (this *ProtoFile) Parse() *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
-		offset, success := this.parse(0,OBJ_PROTO_SYNTAX)
+		offset, success := this.parse(0, OBJ_PROTO_SYNTAX)
 		this.GetLogger().Warnf("parseProtoSyntax", offset, success)
 		offset, success = this.parse(offset, OBJ_PROTO_PACKAGE)
 		this.GetLogger().Warnf("parseProtoPackage", offset, success)
-		offset, success = this.parse(offset, OBJ_COMMENT,OBJ_PROTO_ENUM, OBJ_PROTO_MSG)
+		offset, success = this.parse(offset, OBJ_COMMENT, OBJ_PROTO_ENUM, OBJ_PROTO_MSG)
 		//offset, success = this.parseGoImports(offset, nil)
 		//log.Warnf("parseGoImports", offset, success)
 		//offset, success = this.parseGoMain(offset, nil)
@@ -266,9 +265,9 @@ func (this *ProtoFile) Parse() *promise.Promise {
 	})
 }
 
-func (this *ProtoFile) ProcessProtos()[]*ProtoMsgObject {
-	ret:=make([]*ProtoMsgObject,0)
-	for _,obj:=range this.Objects {
+func (this *ProtoFile) ProcessProtos() []*ProtoMsgObject {
+	ret := make([]*ProtoMsgObject, 0)
+	for _, obj := range this.Objects {
 		if obj.ObjectType() == OBJ_PROTO_MSG {
 			ret = append(ret, obj.(*ProtoMsgObject))
 		}

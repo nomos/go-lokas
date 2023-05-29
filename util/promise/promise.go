@@ -7,12 +7,12 @@ import (
 	"time"
 )
 
-type Promise struct {
+type Promise[T any] struct {
 	pending bool
 
-	executor func(resolve func(interface{}), reject func(interface{}))
+	executor func(resolve func(any), reject func(any))
 
-	result interface{}
+	result any
 
 	err error
 
@@ -82,16 +82,19 @@ func (this *Timeout) execute(duration time.Duration, f func(*Timeout)) {
 	}()
 }
 
-func (this *Promise) CalTime() *Promise {
+func (this *Promise[T]) Any() *Promise[any] {
+	return (*Promise[any])(this)
+}
+func (this *Promise[T]) CalTime() *Promise[T] {
 	this.calTime = true
 	return this
 }
 
-func (this *Promise) Elapse() time.Duration {
+func (this *Promise[T]) Elapse() time.Duration {
 	return this.elapseTime
 }
 
-func (this *Promise) Resolve(resolution interface{}) {
+func (this *Promise[T]) Resolve(resolution any) {
 	this.mutex.Lock()
 
 	if !this.pending {
@@ -100,7 +103,7 @@ func (this *Promise) Resolve(resolution interface{}) {
 	}
 
 	switch result := resolution.(type) {
-	case *Promise:
+	case *Promise[T]:
 		flattenedResult, err := result.Await()
 		if err != nil {
 			this.mutex.Unlock()
@@ -117,7 +120,7 @@ func (this *Promise) Resolve(resolution interface{}) {
 	this.mutex.Unlock()
 }
 
-func (this *Promise) Reject(err interface{}) {
+func (this *Promise[T]) Reject(err any) {
 	this.mutex.Lock()
 	defer this.mutex.Unlock()
 
@@ -134,7 +137,7 @@ func (this *Promise) Reject(err interface{}) {
 	this.wg.Done()
 }
 
-func (this *Promise) handlePanic() {
+func (this *Promise[T]) handlePanic() {
 	var r = recover()
 	if r != nil {
 		if err, ok := r.(error); ok {
@@ -145,29 +148,29 @@ func (this *Promise) handlePanic() {
 	}
 }
 
-func (this *Promise) Then(fulfillment func(data interface{}) interface{}) *Promise {
-	return Async(func(resolve func(interface{}), reject func(interface{})) {
+func (this *Promise[T]) Then(fulfillment func(data any) any) *Promise[T] {
+	return Async[T](func(resolve func(T), reject func(any)) {
 		result, err := this.Await()
 		if err != nil {
 			reject(err)
 			return
 		}
-		resolve(fulfillment(result))
+		resolve(fulfillment(result).(T))
 	})
 }
 
-func (this *Promise) Catch(rejection func(err error) interface{}) *Promise {
-	return Async(func(resolve func(interface{}), reject func(interface{})) {
+func (this *Promise[T]) Catch(rejection func(err error) any) *Promise[T] {
+	return Async[T](func(resolve func(T), reject func(any)) {
 		result, err := this.Await()
 		if err != nil {
 			reject(rejection(err))
 			return
 		}
-		resolve(result)
+		resolve(result.(T))
 	})
 }
 
-func (this *Promise) Await() (interface{}, error) {
+func (this *Promise[T]) Await() (any, error) {
 	if this.calTime {
 		start := time.Now()
 		this.wg.Wait()
@@ -178,7 +181,7 @@ func (this *Promise) Await() (interface{}, error) {
 	return this.result, this.err
 }
 
-func (this *Promise) AsCallback(f func(interface{}, error)) {
+func (this *Promise[T]) AsCallback(f func(any, error)) {
 	go func() {
 		this.wg.Wait()
 		f(this.result, this.err)
@@ -187,7 +190,7 @@ func (this *Promise) AsCallback(f func(interface{}, error)) {
 
 type resolutionHelper struct {
 	index int
-	data  interface{}
+	data  any
 }
 
 func SetTimeout(duration time.Duration, f func(*Timeout)) *Timeout {
@@ -219,14 +222,18 @@ func SetInterval(duration time.Duration, f func(*Interval)) *Interval {
 	return ret
 }
 
-func Async(executor func(resolve func(interface{}), reject func(interface{}))) *Promise {
-	var promise = &Promise{
-		pending:  true,
-		executor: executor,
-		result:   nil,
-		err:      nil,
-		mutex:    sync.Mutex{},
-		wg:       sync.WaitGroup{},
+func Async[T any](executor func(resolve func(T), reject func(any))) *Promise[T] {
+	var promise = &Promise[T]{
+		pending: true,
+		executor: func(resolve func(any), reject func(any)) {
+			executor(func(t T) {
+				resolve(t)
+			}, reject)
+		},
+		result: any(nil),
+		err:    nil,
+		mutex:  sync.Mutex{},
+		wg:     sync.WaitGroup{},
 	}
 
 	promise.wg.Add(1)
@@ -239,13 +246,13 @@ func Async(executor func(resolve func(interface{}), reject func(interface{}))) *
 	return promise
 }
 
-func Await(p *Promise) (interface{}, error) {
+func Await[T any](p *Promise[T]) (any, error) {
 	return p.Await()
 }
 
-func Each(promises ...*Promise) *Promise {
-	return Async(func(resolve func(interface{}), reject func(interface{})) {
-		resolutions := make([]interface{}, 0)
+func Each(promises ...*Promise[any]) *Promise[any] {
+	return Async[any](func(resolve func(any), reject func(any)) {
+		resolutions := make([]any, 0)
 		for _, promise := range promises {
 			result, err := promise.Await()
 			if err != nil {
@@ -258,29 +265,29 @@ func Each(promises ...*Promise) *Promise {
 	})
 }
 
-func All(promises ...*Promise) *Promise {
+func All(promises ...*Promise[any]) *Promise[any] {
 	psLen := len(promises)
 	if psLen == 0 {
-		return Resolve(make([]interface{}, 0))
+		return Resolve[any](make([]any, 0))
 	}
 
-	return Async(func(resolve func(interface{}), reject func(interface{})) {
+	return Async[any](func(resolve func(any), reject func(any)) {
 		resolutionsChan := make(chan resolutionHelper, psLen)
 		errorChan := make(chan error, psLen)
 
 		for index, promise := range promises {
 			func(i int) {
-				promise.Then(func(data interface{}) interface{} {
+				promise.Then(func(data any) any {
 					resolutionsChan <- resolutionHelper{i, data}
 					return data
-				}).Catch(func(err error) interface{} {
+				}).Catch(func(err error) any {
 					errorChan <- err
 					return err
 				})
 			}(index)
 		}
 
-		resolutions := make([]interface{}, psLen)
+		resolutions := make([]any, psLen)
 		for x := 0; x < psLen; x++ {
 			select {
 			case resolution := <-resolutionsChan:
@@ -295,21 +302,21 @@ func All(promises ...*Promise) *Promise {
 	})
 }
 
-func Race(promises ...*Promise) *Promise {
+func Race(promises ...*Promise[any]) *Promise[any] {
 	psLen := len(promises)
 	if psLen == 0 {
-		return Resolve(nil)
+		return Resolve[any](nil)
 	}
 
-	return Async(func(resolve func(interface{}), reject func(interface{})) {
-		resolutionsChan := make(chan interface{}, psLen)
+	return Async[any](func(resolve func(any), reject func(any)) {
+		resolutionsChan := make(chan any, psLen)
 		errorChan := make(chan error, psLen)
 
 		for _, promise := range promises {
-			promise.Then(func(data interface{}) interface{} {
+			promise.Then(func(data any) any {
 				resolutionsChan <- data
 				return data
-			}).Catch(func(err error) interface{} {
+			}).Catch(func(err error) any {
 				errorChan <- err
 				return err
 			})
@@ -325,28 +332,28 @@ func Race(promises ...*Promise) *Promise {
 	})
 }
 
-func AllSettled(promises ...*Promise) *Promise {
+func AllSettled(promises ...*Promise[any]) *Promise[any] {
 	psLen := len(promises)
 	if psLen == 0 {
-		return Resolve(nil)
+		return Resolve[any](nil)
 	}
 
-	return Async(func(resolve func(interface{}), reject func(interface{})) {
+	return Async[any](func(resolve func(any), reject func(any)) {
 		resolutionsChan := make(chan resolutionHelper, psLen)
 
 		for index, promise := range promises {
 			func(i int) {
-				promise.Then(func(data interface{}) interface{} {
+				promise.Then(func(data any) any {
 					resolutionsChan <- resolutionHelper{i, data}
 					return data
-				}).Catch(func(err error) interface{} {
+				}).Catch(func(err error) any {
 					resolutionsChan <- resolutionHelper{i, err}
 					return err
 				})
 			}(index)
 		}
 
-		resolutions := make([]interface{}, psLen)
+		resolutions := make([]any, psLen)
 		for x := 0; x < psLen; x++ {
 			resolution := <-resolutionsChan
 			resolutions[resolution.index] = resolution.data
@@ -355,14 +362,14 @@ func AllSettled(promises ...*Promise) *Promise {
 	})
 }
 
-func Resolve(resolution interface{}) *Promise {
-	return Async(func(resolve func(interface{}), reject func(interface{})) {
-		resolve(resolution)
+func Resolve[T any](resolution any) *Promise[T] {
+	return Async[T](func(resolve func(T), reject func(any)) {
+		resolve(resolution.(T))
 	})
 }
 
-func Reject(err error) *Promise {
-	return Async(func(resolve func(interface{}), reject func(interface{})) {
+func Reject[T any](err error) *Promise[T] {
+	return Async[T](func(resolve func(T), reject func(any)) {
 		reject(err)
 	})
 }

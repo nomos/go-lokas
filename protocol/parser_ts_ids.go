@@ -59,7 +59,6 @@ func (this *TsIdsObject) CheckLine(line *LineText) bool {
 	return false
 }
 
-
 type TsErrorsObject struct {
 	DefaultGeneratorObj
 }
@@ -122,15 +121,15 @@ func NewTsIdsFile(generator *Generator) *TsIdsFile {
 	return ret
 }
 
-func (this *TsIdsFile) Generate() *promise.Promise {
+func (this *TsIdsFile) Generate() *promise.Promise[interface{}] {
 	return nil
 }
 
-func (this *TsIdsFile) Parse() *promise.Promise {
+func (this *TsIdsFile) Parse() *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_TS_IMPORTS)
 		this.GetLogger().Infof("parseTsImports", offset, success)
-		offset, success = this.parse(offset, OBJ_TS_ERRORS,OBJ_TS_IDS, OBJ_EMPTY)
+		offset, success = this.parse(offset, OBJ_TS_ERRORS, OBJ_TS_IDS, OBJ_EMPTY)
 		this.GetLogger().Infof("parseTsIds", offset, success)
 		//offset, success = this.parseGoMain(offset, nil)
 		//this.GetLogger().Warnf("parseGoMain finish", offset, success)

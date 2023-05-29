@@ -136,30 +136,29 @@ type TsClassMember struct {
 
 type TsClassObject struct {
 	DefaultGeneratorObj
-	Package string
-	ClassName      string
-	IsComponent    bool
-	IsRenderComponent    bool
-	IsSerializable bool
-	members        []*TsClassMember
-	LongStringTag  map[string]bool
-	BufferTag  map[string]bool
-
+	Package           string
+	ClassName         string
+	IsComponent       bool
+	IsRenderComponent bool
+	IsSerializable    bool
+	members           []*TsClassMember
+	LongStringTag     map[string]bool
+	BufferTag         map[string]bool
 }
 
 func NewTsClassObject(file GeneratorFile) *TsClassObject {
 	ret := &TsClassObject{
 		DefaultGeneratorObj: DefaultGeneratorObj{},
-		members: []*TsClassMember{},
-		LongStringTag: map[string]bool{},
-		BufferTag: map[string]bool{},
+		members:             []*TsClassMember{},
+		LongStringTag:       map[string]bool{},
+		BufferTag:           map[string]bool{},
 	}
 	ret.DefaultGeneratorObj.init(OBJ_TS_CLASS, file)
 	return ret
 }
 
 func (this *TsClassObject) GetClassMember(s string) *TsClassMember {
-	for _,member:=range this.members {
+	for _, member := range this.members {
 		if member.Name == s {
 			return member
 		}
@@ -179,13 +178,13 @@ func (this *TsClassObject) IsModel() bool {
 	return this.IsSerializable || this.IsComponent || this.IsRenderComponent
 }
 
-func (this *TsClassObject) CheckLongString(mName string)bool{
-	_,ok:=this.LongStringTag[mName]
+func (this *TsClassObject) CheckLongString(mName string) bool {
+	_, ok := this.LongStringTag[mName]
 	return ok
 }
 
-func (this *TsClassObject) CheckBuffer(mName string)bool{
-	_,ok:=this.BufferTag[mName]
+func (this *TsClassObject) CheckBuffer(mName string) bool {
+	_, ok := this.BufferTag[mName]
 	return ok
 }
 
@@ -301,7 +300,7 @@ func (this *TsClassObject) CheckLine(line *LineText) bool {
 			this.state = TS_CLASSOBJ_CONSTRUCTOR
 			return true
 		}
-		if this.TryAddLine(line,LINE_CLOSURE_END) {
+		if this.TryAddLine(line, LINE_CLOSURE_END) {
 			this.state = TS_CLASSOBJ_CLASS_END
 			return true
 		}
@@ -402,7 +401,7 @@ func (this *TsImportObject) CheckLine(line *LineText) bool {
 
 type TsModelFile struct {
 	*DefaultGeneratorFile
-	Package string
+	Package   string
 	ClassName string
 }
 
@@ -415,11 +414,11 @@ func NewTsModelFile(generator *Generator) *TsModelFile {
 	return ret
 }
 
-func (this *TsModelFile) Generate() *promise.Promise {
+func (this *TsModelFile) Generate() *promise.Promise[interface{}] {
 	return nil
 }
 
-func (this *TsModelFile) Parse() *promise.Promise {
+func (this *TsModelFile) Parse() *promise.Promise[interface{}] {
 	return promise.Async(func(resolve func(interface{}), reject func(interface{})) {
 		offset, success := this.parse(0, OBJ_TS_IMPORTS)
 		this.GetLogger().Warnf("parseTsImports", offset, success)

@@ -8,7 +8,7 @@ import (
 type IConsole interface {
 	log.Hook
 	log.ILogger
-	Write(p []byte)(int,error)
+	Write(p []byte) (int, error)
 	Clear()
 }
 
@@ -19,10 +19,10 @@ type ICommandSender interface {
 }
 
 type ICommand interface {
-	Name()string
+	Name() string
 	SetConsole(IConsole)
-	ConsoleExec(param *ParamsValue,console IConsole)*promise.Promise
-	ExecWithConsole(console IConsole,params... interface{})*promise.Promise
-	Exec(params... interface{})*promise.Promise
-	Tips()string
+	ConsoleExec(param *ParamsValue, console IConsole) *promise.Promise[interface{}]
+	ExecWithConsole(console IConsole, params ...interface{}) *promise.Promise[interface{}]
+	Exec(params ...interface{}) *promise.Promise[interface{}]
+	Tips() string
 }
