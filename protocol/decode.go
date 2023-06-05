@@ -102,7 +102,6 @@ func unmarshalHeader(data []byte) (*BinaryMessage, error) {
 	transId := binary.LittleEndian.Uint32(data[2:6])
 	var cmdId BINARY_TAG
 	cmdId = BINARY_TAG(binary.LittleEndian.Uint16(data[6:8]))
-	//log.Infof("unmarshalHeader",cmdId,cmdId.String())
 	return &BinaryMessage{
 		CmdId:   cmdId,
 		TransId: transId,

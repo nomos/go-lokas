@@ -47,6 +47,37 @@ func (this *Timeout) Close() {
 	}()
 }
 
+type IntervalWaitFinish struct {
+	interval time.Duration
+	stop     bool
+	lastTick time.Time
+	mutex    sync.Mutex
+}
+
+func (this *IntervalWaitFinish) execute(duration time.Duration, f func(*IntervalWaitFinish, time.Time, time.Duration)) {
+	go func() {
+		this.lastTick = time.Now()
+		for {
+			if this.stop {
+				break
+			}
+			now := time.Now()
+			delta := now.Sub(this.lastTick)
+			if delta < duration {
+				f(this, now, duration)
+				time.Sleep(duration - now.Sub(this.lastTick))
+			} else {
+				f(this, now, delta)
+			}
+			this.lastTick = now
+		}
+	}()
+}
+
+func (this *IntervalWaitFinish) Close() {
+	this.stop = true
+}
+
 type Interval struct {
 	interval  time.Duration
 	ticker    *time.Ticker
@@ -196,6 +227,14 @@ type resolutionHelper struct {
 func SetTimeout(duration time.Duration, f func(*Timeout)) *Timeout {
 	ret := &Timeout{
 		isClose: true,
+	}
+	ret.execute(duration, f)
+	return ret
+}
+
+func SetIntervalWaitFinish(duration time.Duration, f func(*IntervalWaitFinish, time.Time, time.Duration)) *IntervalWaitFinish {
+	ret := &IntervalWaitFinish{
+		interval: duration,
 	}
 	ret.execute(duration, f)
 	return ret
