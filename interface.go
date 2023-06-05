@@ -306,6 +306,7 @@ type ITaskPipeLine interface {
 type IConfig interface {
 	Save() error
 	Load() error
+	LoadFromLocal() error
 	GetFolder() string
 	LoadFromRemote() error
 	SetRemoteConfig(p string, etcd string)

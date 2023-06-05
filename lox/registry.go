@@ -84,7 +84,7 @@ func (this *Registry) OnDestroy() error {
 	panic("implement me")
 }
 
-//return leaseId,(bool)is registered,error
+// return leaseId,(bool)is registered,error
 func (this *Registry) GetLeaseId() (clientv3.LeaseID, bool, error) {
 	c := this.process.GetEtcd()
 	if this.leaseId != 0 {
@@ -185,6 +185,9 @@ func (this *Registry) Type() string {
 }
 
 func (this *Registry) Load(conf lokas.IConfig) error {
+	if this.process.GetEtcd() == nil {
+		return nil
+	}
 	this.startUpdateRemoteActorInfo()
 	this.startUpdateRemoteProcessInfo()
 	// err := this.startUpdateRemoteService()
@@ -202,7 +205,7 @@ func (this *Registry) Unload() error {
 	return nil
 }
 
-//check if actor key exist,otherwise add it
+// check if actor key exist,otherwise add it
 func (this *Registry) checkOrCreateActorRegistry(kv *mvccpb.KeyValue) {
 	id, _ := strconv.Atoi(regexp.MustCompile(`[/]actor[/]([0-9]+)`).ReplaceAllString(string(kv.Key), "$1"))
 	actorId := util.ID(id)
@@ -220,7 +223,7 @@ func (this *Registry) deleteActorRegistry(kv *mvccpb.KeyValue) {
 	this.GlobalRegistry.RemoveActor(actorId)
 }
 
-//check if process key exist,otherwise add it
+// check if process key exist,otherwise add it
 func (this *Registry) checkOrCreateProcessRegistry(kv *mvccpb.KeyValue) {
 	id, _ := strconv.Atoi(regexp.MustCompile(`[/]processids[/]([0-9]+)`).ReplaceAllString(string(kv.Key), "$1"))
 	// log.Debug("checkOrCreateProcessRegistry", zap.Int("id", id))
@@ -238,7 +241,7 @@ func (this *Registry) deleteProcessRegistry(kv *mvccpb.KeyValue) {
 	this.GlobalRegistry.RemoveProcess(pid)
 }
 
-//update actor registries via etcd
+// update actor registries via etcd
 func (this *Registry) startUpdateRemoteActorInfo() error {
 	log.Info("start", flog.FuncInfo(this, "startUpdateRemoteActorInfo")...)
 	client := this.GetProcess().GetEtcd()
@@ -282,7 +285,7 @@ func (this *Registry) startUpdateRemoteActorInfo() error {
 	return nil
 }
 
-//update process registries information via etcd
+// update process registries information via etcd
 func (this *Registry) startUpdateRemoteProcessInfo() error {
 	log.Info("start", flog.FuncInfo(this, "startUpdateRemoteProcessInfo")...)
 	client := this.GetProcess().GetEtcd()
@@ -476,6 +479,9 @@ func (this *Registry) RegisterActors() error {
 }
 
 func (this *Registry) RegisterActorRemote(actor lokas.IActor) error {
+	if this.GetProcess().GetEtcd() == nil {
+		return nil
+	}
 	client := this.GetProcess().GetEtcd()
 	s, err := json.Marshal(CreateActorRegistryInfo(actor))
 	if err != nil {
@@ -502,6 +508,9 @@ func (this *Registry) RegisterActorRemote(actor lokas.IActor) error {
 }
 
 func (this *Registry) UnregisterActorRemote(actor lokas.IActor) error {
+	if this.GetProcess().GetEtcd() == nil {
+		return nil
+	}
 	client := this.GetProcess().GetEtcd()
 	leaseId, _, err := actor.GetLeaseId()
 	if err != nil {

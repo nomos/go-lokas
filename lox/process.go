@@ -311,41 +311,64 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 			Append(zap.String("version", this.Version())).
 			Append(zap.Int32("server", this.ServerId()))...,
 	)
-	err := this.loadMongo(config.GetDb("mongo").(MongoConfig))
-	if err != nil {
-		log.Error(err.Error())
-		return err
+	mongo_conf := config.GetDb("mongo")
+	if !util.IsNil(mongo_conf) {
+		err := this.loadMongo(config.GetDb("mongo").(MongoConfig))
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
 	}
-	err = this.loadRedis(config.GetDb("redis").(RedisConfig))
-	if err != nil {
-		log.Error(err.Error())
-		return err
+	redis_conf := config.GetDb("redis")
+	if !util.IsNil(redis_conf) {
+		err := this.loadRedis(redis_conf.(RedisConfig))
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
 	}
-	err = this.loadEtcd(config.GetDb("etcd").(EtcdConfig))
-	if err != nil {
-		log.Error(err.Error())
-		return err
+	etcd_conf := config.GetDb("etcd")
+	if !util.IsNil(etcd_conf) {
+		err := this.loadEtcd(etcd_conf.(EtcdConfig))
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
 	}
-	err = this.loadOss(config.GetDb("oss").(OssConfig))
-	if err != nil {
-		log.Error(err.Error())
-		return err
+
+	oss_conf := config.GetDb("oss")
+	if !util.IsNil(oss_conf) {
+		err := this.loadOss(config.GetDb("oss").(OssConfig))
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
 	}
-	err = this.loadDockerCLI(config.GetDockerCLI().(DockerConfig))
+	err := this.loadDockerCLI(config.GetDockerCLI().(DockerConfig))
 
 	this.idNode, _ = util.NewSnowflake(int64(config.GetProcessId()))
-	err = this.LoadModuleRegistry()
+	if this.etcd != nil {
+		err = this.LoadModuleRegistry()
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
+	}
 
 	err = this.LoadAllModule(config)
 	if err != nil {
 		log.Error(err.Error())
 		return err
 	}
-	err = this.SaveModuleRegistry()
-	if err != nil {
-		log.Error(err.Error())
-		return err
+
+	if this.etcd != nil {
+		err = this.SaveModuleRegistry()
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
 	}
+
 	return nil
 }
 
@@ -442,7 +465,7 @@ func (this *Process) Stop() error {
 	return nil
 }
 
-//GenId generate snowflake id
+// GenId generate snowflake id
 func (this *Process) GenId() util.ID {
 	if this.idNode == nil {
 		return 0

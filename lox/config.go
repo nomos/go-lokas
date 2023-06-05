@@ -173,6 +173,22 @@ func (this *AppConfig) Save() error {
 	return nil
 }
 
+func (this *AppConfig) LoadFromLocal() error {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	file, err := os.OpenFile(path.Join(this.folder, this.name+".toml"), os.O_RDWR, 0664)
+	if err != nil {
+		log.Warn(err.Error())
+		return err
+	}
+	if file != nil {
+		return this.Viper.ReadConfig(file)
+	} else {
+		log.Warn("no file")
+	}
+	return nil
+}
+
 func (this *AppConfig) Load() error {
 	this.mu.Lock()
 	defer this.mu.Unlock()
@@ -328,11 +344,11 @@ type DefaultConfig struct {
 	Version   string          `mapstructure:"version"`
 	SName     string          `mapstructure:"serverName"`
 	Name      string          `mapstructure:"name"`
-	Etcd      EtcdConfig      `mapstructure:"-"`
-	Mongo     MongoConfig     `mapstructure:"-"`
-	Mysql     MysqlConfig     `mapstructure:"-"`
-	Redis     RedisConfig     `mapstructure:"-"`
-	Oss       OssConfig       `mapstructure:"-"`
+	Etcd      *EtcdConfig     `mapstructure:"-"`
+	Mongo     *MongoConfig    `mapstructure:"-"`
+	Mysql     *MysqlConfig    `mapstructure:"-"`
+	Redis     *RedisConfig    `mapstructure:"-"`
+	Oss       *OssConfig      `mapstructure:"-"`
 	Mods      []lokas.IConfig `mapstructure:"-"`
 	Modules   []string        `mapstructure:"modules"`
 	DockerCLI DockerConfig    `mapstructure:"docker"`
@@ -456,18 +472,27 @@ func (this *DefaultConfig) loadInner() error {
 		log.Error(err.Error())
 		return err
 	}
-	err = this.Viper.UnmarshalKey("db.mongo", &this.Mongo)
-	if err != nil {
-		log.Error(err.Error())
-		return err
+	if !util.IsNil(this.Viper.Get("db.mongo")) {
+		err = this.Viper.UnmarshalKey("db.mongo", this.Mongo)
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
+	} else {
+		log.Warn("mongo config not exist")
 	}
-	err = this.Viper.UnmarshalKey("db.redis", &this.Redis)
-	if err != nil {
-		log.Error(err.Error())
-		return err
+	if !util.IsNil(this.Viper.Get("db.redis")) {
+		err = this.Viper.UnmarshalKey("db.redis", this.Redis)
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
+	} else {
+		log.Warn("redis config not exist")
 	}
+
 	if !util.IsNil(this.Viper.Get("db.oss")) {
-		err = this.Viper.UnmarshalKey("db.oss", &this.Oss)
+		err = this.Viper.UnmarshalKey("db.oss", this.Oss)
 		if err != nil {
 			log.Error(err.Error())
 			return err
@@ -477,11 +502,17 @@ func (this *DefaultConfig) loadInner() error {
 		log.Warn("oss config not exist")
 	}
 
-	err = this.Viper.UnmarshalKey("db.etcd", &this.Etcd)
-	if err != nil {
-		log.Error(err.Error())
-		return err
+	if !util.IsNil(this.Viper.Get("db.etcd")) {
+		err = this.Viper.UnmarshalKey("db.etcd", this.Etcd)
+		if err != nil {
+			log.Error(err.Error())
+			return err
+		}
+	} else {
+
+		log.Warn("etcd config not exist")
 	}
+
 	this.loadModules()
 	return nil
 }
