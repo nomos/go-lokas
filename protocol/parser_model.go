@@ -107,9 +107,9 @@ func (this *ModelPackageObject) CsString(g *Generator) string {
 	ret := `//this is a generated file,do not modify it!!!
 using System;
 using System.Threading.Tasks;
-using Funnel.Client;
 using Funnel.Protocol;
 using Funnel.Protocol.Abstractions;
+using Funnel.Common.Abstractions;
 #if UNITY_2017_1_OR_NEWER
     using UnityEngine;
 #endif
@@ -121,17 +121,17 @@ namespace {CsPackageName}
     {
 {Protocols}
 
-        private static Funnel.Client.Client _client = null;
+        private static Funnel.Common.Abstractions.IClient _client = null;
 		//错误注册
 {Errors}
         //方法注册
-        public static void Init(Funnel.Client.Client client)
+        public static void Init(Funnel.Common.Abstractions.IClient client)
         {
             setClient(client);
             registerIds();
             registerMessages();
         }
-        private static void setClient(Funnel.Client.Client client)
+        private static void setClient(Funnel.Common.Abstractions.IClient client)
         {
             _client = client;
         }
@@ -614,7 +614,12 @@ func Register{ClassB}(f OnRequest{ClassB}Func,r func(protocol.BINARY_TAG,func(da
 }`
 		ret = strings.ReplaceAll(ret, "{TAG}", "TAG_"+stringutil.SplitCamelCaseUpperSnake(this.Name))
 		ret = strings.ReplaceAll(ret, "{ClassB}", this.Name)
-		ret = strings.ReplaceAll(ret, "{ClassA}", this.Resp)
+		if this.Resp == "OK" {
+			ret = strings.ReplaceAll(ret, "{ClassA}", "protocol.OK")
+		} else {
+
+			ret = strings.ReplaceAll(ret, "{ClassA}", this.Resp)
+		}
 		return ret
 	case "NTF":
 		ret += "//"
@@ -735,7 +740,7 @@ func (this *ModelId) GetCsMessageRegisterString(g *Generator) string {
 }
 
 func (this *ModelId) GetCsIdRegisterString(g *Generator) string {
-	ret := `			FunnelSerializable.RegisterType(new {ClassA}(), {MsgId});`
+	ret := `			Serializable.RegisterType(new {ClassA}(), {MsgId});`
 	ret = strings.ReplaceAll(ret, "{ClassA}", this.Name)
 	ret = strings.ReplaceAll(ret, "{MsgId}", strconv.Itoa(this.Id))
 	return ret
@@ -805,7 +810,7 @@ func (this *ModelIdsObject) CheckLine(line *LineText) bool {
 			if line.GetTagName() != "" {
 				p.Resp = line.GetTagName()
 				if p.Resp == "OK" {
-					p.Resp = "protocol.OK"
+					p.Resp = "OK"
 				}
 			}
 			this.Ids[line.GetValue()] = p
@@ -1607,7 +1612,7 @@ func (this *ModelClassObject) ToTsClassHeader(g *Generator, object *TsClassObjec
 	return ret
 }
 func (this *ModelClassObject) CsImplString(g *Generator) string {
-	ret := `//this is a generate file,do not modify it!
+	ret := `//you can add impl code here
 using System;
 using System.Collections.Generic;
 using Funnel.Protocol;
@@ -1628,7 +1633,7 @@ namespace {CsPackageName}
 }
 
 func (this *ModelClassObject) CsString(g *Generator) string {
-	ret := `//this is a generate file,do not modify it!
+	ret := `//this is a generate file,do not modify it!you can add custom code in {ClassName}.impl.cs
 using System;
 using System.Collections.Generic;
 using Funnel.Protocol;
@@ -1637,7 +1642,7 @@ using Newtonsoft.Json;
 namespace {CsPackageName}
 {
 	[JsonObject(MemberSerialization.OptIn)]
-    public partial class {ClassName}:FunnelSerializable
+    public partial class {ClassName}:Serializable
     {
 {ClassBody}
 
@@ -1663,7 +1668,7 @@ using Newtonsoft.Json;
 namespace {CsPackageName}
 {
 	[JsonObject(MemberSerialization.OptIn)]
-    public partial class {ClassName}:FunnelSerializable
+    public partial class {ClassName}:Serializable
     {
 {ClassBody}
     }

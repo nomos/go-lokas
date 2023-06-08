@@ -344,11 +344,11 @@ type DefaultConfig struct {
 	Version   string          `mapstructure:"version"`
 	SName     string          `mapstructure:"serverName"`
 	Name      string          `mapstructure:"name"`
-	Etcd      *EtcdConfig     `mapstructure:"-"`
-	Mongo     *MongoConfig    `mapstructure:"-"`
-	Mysql     *MysqlConfig    `mapstructure:"-"`
-	Redis     *RedisConfig    `mapstructure:"-"`
-	Oss       *OssConfig      `mapstructure:"-"`
+	Etcd      EtcdConfig      `mapstructure:"-"`
+	Mongo     MongoConfig     `mapstructure:"-"`
+	Mysql     MysqlConfig     `mapstructure:"-"`
+	Redis     RedisConfig     `mapstructure:"-"`
+	Oss       OssConfig       `mapstructure:"-"`
 	Mods      []lokas.IConfig `mapstructure:"-"`
 	Modules   []string        `mapstructure:"modules"`
 	DockerCLI DockerConfig    `mapstructure:"docker"`
@@ -383,10 +383,12 @@ type MongoConfig struct {
 	Database string `mapstructure:"database"`
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
+	inited   bool
 }
 
 type EtcdConfig struct {
 	EndPoints []string `mapstructure:"endpoints"`
+	inited    bool
 }
 
 type OssConfig struct {
@@ -394,6 +396,7 @@ type OssConfig struct {
 	EndPoint     string `mapstructure:"endpoint"`
 	AccessId     string `mapstructure:"user"`
 	AccessSecret string `mapstructure:"password"`
+	inited       bool
 }
 
 type MysqlConfig struct {
@@ -402,12 +405,14 @@ type MysqlConfig struct {
 	Database string `mapstructure:"database"`
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
+	inited   bool
 }
 
 type RedisConfig struct {
 	Host     string `mapstructure:"host"`
 	Port     string `mapstructure:"port"`
 	Password string `mapstructure:"password"`
+	inited   bool
 }
 
 // type ModuleConfig struct {
@@ -473,41 +478,45 @@ func (this *DefaultConfig) loadInner() error {
 		return err
 	}
 	if !util.IsNil(this.Viper.Get("db.mongo")) {
-		err = this.Viper.UnmarshalKey("db.mongo", this.Mongo)
+		err = this.Viper.UnmarshalKey("db.mongo", &this.Mongo)
 		if err != nil {
 			log.Error(err.Error())
 			return err
 		}
+		this.Mongo.inited = true
 	} else {
 		log.Warn("mongo config not exist")
 	}
 	if !util.IsNil(this.Viper.Get("db.redis")) {
-		err = this.Viper.UnmarshalKey("db.redis", this.Redis)
+		err = this.Viper.UnmarshalKey("db.redis", &this.Redis)
 		if err != nil {
 			log.Error(err.Error())
 			return err
 		}
+		this.Redis.inited = true
 	} else {
 		log.Warn("redis config not exist")
 	}
 
 	if !util.IsNil(this.Viper.Get("db.oss")) {
-		err = this.Viper.UnmarshalKey("db.oss", this.Oss)
+		err = this.Viper.UnmarshalKey("db.oss", &this.Oss)
 		if err != nil {
 			log.Error(err.Error())
 			return err
 		}
+		this.Oss.inited = true
 	} else {
 
 		log.Warn("oss config not exist")
 	}
 
 	if !util.IsNil(this.Viper.Get("db.etcd")) {
-		err = this.Viper.UnmarshalKey("db.etcd", this.Etcd)
+		err = this.Viper.UnmarshalKey("db.etcd", &this.Etcd)
 		if err != nil {
 			log.Error(err.Error())
 			return err
 		}
+		this.Etcd.inited = true
 	} else {
 
 		log.Warn("etcd config not exist")

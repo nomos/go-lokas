@@ -312,7 +312,7 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 			Append(zap.Int32("server", this.ServerId()))...,
 	)
 	mongo_conf := config.GetDb("mongo")
-	if !util.IsNil(mongo_conf) {
+	if mongo_conf.(MongoConfig).inited {
 		err := this.loadMongo(config.GetDb("mongo").(MongoConfig))
 		if err != nil {
 			log.Error(err.Error())
@@ -320,7 +320,7 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 		}
 	}
 	redis_conf := config.GetDb("redis")
-	if !util.IsNil(redis_conf) {
+	if redis_conf.(RedisConfig).inited {
 		err := this.loadRedis(redis_conf.(RedisConfig))
 		if err != nil {
 			log.Error(err.Error())
@@ -328,7 +328,7 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 		}
 	}
 	etcd_conf := config.GetDb("etcd")
-	if !util.IsNil(etcd_conf) {
+	if etcd_conf.(EtcdConfig).inited {
 		err := this.loadEtcd(etcd_conf.(EtcdConfig))
 		if err != nil {
 			log.Error(err.Error())
@@ -337,7 +337,7 @@ func (this *Process) Load(config lokas.IProcessConfig) error {
 	}
 
 	oss_conf := config.GetDb("oss")
-	if !util.IsNil(oss_conf) {
+	if oss_conf.(OssConfig).inited {
 		err := this.loadOss(config.GetDb("oss").(OssConfig))
 		if err != nil {
 			log.Error(err.Error())

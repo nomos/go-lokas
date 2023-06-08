@@ -603,7 +603,7 @@ func MarshalBody(body ISerializable, t TYPE) (bodyData []byte, err error) {
 		data, err := json.Marshal(body)
 		return data, err
 	} else if t == BINARY {
-		return nil, errors.New("todo marshal binary")
+		return MarshalBinary(body)
 	} else {
 		return nil, errors.New("unidentified protocol")
 	}

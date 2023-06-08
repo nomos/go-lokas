@@ -412,6 +412,9 @@ func (this *Registry) startUpdateRemoteService() error {
 
 func (this *Registry) updateProcessInfo() error {
 	client := this.GetProcess().GetEtcd()
+	if client == nil {
+		return nil
+	}
 	leaseId, isReg, err := this.GetLeaseId()
 	if err != nil {
 		log.Error(err.Error())
@@ -446,6 +449,9 @@ func (this *Registry) unregisterProcessInfo() error {
 func (this *Registry) registerProcessInfo() error {
 	// log.Info("registerProcessInfo")
 	client := this.GetProcess().GetEtcd()
+	if client == nil {
+		return nil
+	}
 	s, err := json.Marshal(CreateProcessRegistryInfo(this.GetProcess()))
 	if err != nil {
 		log.Error(err.Error())
@@ -464,6 +470,9 @@ func (this *Registry) registerProcessInfo() error {
 
 func (this *Registry) RegisterActors() error {
 	client := this.GetProcess().GetEtcd()
+	if client == nil {
+		return nil
+	}
 	s, err := json.Marshal(CreateProcessActorsInfo(this.GetProcess()))
 	if err != nil {
 		log.Error(err.Error())
